@@ -6,12 +6,17 @@ func MakeGame(facNames []string) *Game {
 	g := NewGame()
 	g.Sector.MakePlanets(len(facNames), 100)
 	g.Sector.Turn = 1
+	nameMap := map[int]string{}
 	for i, name := range facNames {
 		f := NewFaction()
 		f.Name = name
 		f.FactionID = i + 1
 		g.Factions[i+1] = f
+		nameMap[i+1] = name
 		f.View = *g.Sector.MakeView(i + 1)
+	}
+	for _, f := range g.Factions {
+		f.OtherNames = nameMap
 	}
 	return g
 }

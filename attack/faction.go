@@ -1,7 +1,9 @@
 package attack
 
+// Faction is the object clients should be working with
 type Faction struct {
 	Name        string
+	OtherNames  map[int]string
 	FactionID   int
 	TurnDone    bool
 	BuildOrders []Order
@@ -10,6 +12,7 @@ type Faction struct {
 
 func NewFaction() *Faction {
 	return &Faction{
+		OtherNames:  map[int]string{},
 		BuildOrders: []Order{},
 	}
 }
@@ -37,6 +40,7 @@ func (f *Faction) ChangeOrder(index, plX, plY, size, tarX, tarY int) {
 	f.BuildOrders[index] = o
 }
 
+// TODO: communicate with the game server to check if everyone is done
 func (f *Faction) ToggleDone() {
 	f.TurnDone = !f.TurnDone
 }
