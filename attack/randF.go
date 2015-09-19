@@ -29,3 +29,17 @@ func shuffleWords(list []string) []string {
 func pick(n int) int {
 	return rand.Intn(n) + 1
 }
+
+func shuffleShips(in []*Ship) (out []*Ship) {
+	l := len(in)
+	if l < 1 {
+		return []*Ship{}
+	} else if l == 1 {
+		return []*Ship{in[0]}
+	}
+	out = make([]*Ship, l)
+	for i, j := range rand.Perm(l) {
+		out[i] = in[j]
+	}
+	return out
+}

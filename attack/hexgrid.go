@@ -3,17 +3,25 @@ package attack
 /*
  ========== HEX GRID ==========
 
-       1, 0
-  0,-1       1, 1
+       0, 1
+ -1, 0       1, 1
        0, 0
- -1,-1       0, 1
-      -1, 0
+ -1,-1       1, 0
+       0,-1
 
-circ = (r-1)*6
-
+circ = radius*6
 
 */
+var HEXDIRS = map[int][2]int{
+	0: [2]int{1, 0},
+	1: [2]int{1, 1},
+	2: [2]int{0, 1},
+	3: [2]int{-1, 0},
+	4: [2]int{-1, -1},
+	5: [2]int{0, -1},
+}
 
+// HexDist tells you how many steps from a to b
 func HexDist(a, b [2]int) int {
 	x := b[0] - a[0]
 	y := b[1] - a[1]
@@ -52,6 +60,9 @@ func HexDist(a, b [2]int) int {
 	return y + x
 }
 
+// HexPath creates a path of 1 step grid coords, starting with A and ending with B
+// HexPath uses HexPathSteps to calculate the least steps to take, and
+// then uses StepSplit to interweave the steps as evenly as possible
 func HexPath(a, b [2]int) [][2]int {
 	d := HexDist(a, b)
 	if d == 0 {
@@ -109,6 +120,10 @@ func HexPath(a, b [2]int) [][2]int {
 	return r
 }
 
+// HexPathSteps calculates the minimum steps from a to b
+// HexPathSteps returns a [3]int with the count of:
+// StepsRight(0,1) StepsUp(1,0) StepsUpRight(1,1)
+// with negative numbers for backward steps
 func HexPathSteps(a, b [2]int) (steps [3]int) {
 	//steps right up upRight
 	x := b[0] - a[0]
@@ -140,6 +155,11 @@ func HexPathSteps(a, b [2]int) (steps [3]int) {
 	return
 }
 
+// StepSplit figures out how best to weave two types of steps
+// It takes two ints representing counts of each steptype and is
+// indifferent to what those steptypes are
+// It returns a bool slice to use for determining which type to
+// use in a sequence
 func StepSplit(larger, smaller int) (useSmall []bool) {
 	useSmall = make([]bool, larger+smaller)
 	beat := (larger + smaller) / (smaller + 1)
@@ -171,27 +191,31 @@ func Dir(x int) int {
 	}
 }
 
+// HexAngle2Grid transforms polar step instructions (from the grid origin) into grid coordinates
+// radius = steps outward directly rightward (1,0) from origin
+// theta = steps counter-clockwise from this point, staying distance "radius" from the origin
 func HexAngle2Grid(radius, theta int) (loc [2]int) {
 	if radius == 0 {
 		return [2]int{0, 0}
 	}
-	leg := theta / radius // 0-5
-	extra := theta % radius
-	var mainX, mainY, boostX, boostY int
-	switch leg {
-	case 0: //  1, 0
-		mainX, mainY, boostX, boostY = 1, 0, 0, -1
-	case 1: //  0,-1
-		mainX, mainY, boostX, boostY = 0, -1, -1, -1
-	case 2: // -1,-1
-		mainX, mainY, boostX, boostY = -1, -1, -1, 0
-	case 3: // -1, 0
-		mainX, mainY, boostX, boostY = -1, 0, 0, 1
-	case 4: //  0, 1
-		mainX, mainY, boostX, boostY = 0, 1, 1, 1
-	case 5: //  1, 1
-		mainX, mainY, boostX, boostY = 1, 1, 1, 0
+	circ := 6 * radius
+	for theta > circ {
+		theta -= circ
 	}
-	loc = [2]int{mainX*radius + boostX*extra, mainY*radius + boostY*extra}
-	return
+	for theta < 0 {
+		theta += circ
+	}
+	// Which leg of the hexagon are we on?
+	// (legs have length = radius)
+	leg := theta / radius
+	// How far along that leg are we?
+	extra := theta % radius
+	// Go out along the axis to the start of your leg
+	extend := HEXDIRS[leg]
+	extend = [2]int{extend[0] * radius, extend[1] * radius}
+	// Go along the leg the appropriate distance
+	legDir := HEXDIRS[(leg+2)%6]
+	legDir = [2]int{legDir[0] * extra, legDir[1] * extra}
+	// Viola!
+	return [2]int{extend[0] + legDir[0], extend[1] + legDir[1]}
 }

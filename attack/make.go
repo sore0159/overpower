@@ -85,7 +85,8 @@ func (s *Sector) SplitSector(homeworlds, minD, maxD int) [][2]int {
 	coords := [][2]int{}
 	for i := 0; i < homeworlds; {
 		radius := minD + pick(maxD-minD)
-		theta := i*(6*radius/homeworlds) + pick(6*radius/homeworlds) - 1
+		leg := 6 * radius / homeworlds
+		theta := i*(leg) - 1 + 3*leg/8 + pick(leg/4)
 		loc := HexAngle2Grid(radius, theta)
 		if s.CoordClear(loc, CLEARDIST) {
 			coords = append(coords, loc)
