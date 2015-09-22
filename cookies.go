@@ -5,7 +5,7 @@ import (
 )
 
 func Login(userName, password string, w http.ResponseWriter) bool {
-	if !ValidPW(userName, password) {
+	if !ValidLogin(userName, password) {
 		Log("Bad attempt at login for user", userName, ":", password)
 		return false
 	}

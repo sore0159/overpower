@@ -1,0 +1,14 @@
+{{ define "frame" }}
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{{ template "title" .}}</title>
+<link rel="stylesheet" href="/static/css/{{ template "css" .}}.css">
+</head>
+<body>
+{{ template "body" .}}
+</body>
+</html>
+{{ end }}
+

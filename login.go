@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"unicode"
 )
 
 const PWFILE = DATADIR + "passwords.txt"
@@ -35,8 +36,9 @@ func LoadUserData() (map[string]string, error) {
 	return m, nil
 }
 
-func ValidPW(userName, password string) bool {
-	return USERSPWS[userName] == password
+func ValidLogin(userName, password string) bool {
+	pw, ok := USERSPWS[userName]
+	return ok && pw == password
 }
 
 func CreateUser(userName, password string) error {
@@ -52,4 +54,32 @@ func CreateUser(userName, password string) error {
 		return err
 	}
 	return nil
+}
+
+func ValidPassword(password string) bool {
+	for _, rn := range password {
+		if !unicode.In(rn, unicode.L, unicode.N) {
+			return false
+		}
+	}
+	return true
+}
+
+func UserNameInUse(username string) bool {
+	name := strings.ToLower(username)
+	for test, _ := range USERSPWS {
+		if name == strings.ToLower(test) {
+			return true
+		}
+	}
+	return false
+}
+
+func ValidUserName(username string) bool {
+	for _, rn := range username {
+		if !unicode.In(rn, unicode.L, unicode.N) {
+			return false
+		}
+	}
+	return true
 }
