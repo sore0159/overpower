@@ -8,6 +8,7 @@ type Faction struct {
 	TurnDone    bool
 	BuildOrders []Order
 	View        SectorView
+	TV          *TextView
 }
 
 func NewFaction() *Faction {
@@ -43,4 +44,8 @@ func (f *Faction) ChangeOrder(index, plX, plY, size, tarX, tarY int) {
 // TODO: communicate with the game server to check if everyone is done
 func (f *Faction) ToggleDone() {
 	f.TurnDone = !f.TurnDone
+}
+
+func (f *Faction) CenterTV(center [2]int) {
+	f.TV.Recenter(center)
 }

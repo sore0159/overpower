@@ -1,10 +1,13 @@
 package attack
 
-import "strings"
+import (
+	//"fmt"
+	"strings"
+)
 
 func MakeGame(facNames []string) *Game {
 	g := NewGame()
-	g.Sector.MakePlanets(len(facNames), 100)
+	homePlanets := g.Sector.MakePlanets(len(facNames), 100)
 	g.Sector.Turn = 1
 	nameMap := map[int]string{}
 	for i, name := range facNames {
@@ -14,6 +17,12 @@ func MakeGame(facNames []string) *Game {
 		g.Factions[i+1] = f
 		nameMap[i+1] = name
 		f.View = *g.Sector.MakeView(i + 1)
+		for coord, pl := range homePlanets {
+			if pl.Faction() == f.FactionID {
+				f.TV = MakeTextView(coord, &f.View)
+				break
+			}
+		}
 	}
 	for _, f := range g.Factions {
 		f.OtherNames = nameMap
@@ -21,7 +30,7 @@ func MakeGame(facNames []string) *Game {
 	return g
 }
 
-func (s *Sector) MakePlanets(homeworlds, total int) {
+func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*Planet) {
 	num := 100
 	orion := NewPlanet()
 	orion.Name = "Planet Borion" // DO YOU WANT TO GET US ALL SUED, BOY?
@@ -33,9 +42,10 @@ func (s *Sector) MakePlanets(homeworlds, total int) {
 	bigPlanets := make([]*Planet, bigN)
 	littlePlanets := make([]*Planet, num-bigN-1)
 	homePlanets := make([]*Planet, homeworlds)
+	homePlanetMap = make(map[[2]int]*Planet, homeworlds)
 	for i := 0; i < len(bigPlanets); i++ {
 		pl := NewPlanet()
-		pl.Name = "Planet " + strings.ToTitle(names[i])
+		pl.Name = "Planet " + strings.Title(names[i])
 		pl.Resources = 10 + pick(10)
 		if pick(3) == 1 {
 			pl.Inhabitants[1] = pick(10)
@@ -44,13 +54,13 @@ func (s *Sector) MakePlanets(homeworlds, total int) {
 	}
 	for i := 0; i < len(littlePlanets); i++ {
 		pl := NewPlanet()
-		pl.Name = "Planet " + strings.ToTitle(names[i+bigN])
+		pl.Name = "Planet " + strings.Title(names[i+bigN])
 		pl.Resources = pick(10)
 		littlePlanets[i] = pl
 	}
 	for i := 0; i < homeworlds; i++ {
 		pl := NewPlanet()
-		pl.Name = "Planet " + strings.ToTitle(names[i+num])
+		pl.Name = "Planet " + strings.Title(names[i+num])
 		pl.Resources = 15
 		pl.Inhabitants = [2]int{i + 1, 5}
 		pl.Launchers = 5
@@ -82,8 +92,11 @@ func (s *Sector) MakePlanets(homeworlds, total int) {
 	}
 	homeCoords := s.SplitSector(homeworlds, 170, 190)
 	for i, coord := range homeCoords {
+		homePlanets[i].Location = coord
 		s.PlanetGrid[coord] = homePlanets[i]
+		homePlanetMap[coord] = homePlanets[i]
 	}
+	return homePlanetMap
 }
 
 func (s *Sector) SplitSector(homeworlds, minD, maxD int) [][2]int {
