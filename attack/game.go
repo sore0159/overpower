@@ -1,7 +1,5 @@
 package attack
 
-import "log"
-
 type Game struct {
 	Sector   *Sector
 	Factions map[int]*Faction
@@ -33,10 +31,10 @@ func (s *Sector) AdvanceTurn(orders map[int][]Order) {
 		for _, order := range list {
 			pl, ok := s.PlanetGrid[order.Location]
 			if !ok {
-				log.Fatal("Bad order", order, "by faction", fac, ": no planet found at", order.Location)
+				LogF("Bad order", order, "by faction", fac, ": no planet found at", order.Location)
 			}
 			if pl.Faction() != fac {
-				log.Fatal("Bad faction", fac, "ordering", order, "to planet", pl.Name, "belonging to", pl.Faction())
+				LogF("Bad faction", fac, "ordering", order, "to planet", pl.Name, "belonging to", pl.Faction())
 			}
 			cl := pl.FireLaunchers(order.Size, order.Target)
 			s.AddShip(cl)
@@ -71,7 +69,7 @@ func (s *Sector) AdvanceTurn(orders map[int][]Order) {
 		for _, ship := range list {
 			pl, ok := s.PlanetGrid[ship.Location()]
 			if !ok {
-				log.Fatal("Bad ship landing: no planet at", ship.Location(), "for ship", ship)
+				LogF("Bad ship landing: no planet at", ship.Location(), "for ship", ship)
 			}
 			ship.Land(pl)
 		}

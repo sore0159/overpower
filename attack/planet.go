@@ -1,7 +1,5 @@
 package attack
 
-import "log"
-
 type Planet struct {
 	Name        string
 	Location    [2]int
@@ -35,7 +33,7 @@ func (pl *Planet) BuildLaunchers() {
 
 func (pl *Planet) FireLaunchers(size int, target [2]int) *Ship {
 	if pl.Launchers < size {
-		log.Fatal("Bad firelaunchers size", size, "for planet", pl.Name, "with launchers", pl.Launchers)
+		LogF("Bad firelaunchers size", size, "for planet", pl.Name, "with launchers", pl.Launchers)
 	}
 	pl.Launchers -= size
 	c := NewShip()
