@@ -9,7 +9,7 @@ import (
 )
 
 var TEMPGAME = attack.MakeGame([]string{"P1", "P2", "P3"})
-var TPTV = MixTemp("frame", "textview")
+var TPLIST = MixTemp("frame", "listview", "listcoord")
 
 func tempGamePage(w http.ResponseWriter, r *http.Request) {
 	pathParts := strings.Split(r.URL.Path, "/")
@@ -45,7 +45,8 @@ func tempGamePage(w http.ResponseWriter, r *http.Request) {
 		}
 		f.CenterTV([2]int{x, y})
 	}
-	err := TPTV.ExecuteTemplate(w, "frame", f.TV.OrderedCoords)
+	err := TPLIST.ExecuteTemplate(w, "frame", f)
+	//err := TPLIST.ExecuteTemplate(w, "frame", f.TV.OrderedCoords)
 	if err != nil {
 		Log("Error executing gameview template:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -6,7 +6,10 @@ import (
 	"net/http"
 )
 
-const DATADIR = "DATA/"
+const (
+	DATADIR  = "DATA/"
+	SERVPORT = ":8080"
+)
 
 var Log = mylog.Err
 
@@ -17,6 +20,6 @@ func init() {
 func main() {
 	http.HandleFunc("/", gameMux)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
-	log.Println("STARTING SERVER")
-	http.ListenAndServe(":8080", nil)
+	log.Println("STARTING SERVER AT", SERVPORT)
+	http.ListenAndServe(SERVPORT, nil)
 }

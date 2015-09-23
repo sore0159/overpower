@@ -1,7 +1,8 @@
 {{ define "title"}}Planet Attack! Game View Page{{end}}
 {{ define "css"}}main{{end}}
 {{define "body"}}
-{{ range . }}
-{{ . }} <br>
+<h1>Faction {{ .Name }}</h1>
+{{ range .TV.OrderedCoords }}
+{{ template "listcoord" . }}
 {{ end }}
 {{ end }}
