@@ -1,0 +1,10 @@
+{{ define "title"}}Planet Attack! Game View Page{{end}}
+{{ define "css"}}main{{end}}
+{{define "body"}}
+<h1>Planet Attack!</h1>
+Turn: {{ .Sector.Turn }}<br>
+Factions:<ul>{{range .Factions }}
+        <li><a href="/view/{{ .Name}}">{{ .Name }}</a> <b>{{ if .TurnDone }}Turn Completed{{ else }}Turn in progress{{end}}</b>
+        {{ end }}</ul>
+{{ end }}
+
