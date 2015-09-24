@@ -1,3 +1,41 @@
 {{ define "listcoord" }}
-{{ . }} <br>
+{{ $fID := index . "fID" }}
+{{ $fNames := index . "fNames" }}
+{{ with index . "val" }}
+<form action="" method="post">
+Sector {{ index .Polar 0}}, Radius {{ index .Polar 1 }}, Sweep {{ index .Polar 2 }} (Grid Coord: [{{ index .Coord 0 }}, {{ index .Coord 1 }}]; {{ .Dist }} Clicks from center)
+{{ if ne .Dist 0 }}
+        <input type="submit" value="Set as Center" title="Recenter List Data">
+        <input type="hidden" name="action" value="recenter">
+        <input type="hidden" name="fID" value="{{ $fID }}">
+        <input type="hidden" name="adjX" value="{{ index .Coord 0}}">
+        <input type="hidden" name="adjY" value="{{ index .Coord 1}}">
+</form>
+{{ end }}<br>
+{{ if .Planet.Name }} 
+<b>{{ .Planet.Name }} </b> {{ if not .Planet.Yours }} Last Seen: {{ if .Planet.LastSeen }}{{ .Planet.LastSeen }}{{ else }}Never{{ end }}{{ else }}Your Planet{{ end }}
+<br>
+{{ if .Planet.LastSeen }}
+{{ if not .Planet.Yours}}Faction: {{ index $fNames (index .Planet.Inhabitants 0) }}{{ else }}Launchers: {{ index .Planet.Launchers }}{{end}} Inhabitants: {{ index .Planet.Inhabitants 1 }} Resources: {{ .Planet.Resources }}<br>
+{{ if (and .Planet.Yours .Planet.Launchers) }}
+<input type="submit" value="FIRE MAIN CANNON" title="Launch Ship">
+<input type="hidden" name="action" value="setlorder">
+<input type="hidden" name="fID" value="{{ $fID }}">
+<input type="hidden" name="sourceX" value="{{ index .Coord 0 }}">
+<input type="hidden" name="sourceY" value="{{ index .Coord 1 }}">
+Amount: <input type="text" size="4" name="amount"><br>
+Target Grid X:<input type="text" size="4" name="tarX"> Target Grid Y: <input name="tarY" type="text" size="4">
+</form>
+{{ end }}
+{{ else }}
+No Planetary information available
+{{ end }}
+{{ end }}
+{{ if .Ships }}
+Ships!
+{{ end }}
+{{ if .Trails }}
+Trails!
+{{ end }}
+{{ end }}
 {{ end }}

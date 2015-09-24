@@ -16,7 +16,10 @@ func MakeGame(facNames []string) *Game {
 		f.FactionID = i + 1
 		g.Factions[i+1] = f
 		nameMap[i+1] = name
-		f.View = *g.Sector.MakeView(i + 1)
+		f.View = *g.Sector.MakeView(f)
+		if i != 0 {
+			f.TurnDone = true
+		}
 		for coord, pl := range homePlanets {
 			if pl.Faction() == f.FactionID {
 				f.TV = MakeTextView(coord, &f.View)
@@ -66,7 +69,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 		pl.Launchers = 5
 		homePlanets[i] = pl
 	}
-	bigRange := 100
+	bigRange := 50
 	for i := 0; i < len(bigPlanets); {
 		radius := pick(bigRange)
 		circ := 6 * radius
@@ -78,7 +81,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 			i++
 		}
 	}
-	littleRange := 200
+	littleRange := 100
 	for i := 0; i < len(littlePlanets); {
 		radius := pick(littleRange-bigRange) + bigRange
 		circ := 6 * radius
@@ -90,7 +93,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 			i++
 		}
 	}
-	homeCoords := s.SplitSector(homeworlds, 170, 190)
+	homeCoords := s.SplitSector(homeworlds, 70, 90)
 	for i, coord := range homeCoords {
 		homePlanets[i].Location = coord
 		s.PlanetGrid[coord] = homePlanets[i]

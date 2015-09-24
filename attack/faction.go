@@ -6,7 +6,7 @@ type Faction struct {
 	OtherNames  map[int]string
 	FactionID   int
 	TurnDone    bool
-	BuildOrders []Order
+	BuildOrders map[[4]int]Order
 	View        SectorView
 	TV          *TextView
 }
@@ -14,7 +14,7 @@ type Faction struct {
 func NewFaction() *Faction {
 	return &Faction{
 		OtherNames:  map[int]string{},
-		BuildOrders: []Order{},
+		BuildOrders: map[[4]int]Order{},
 	}
 }
 
@@ -28,24 +28,24 @@ func NewOrder() *Order {
 	return &Order{}
 }
 
-func (f *Faction) AddOrder(plX, plY, size, tarX, tarY int) {
-	o := Order{Location: [2]int{plX, plY}, Size: size, Target: [2]int{tarX, tarY}}
-	f.BuildOrders = append(f.BuildOrders, o)
-}
-
-func (f *Faction) DropOrder(index int) {
-	f.BuildOrders = append(f.BuildOrders[:index], f.BuildOrders[index+1:]...)
-}
-func (f *Faction) ChangeOrder(index, plX, plY, size, tarX, tarY int) {
-	o := Order{Location: [2]int{plX, plY}, Size: size, Target: [2]int{tarX, tarY}}
-	f.BuildOrders[index] = o
-}
-
-// TODO: communicate with the game server to check if everyone is done
-func (f *Faction) ToggleDone() {
-	f.TurnDone = !f.TurnDone
+func (f *Faction) SetOrder(amount int, source, target [2]int) {
+	if amount < 1 {
+		delete(f.BuildOrders, [4]int{source[0], source[1], target[0], target[1]})
+		return
+	}
+	f.BuildOrders[[4]int{source[0], source[1], target[0], target[1]}] = Order{Location: source, Size: amount, Target: target}
 }
 
 func (f *Faction) CenterTV(center [2]int) {
 	f.TV.Recenter(center)
+}
+
+func (f *Faction) NumAvail(source [2]int) (num int) {
+	num = f.View.PlanetGrid[source].Launchers
+	for _, o := range f.BuildOrders {
+		if o.Location == source {
+			num -= o.Size
+		}
+	}
+	return
 }

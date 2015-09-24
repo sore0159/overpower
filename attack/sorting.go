@@ -38,5 +38,6 @@ func (tv *TextView) Recenter(center [2]int) {
 		return
 	}
 	tv.Center = center
+	tv.PolarC = HexPolar(center)
 	tv.SortTool(true, center)
 }

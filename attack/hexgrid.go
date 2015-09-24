@@ -21,6 +21,25 @@ var HEXDIRS = map[int][2]int{
 	5: [2]int{0, -1},
 }
 
+// HexPolar returns the sector, radius, and 'sweep' of a grid
+// coordinate: sectors are the galaxy split into pie pieces, sweep is how far radially into a sector a coordinate is
+func HexPolar(grid [2]int) [3]int {
+	if grid == [2]int{0, 0} {
+		return [3]int{0, 0, 0}
+	}
+	r := HexDist(grid, [2]int{0, 0})
+	circ := 6 * r
+	for theta := 0; theta < circ; theta++ {
+		if HexAngle2Grid(r, theta) == grid {
+			sector := (theta / r) + 1
+			sweep := theta % r
+			return [3]int{sector, r, sweep}
+		}
+	}
+	Log("Couldn't find HexPolar for", grid)
+	return [3]int{-1, -1, -1}
+}
+
 // HexDist tells you how many steps from a to b
 func HexDist(a, b [2]int) int {
 	x := b[0] - a[0]

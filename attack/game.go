@@ -12,20 +12,46 @@ func NewGame() *Game {
 	}
 }
 
+func (g *Game) UserToggleDone(fID int) {
+	f, ok := g.Factions[fID]
+	if !ok {
+		Log("Couldn't toggleDone faction", fID, ": not found")
+		return
+	}
+	f.TurnDone = !f.TurnDone
+	var wait bool
+	for _, f := range g.Factions {
+		if !f.TurnDone {
+			wait = true
+			break
+		}
+	}
+	if !wait {
+		g.RunTurn()
+	}
+}
+
 func (g *Game) RunTurn() {
 	orders := map[int][]Order{}
 	for fID, faction := range g.Factions {
-		orders[fID] = faction.BuildOrders
-		faction.BuildOrders = []Order{}
+		fOrders := []Order{}
+		for _, o := range faction.BuildOrders {
+			fOrders = append(fOrders, o)
+		}
+		orders[fID] = fOrders
+		faction.BuildOrders = map[[4]int]Order{}
 	}
-	g.Sector.AdvanceTurn(orders)
-	for fID, f := range g.Factions {
-		f.View = *g.Sector.MakeView(fID)
+	g.ExecuteOrders(orders)
+	for _, f := range g.Factions {
+		tv := g.Sector.MakeView(f)
+		f.View = *tv
+		f.TV = MakeTextView(f.TV.Center, tv)
 		f.TurnDone = false
 	}
 }
 
-func (s *Sector) AdvanceTurn(orders map[int][]Order) {
+func (g *Game) ExecuteOrders(orders map[int][]Order) {
+	s := g.Sector
 	// Ship Spawning //
 	for fac, list := range orders {
 		for _, order := range list {
@@ -72,6 +98,7 @@ func (s *Sector) AdvanceTurn(orders map[int][]Order) {
 				LogF("Bad ship landing: no planet at", ship.Location(), "for ship", ship)
 			}
 			ship.Land(pl)
+			g.Factions[ship.FactionID].View.ViewPlanet(pl)
 		}
 	}
 	// Build Launchers //

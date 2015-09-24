@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"mule/mylog"
 	"net/http"
 )
 
@@ -10,12 +9,6 @@ const (
 	DATADIR  = "DATA/"
 	SERVPORT = ":8080"
 )
-
-var Log = mylog.Err
-
-func init() {
-	mylog.SetErr(DATADIR + "errors.txt")
-}
 
 func main() {
 	http.HandleFunc("/", gameMux)

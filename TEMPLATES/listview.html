@@ -1,8 +1,27 @@
-{{ define "title"}}Planet Attack! Game View Page{{end}}
+{{ define "title"}}Planet Attack! {{ .Name }} View Page{{end}}
 {{ define "css"}}main{{end}}
 {{define "body"}}
+{{ $fID := .FactionID }}
+{{ $fNames := .OtherNames }}
 <h1>Faction {{ .Name }}</h1>
+Turn {{ .View.Turn }}<br>
+<a href="/view/">Back to Game View</a><br>
+<form action="/view/" method="post">
+        <input type="hidden" name="action" value="toggledone">
+        <input type="hidden" name="fID" value="{{ $fID }}">
+        {{ if .TurnDone }}Turn marked "complete". <input type="submit" value="Cancel Turn Complete" title="Mark your turn as in progress">{{ else }}Turn marked "in progress".<input type="submit" value="Set Turn Complete" title="Mark your turn as complete">{{ end }}
+</form>
+<br>
+<b>View centered on Sector {{ index .TV.PolarC 0 }}, Radius {{ index .TV.PolarC 1 }},  Sweep {{ index .TV.PolarC 2 }} (Grid Coordinate [{{ index .TV.Center 0 }}, {{ index .TV.Center 1 }}]) </b>
+
+<form action="/view/{{ .Name }}" method="post">
+        <input type="hidden" name="action" value="recenter">
+        <input type="hidden" name="fID" value="{{ $fID }}">
+        <input type="submit" value="Change Center" title="Recenter List Data">
+        Grid X:<input type="text" size="4" name="adjX"> Grid Y: <input name="adjY" type="text" size="4">
+</form>
 {{ range .TV.OrderedCoords }}
-{{ template "listcoord" . }}
+<hr>
+{{ template "listcoord" dict "val" . "fID" $fID "fNames" $fNames }}
 {{ end }}
 {{ end }}

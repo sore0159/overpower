@@ -1,11 +1,41 @@
 package attack
 
-func (s *Sector) MakeView(factionID int) *SectorView {
+type PlanetView struct {
+	Name        string
+	Location    [2]int
+	Yours       bool
+	LastSeen    int
+	Inhabitants [2]int
+	Resources   int
+	Launchers   int
+}
+
+func NewPlanetView() *PlanetView {
+	return &PlanetView{}
+}
+
+type ShipView struct {
+	FactionID int
+	Size      int
+	Location  [2]int
+	Yours     bool
+	Target    [2]int
+}
+
+func NewShipView() *ShipView {
+	return &ShipView{}
+}
+
+func (s *Sector) MakeView(f *Faction) *SectorView {
 	sv := NewSectorView()
+	factionID := f.FactionID
 	sv.Faction = factionID
 	sv.Turn = s.Turn
+	if f.View.PlanetGrid != nil {
+		sv.PlanetGrid = f.View.PlanetGrid
+	}
 	for _, pl := range s.PlanetGrid {
-		sv.AddPlanet(pl)
+		sv.UpdatePlanet(pl)
 	}
 	for loc, list := range s.ShipGrid {
 		if s.AreaVisible(factionID, loc) {
@@ -49,39 +79,40 @@ func NewSectorView() *SectorView {
 	}
 }
 
-type PlanetView struct {
-	Name        string
-	Location    [2]int
-	Yours       bool
-	Inhabitants [2]int
-	Resources   int
-}
-
-func NewPlanetView() *PlanetView {
-	return &PlanetView{}
-}
-
-type ShipView struct {
-	FactionID int
-	Size      int
-	Location  [2]int
-	Yours     bool
-	Target    [2]int
-}
-
-func NewShipView() *ShipView {
-	return &ShipView{}
-}
-
 func (sv *SectorView) AddPlanet(pl *Planet) {
 	pv := NewPlanetView()
 	pv.Name = pl.Name
 	pv.Location = pl.Location
 	if pl.Faction() == sv.Faction {
 		pv.Yours = true
+		pv.LastSeen = sv.Turn
 		pv.Inhabitants = pl.Inhabitants
 		pv.Resources = pl.Resources
+		pv.Launchers = pl.Launchers
 	}
+	sv.PlanetGrid[pl.Location] = *pv
+}
+
+func (sv *SectorView) UpdatePlanet(pl *Planet) {
+	_, ok := sv.PlanetGrid[pl.Location]
+	if !ok {
+		sv.AddPlanet(pl)
+		return
+	} else if pl.Faction() == sv.Faction {
+		delete(sv.PlanetGrid, pl.Location)
+		sv.AddPlanet(pl)
+	}
+}
+
+func (sv *SectorView) ViewPlanet(pl *Planet) {
+	pv := NewPlanetView()
+	pv.Name = pl.Name
+	pv.Location = pl.Location
+	pv.Yours = pl.Faction() == sv.Faction
+	pv.LastSeen = sv.Turn
+	pv.Inhabitants = pl.Inhabitants
+	pv.Resources = pl.Resources
+	delete(sv.PlanetGrid, pl.Location)
 	sv.PlanetGrid[pl.Location] = *pv
 }
 
@@ -108,76 +139,4 @@ func (sv *SectorView) AddShipTrail(loc [2]int, trail ShipTrail) {
 	} else {
 		sv.TrailGrid[loc] = []ShipTrail{trail}
 	}
-}
-
-type TextView struct {
-	Center        [2]int
-	OrderedCoords []CoordView
-}
-
-func NewTextView() *TextView {
-	return &TextView{
-		OrderedCoords: []CoordView{},
-	}
-}
-
-type CoordView struct {
-	Dist   int
-	Coord  [2]int
-	Planet PlanetView
-	Ships  []ShipView
-	Trails []ShipTrail
-}
-
-func NewCoordView() *CoordView {
-	return &CoordView{
-		Ships:  []ShipView{},
-		Trails: []ShipTrail{},
-	}
-}
-
-func MakeTextView(center [2]int, sector *SectorView) *TextView {
-	tv := NewTextView()
-	tv.Center = center
-	for loc, plv := range sector.PlanetGrid {
-		c := NewCoordView()
-		c.Coord = loc
-		c.Dist = HexDist(center, loc)
-		c.Planet = plv
-		if list, ok := sector.ShipGrid[loc]; ok {
-			c.Ships = list
-		}
-		if list, ok := sector.TrailGrid[loc]; ok {
-			c.Trails = list
-		}
-		tv.OrderedCoords = append(tv.OrderedCoords, *c)
-	}
-	for loc, list := range sector.ShipGrid {
-		if _, ok := sector.PlanetGrid[loc]; ok {
-			continue
-		}
-		c := NewCoordView()
-		c.Coord = loc
-		c.Dist = HexDist(center, loc)
-		c.Ships = list
-		if list, ok := sector.TrailGrid[loc]; ok {
-			c.Trails = list
-		}
-		tv.OrderedCoords = append(tv.OrderedCoords, *c)
-	}
-	for loc, list := range sector.TrailGrid {
-		if _, ok := sector.PlanetGrid[loc]; ok {
-			continue
-		}
-		if _, ok := sector.ShipGrid[loc]; ok {
-			continue
-		}
-		c := NewCoordView()
-		c.Coord = loc
-		c.Dist = HexDist(center, loc)
-		c.Trails = list
-		tv.OrderedCoords = append(tv.OrderedCoords, *c)
-	}
-	tv.SortCoords()
-	return tv
 }

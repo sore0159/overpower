@@ -18,7 +18,7 @@ func (pl *Planet) Faction() int {
 }
 
 func (pl *Planet) BuildLaunchers() {
-	if pl.Resources == 0 || pl.Inhabitants[1] == 0 || pl.Inhabitants[0] == 0 {
+	if pl.Resources == 0 || (pl.Inhabitants[1] == 0 && pl.Arrivals == 0) || pl.Inhabitants[0] == 0 {
 		return
 	}
 	num := pl.Inhabitants[1]
