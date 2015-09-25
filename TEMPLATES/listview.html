@@ -3,13 +3,14 @@
 {{define "body"}}
 {{ $fID := .FactionID }}
 {{ $fNames := .OtherNames }}
+{{ $f := . }}
 <h1>Faction {{ .Name }}</h1>
 Turn {{ .View.Turn }}<br>
 <a href="/view/">Back to Game View</a><br>
 <form action="/view/" method="post">
         <input type="hidden" name="action" value="toggledone">
         <input type="hidden" name="fID" value="{{ $fID }}">
-        {{ if .TurnDone }}Turn marked "complete". <input type="submit" value="Cancel Turn Complete" title="Mark your turn as in progress">{{ else }}Turn marked "in progress".<input type="submit" value="Set Turn Complete" title="Mark your turn as complete">{{ end }}
+        {{ if .TurnDone }}Turn currently "complete". <input type="submit" value="Cancel Turn Complete" title="Mark your turn as in progress">{{ else }}Turn currently "in progress".<input type="submit" value="Set Turn Complete" title="Mark your turn as complete">{{ end }}
 </form>
 <br>
 <b>View centered on Sector {{ index .TV.PolarC 0 }}, Radius {{ index .TV.PolarC 1 }},  Sweep {{ index .TV.PolarC 2 }} (Grid Coordinate [{{ index .TV.Center 0 }}, {{ index .TV.Center 1 }}]) </b>
@@ -21,7 +22,8 @@ Turn {{ .View.Turn }}<br>
         Grid X:<input type="text" size="4" name="adjX"> Grid Y: <input name="adjY" type="text" size="4">
 </form>
 {{ range .TV.OrderedCoords }}
-<hr>
-{{ template "listcoord" dict "val" . "fID" $fID "fNames" $fNames }}
+<div class="box">
+{{ template "listcoord" dict "val" . "f" $f }}
+</div>
 {{ end }}
 {{ end }}

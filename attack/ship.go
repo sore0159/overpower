@@ -22,6 +22,9 @@ func (c *Ship) Target() [2]int {
 type ShipTrail struct {
 	FactionID int
 	Size      int
+	TrailID   int
+	Count     int
+	Location  [2]int
 }
 
 func NewShipTrail() *ShipTrail {
@@ -32,5 +35,7 @@ func (c *Ship) MakeShipTrail() *ShipTrail {
 	ct := NewShipTrail()
 	ct.FactionID = c.FactionID
 	ct.Size = c.Size
+	ct.Count = c.ILocation
+	ct.Location = c.Location()
 	return ct
 }

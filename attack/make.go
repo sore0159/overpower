@@ -39,6 +39,8 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 	orion.Name = "Planet Borion" // DO YOU WANT TO GET US ALL SUED, BOY?
 	orion.Inhabitants[1] = 20
 	orion.Resources = 30
+	orion.ID = 999
+	s.PlanetIDs[999] = [2]int{0, 0}
 	s.PlanetGrid[[2]int{0, 0}] = orion
 	names := shuffleWords(ADJECTIVES[:])
 	bigN := num/4 - 1
@@ -76,8 +78,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 		theta := pick(circ) - 1
 		loc := HexAngle2Grid(radius, theta)
 		if s.CoordClear(loc, CLEARDIST) {
-			bigPlanets[i].Location = loc
-			s.PlanetGrid[loc] = bigPlanets[i]
+			s.AddPlanet(bigPlanets[i], loc)
 			i++
 		}
 	}
@@ -88,15 +89,13 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 		theta := pick(circ) - 1
 		loc := HexAngle2Grid(radius, theta)
 		if s.CoordClear(loc, CLEARDIST) {
-			littlePlanets[i].Location = loc
-			s.PlanetGrid[loc] = littlePlanets[i]
+			s.AddPlanet(littlePlanets[i], loc)
 			i++
 		}
 	}
 	homeCoords := s.SplitSector(homeworlds, 70, 90)
 	for i, coord := range homeCoords {
-		homePlanets[i].Location = coord
-		s.PlanetGrid[coord] = homePlanets[i]
+		s.AddPlanet(homePlanets[i], coord)
 		homePlanetMap[coord] = homePlanets[i]
 	}
 	return homePlanetMap

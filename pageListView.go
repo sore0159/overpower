@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"mule/planetattack/attack"
 	"net/http"
 )
@@ -22,6 +23,8 @@ func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Fac
 		}
 		if err == nil {
 			//g.Save()
+		} else {
+			fmt.Println(err)
 		}
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return
@@ -39,19 +42,22 @@ func UserRecenter(r *http.Request, f *attack.Faction) error {
 }
 
 func UserSetLaunchOrder(r *http.Request, f *attack.Faction) error {
-	m, err := GetInts(r, "amount", "tarX", "tarY", "sourceX", "sourceY")
+	m, err := GetInts(r, "amount", "tarID", "sourceID")
 	if err != nil {
 		return err
 	}
 	amount := m["amount"]
-	sCoord := [2]int{m["sourceX"], m["sourceY"]}
-	if source, ok := f.View.PlanetGrid[sCoord]; !ok || !source.Yours || f.NumAvail(sCoord) < amount {
-		return makeE("Bad launch order", m)
+	source, ok := f.GetPlanetView(m["sourceID"])
+	if !ok || !source.Yours {
+		return makeE("Bad launch order:", m["sourceID"], "not found/owned by", f.Name)
 	}
-	tCoord := [2]int{m["tarX"], m["tarY"]}
-	if _, ok := f.View.PlanetGrid[tCoord]; !ok {
-		return makeE("No planet found at target coord", tCoord)
+	if f.NumAvail(source.Location) < amount {
+		return makeE("Bad launch order:", amount, "not avail at", source.Location)
 	}
-	f.SetOrder(amount, sCoord, tCoord)
+	target, ok := f.GetPlanetView(m["tarID"])
+	if !ok {
+		return makeE("Bad launch order:", m["tarID"], "not found by", f.Name)
+	}
+	f.SetOrder(amount, source, target)
 	return nil
 }

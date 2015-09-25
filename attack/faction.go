@@ -28,7 +28,9 @@ func NewOrder() *Order {
 	return &Order{}
 }
 
-func (f *Faction) SetOrder(amount int, source, target [2]int) {
+func (f *Faction) SetOrder(amount int, sourcePl, targetPl PlanetView) {
+	source := sourcePl.Location
+	target := targetPl.Location
 	if amount < 1 {
 		delete(f.BuildOrders, [4]int{source[0], source[1], target[0], target[1]})
 		return
@@ -48,4 +50,31 @@ func (f *Faction) NumAvail(source [2]int) (num int) {
 		}
 	}
 	return
+}
+func (f *Faction) OrdersFor(source [2]int) []Order {
+	r := []Order{}
+	for _, o := range f.BuildOrders {
+		if o.Location == source {
+			r = append(r, o)
+		}
+	}
+	return r
+}
+
+func (f *Faction) GetPlanetView(id int) (plv PlanetView, ok bool) {
+	if loc, ok := f.View.PlanetIDs[id]; !ok {
+		return PlanetView{}, false
+	} else {
+		plv, ok = f.View.PlanetGrid[loc]
+		return plv, ok
+	}
+}
+
+func (f *Faction) IDat(loc [2]int) int {
+	plv, ok := f.View.PlanetGrid[loc]
+	if ok {
+		return plv.ID
+	} else {
+		return -1
+	}
 }

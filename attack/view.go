@@ -2,6 +2,7 @@ package attack
 
 type PlanetView struct {
 	Name        string
+	ID          int
 	Location    [2]int
 	Yours       bool
 	LastSeen    int
@@ -31,6 +32,7 @@ func (s *Sector) MakeView(f *Faction) *SectorView {
 	factionID := f.FactionID
 	sv.Faction = factionID
 	sv.Turn = s.Turn
+	sv.PlanetIDs = s.PlanetIDs
 	if f.View.PlanetGrid != nil {
 		sv.PlanetGrid = f.View.PlanetGrid
 	}
@@ -66,6 +68,7 @@ func (s *Sector) AreaVisible(factionID int, area [2]int) bool {
 type SectorView struct {
 	Faction    int
 	Turn       int
+	PlanetIDs  map[int][2]int
 	PlanetGrid map[[2]int]PlanetView
 	ShipGrid   map[[2]int][]ShipView
 	TrailGrid  map[[2]int][]ShipTrail
@@ -73,6 +76,7 @@ type SectorView struct {
 
 func NewSectorView() *SectorView {
 	return &SectorView{
+		PlanetIDs:  map[int][2]int{},
 		PlanetGrid: map[[2]int]PlanetView{},
 		ShipGrid:   map[[2]int][]ShipView{},
 		TrailGrid:  map[[2]int][]ShipTrail{},
@@ -82,6 +86,7 @@ func NewSectorView() *SectorView {
 func (sv *SectorView) AddPlanet(pl *Planet) {
 	pv := NewPlanetView()
 	pv.Name = pl.Name
+	pv.ID = pl.ID
 	pv.Location = pl.Location
 	if pl.Faction() == sv.Faction {
 		pv.Yours = true
@@ -107,6 +112,7 @@ func (sv *SectorView) UpdatePlanet(pl *Planet) {
 func (sv *SectorView) ViewPlanet(pl *Planet) {
 	pv := NewPlanetView()
 	pv.Name = pl.Name
+	pv.ID = pl.ID
 	pv.Location = pl.Location
 	pv.Yours = pl.Faction() == sv.Faction
 	pv.LastSeen = sv.Turn

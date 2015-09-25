@@ -1,41 +1,70 @@
 {{ define "listcoord" }}
-{{ $fID := index . "fID" }}
-{{ $fNames := index . "fNames" }}
+{{ $f := index . "f" }}
+{{ $fID := $f.FactionID }}
+{{ $fNames := $f.OtherNames }}
+{{ $coord := (index . "val").Coord }}
+{{ $orders := ($f.OrdersFor $coord) }}
+{{ $nAvail := ($f.NumAvail $coord) }}
 {{ with index . "val" }}
-<form action="" method="post">
-Sector {{ index .Polar 0}}, Radius {{ index .Polar 1 }}, Sweep {{ index .Polar 2 }} (Grid Coord: [{{ index .Coord 0 }}, {{ index .Coord 1 }}]; {{ .Dist }} Clicks from center)
-{{ if ne .Dist 0 }}
+        {{ $plID := .Planet.ID }}
+        Sector {{ index .Polar 0}}, Radius {{ index .Polar 1 }}, Sweep {{ index .Polar 2 }} (Grid Coord: [{{ index .Coord 0 }}, {{ index .Coord 1 }}]; {{ .Dist }} Clicks from center)
+        {{ if ne .Dist 0 }}
+        <form action="" method="post">
         <input type="submit" value="Set as Center" title="Recenter List Data">
         <input type="hidden" name="action" value="recenter">
         <input type="hidden" name="fID" value="{{ $fID }}">
         <input type="hidden" name="adjX" value="{{ index .Coord 0}}">
         <input type="hidden" name="adjY" value="{{ index .Coord 1}}">
-</form>
-{{ end }}<br>
+        </form>
+        {{ else }}
+        <br>
+        {{ end }}<br>
 {{ if .Planet.Name }} 
-<b>{{ .Planet.Name }} </b> {{ if not .Planet.Yours }} Last Seen: {{ if .Planet.LastSeen }}{{ .Planet.LastSeen }}{{ else }}Never{{ end }}{{ else }}Your Planet{{ end }}
-<br>
-{{ if .Planet.LastSeen }}
-{{ if not .Planet.Yours}}Faction: {{ index $fNames (index .Planet.Inhabitants 0) }}{{ else }}Launchers: {{ index .Planet.Launchers }}{{end}} Inhabitants: {{ index .Planet.Inhabitants 1 }} Resources: {{ .Planet.Resources }}<br>
-{{ if (and .Planet.Yours .Planet.Launchers) }}
-<input type="submit" value="FIRE MAIN CANNON" title="Launch Ship">
-<input type="hidden" name="action" value="setlorder">
-<input type="hidden" name="fID" value="{{ $fID }}">
-<input type="hidden" name="sourceX" value="{{ index .Coord 0 }}">
-<input type="hidden" name="sourceY" value="{{ index .Coord 1 }}">
-Amount: <input type="text" size="4" name="amount"><br>
-Target Grid X:<input type="text" size="4" name="tarX"> Target Grid Y: <input name="tarY" type="text" size="4">
-</form>
-{{ end }}
-{{ else }}
-No Planetary information available
-{{ end }}
+        <b>({{ .Planet.ID }}){{ .Planet.Name }} </b> {{ if not .Planet.Yours }} Last Seen: {{ if .Planet.LastSeen }}{{ .Planet.LastSeen }}{{ else }}Never{{ end }}{{ else }}Your Planet{{ end }}
+        <br>
+        {{ if .Planet.LastSeen }}
+        {{ if not .Planet.Yours}}Faction: {{ index $fNames (index .Planet.Inhabitants 0) }}{{ else }}Ship Parts: {{ index .Planet.Launchers }}{{end}} Inhabitants: {{ index .Planet.Inhabitants 1 }} Resources: {{ .Planet.Resources }}<br>
+        {{ if (and .Planet.Yours $nAvail) }}
+        <div class="box">
+        <form action="" method="post">
+        Order Ship Built:<br>
+        Ship Size:<input type="text" size="4" name="amount"> ({{ $nAvail }} Parts Available)<br>
+        Target Planet ID:<input type="text" size="4" name="tarID">
+        <input type="submit" value="Order Construction" title="Launch Ship">
+        <input type="hidden" name="action" value="setlorder">
+        <input type="hidden" name="fID" value="{{ $fID }}">
+        <input type="hidden" name="sourceID" value="{{ .Planet.ID }}">
+        </form>
+        </div>
+        {{ end }}
+        {{ else }} No Planetary information available {{ end }}
 {{ end }}
 {{ if .Ships }}
-Ships!
+        Ships!  <br>
+{{ end }}
+{{ if $orders }}
+        Orders:<br>
+        {{ range $orders }} 
+        <div class="box">
+        {{ $tarID := ($f.IDat .Target) }}
+        Launch size {{ .Size }} ship at ({{ $tarID }}) {{ (index $f.View.PlanetGrid .Target).Name }} (Coords: {{ .Target }})
+        <form action="" method="post">
+        <input type="hidden" name="tarID" value="{{ $tarID }}">
+        <input type="hidden" name="fID" value="{{ $fID }}">
+        <input type="hidden" name="action" value="setlorder">
+        <input type="hidden" name="sourceID" value="{{ $plID }}">
+        <input type="submit" value="Adjust Ship size" title="Change launch order"> (&lt;1 to cancel):
+        <input type="text" size="4" name="amount"> 
+        </form>
+        </div>
+        {{ end }}
 {{ end }}
 {{ if .Trails }}
-Trails!
+        <b>Ship passage detected:</b><br>
+        {{ range .Trails }}
+        Faction {{ index $fNames (index . 0).FactionID }} Size {{ (index . 0).Size }} detected passing through:
+        {{ range . }} {{ .Location }}{{ end }}<br>
+        {{ end }}
 {{ end }}
 {{ end }}
 {{ end }}

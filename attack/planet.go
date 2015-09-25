@@ -2,6 +2,7 @@ package attack
 
 type Planet struct {
 	Name        string
+	ID          int
 	Location    [2]int
 	Inhabitants [2]int // FactionID, amount
 	Arrivals    int

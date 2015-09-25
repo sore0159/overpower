@@ -71,9 +71,14 @@ func (g *Game) ExecuteOrders(orders map[int][]Order) {
 	s.TrailGrid = map[[2]int][]ShipTrail{}
 	s.ShipGrid = map[[2]int][]*Ship{}
 	LandList := map[int][]*Ship{}
+	var trailCount int
 	for _, shipList := range oldShipGrid {
 		for _, ship := range shipList {
 			dist, trailGrid := ship.Move()
+			trailCount++
+			for _, trail := range trailGrid {
+				trail.TrailID = trailCount
+			}
 			s.AddTrailGrid(trailGrid)
 			if ship.AtTarget() {
 				if list, ok := LandList[dist]; ok {

@@ -2,6 +2,7 @@ package attack
 
 type Sector struct {
 	Turn       int
+	PlanetIDs  map[int][2]int
 	PlanetGrid map[[2]int]*Planet
 	ShipGrid   map[[2]int][]*Ship
 	TrailGrid  map[[2]int][]ShipTrail
@@ -9,6 +10,7 @@ type Sector struct {
 
 func NewSector() *Sector {
 	return &Sector{
+		PlanetIDs:  map[int][2]int{},
 		PlanetGrid: map[[2]int]*Planet{},
 		ShipGrid:   map[[2]int][]*Ship{},
 		TrailGrid:  map[[2]int][]ShipTrail{},
@@ -31,5 +33,26 @@ func (s *Sector) AddTrailGrid(grid map[[2]int]ShipTrail) {
 		} else {
 			s.TrailGrid[loc] = []ShipTrail{trail}
 		}
+	}
+}
+
+func (s *Sector) AddPlanet(pl *Planet, loc [2]int) {
+	id := 99 + pick(899)
+	for _, ok := s.PlanetIDs[id]; ok; {
+		id = 99 + pick(899)
+		_, ok = s.PlanetIDs[id]
+	}
+	pl.ID = id
+	s.PlanetIDs[id] = loc
+	s.PlanetGrid[loc] = pl
+	pl.Location = loc
+}
+
+func (s *Sector) GetPlanet(id int) (pl *Planet, ok bool) {
+	if loc, ok := s.PlanetIDs[id]; !ok {
+		return nil, false
+	} else {
+		pl, ok = s.PlanetGrid[loc]
+		return pl, ok
 	}
 }
