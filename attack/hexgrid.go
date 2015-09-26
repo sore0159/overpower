@@ -1,5 +1,7 @@
 package attack
 
+import "math"
+
 /*
  ========== HEX GRID ==========
 
@@ -19,6 +21,17 @@ var HEXDIRS = map[int][2]int{
 	3: [2]int{-1, 0},
 	4: [2]int{-1, -1},
 	5: [2]int{0, -1},
+}
+
+// Hex2Plane returns the x,y coords of the center of a hexagon
+// chosen from a flat-side-up grid of "radius" sized hexagons,
+// with the hexagon 0,0 having a center at 0,0
+func Hex2Plane(radius int, coord [2]int) (plane [2]int) {
+	x := 2 * radius * coord[0]
+	// y^2 + (r/2)^2 = r^2
+	// y = sqrt( r^2 - (r/2)^2 )
+	y := float64(coord[1]*2) * math.Sqrt(float64(3*radius*radius)/4.0)
+	return [2]int{x, int(y)}
 }
 
 // HexPolar returns the sector, radius, and 'sweep' of a grid
@@ -181,16 +194,12 @@ func HexPathSteps(a, b [2]int) (steps [3]int) {
 // use in a sequence
 func StepSplit(larger, smaller int) (useSmall []bool) {
 	useSmall = make([]bool, larger+smaller)
-	beat := (larger + smaller) / (smaller + 1)
-	if (larger+smaller)%(smaller+1) != 0 {
-		beat++
+	if smaller <= 0 {
+		return
 	}
-	count := 0
-	for i := 0; i < larger+smaller; i++ {
-		if (i+1)%beat == 0 && count < smaller {
-			count++
-			useSmall[i] = true
-		}
+	beat := (larger + smaller) / (smaller + 1)
+	for i := 1; i < (smaller + 1); i++ {
+		useSmall[i*beat] = true
 	}
 	return
 }

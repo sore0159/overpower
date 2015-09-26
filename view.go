@@ -33,3 +33,7 @@ func MakeView(r *http.Request) *View {
 func (v *View) Apply(t *template.Template, w http.ResponseWriter) {
 	Apply(t, w, v)
 }
+
+func (v *View) newpath(n int) string {
+	return strings.Join(v.path[:n], "/")
+}

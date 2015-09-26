@@ -2,6 +2,7 @@ package main
 
 import (
 	"mule/planetattack/attack"
+	"mule/planetattack/mapping"
 )
 
 type Game struct {
@@ -12,7 +13,6 @@ type Game struct {
 
 func NewGame() *Game {
 	return &Game{
-		//		Game:  attack.NewGame(),
 		Users:  map[string]int{},
 		Signup: map[string]string{},
 	}
@@ -35,6 +35,7 @@ func (g *Game) MakeGame() {
 				break
 			}
 		}
+		mapping.MakeMap(fac)
 	}
 	g.Users = m
 	g.Signup = nil
@@ -42,4 +43,11 @@ func (g *Game) MakeGame() {
 
 func (g *Game) Save() {
 	Save(g, SAVEFL)
+}
+
+func (g *Game) RunTurn() {
+	g.Game.RunTurn()
+	for _, f := range g.Factions {
+		mapping.MakeMap(f)
+	}
 }

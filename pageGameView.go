@@ -1,11 +1,9 @@
 package main
 
 import (
-	//	"fmt"
 	"mule/planetattack/attack"
+	"mule/planetattack/mapping"
 	"net/http"
-	//"strconv"
-	//"strings"
 )
 
 var TPGAMEV = MixTemp("frame", "titlebar", "gameview")
@@ -66,7 +64,11 @@ DONE:
 }
 
 func UserToggleDone(g *Game, f *attack.Faction) error {
-	g.UserToggleDone(f.FactionID)
+	if g.UserToggleDone(f.FactionID) {
+		for _, f := range g.Factions {
+			mapping.MakeMap(f)
+		}
+	}
 	return nil
 }
 

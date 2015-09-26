@@ -2,6 +2,7 @@ package attack
 
 type Ship struct {
 	Size      int
+	ShipID    int
 	FactionID int
 	ILocation int
 	Path      [][2]int
@@ -37,5 +38,6 @@ func (c *Ship) MakeShipTrail() *ShipTrail {
 	ct.Size = c.Size
 	ct.Count = c.ILocation
 	ct.Location = c.Location()
+	ct.TrailID = c.ShipID
 	return ct
 }

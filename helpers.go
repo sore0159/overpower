@@ -6,12 +6,16 @@ import (
 	"html/template"
 	"mule/mylog"
 	"mule/planetattack/attack"
+	"mule/planetattack/mapping"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-const TPDIR = "TEMPLATES/"
+const (
+	TPDIR  = "TEMPLATES/"
+	MAPDIR = DATADIR + "maps/"
+)
 
 var (
 	HexPolar = attack.HexPolar
@@ -20,6 +24,8 @@ var (
 
 func init() {
 	mylog.SetErr(DATADIR + "errors.txt")
+	mapping.SetFont(DATADIR + "DroidSansMono.ttf")
+	mapping.SetMapDir(MAPDIR)
 }
 
 func Apply(t *template.Template, w http.ResponseWriter, d interface{}) {
@@ -35,24 +41,26 @@ func MixTemp(fileNames ...string) *template.Template {
 	for i, val := range fileNames {
 		names[i] = TPDIR + val + ".html"
 	}
-	return template.Must(template.New("").Funcs(template.FuncMap{"dict": func(val ...interface{}) (map[string]interface{}, error) {
-		if len(val)%2 != 0 {
-			err := errors.New("Template dict needs even args")
-			Log(err)
-			return nil, err
-		}
-		d := make(map[string]interface{}, len(val)/2)
-		for i := 0; i < len(val); i += 2 {
-			str, ok := val[i].(string)
-			if !ok {
-				err := errors.New(fmt.Sprintf("Bad template dict arg", val[i], ": need string keys"))
+	return template.Must(template.New("").Funcs(template.FuncMap{
+		"polar": HexPolar,
+		"dict": func(val ...interface{}) (map[string]interface{}, error) {
+			if len(val)%2 != 0 {
+				err := errors.New("Template dict needs even args")
 				Log(err)
 				return nil, err
 			}
-			d[str] = val[i+1]
-		}
-		return d, nil
-	},
+			d := make(map[string]interface{}, len(val)/2)
+			for i := 0; i < len(val); i += 2 {
+				str, ok := val[i].(string)
+				if !ok {
+					err := errors.New(fmt.Sprintf("Bad template dict arg", val[i], ": need string keys"))
+					Log(err)
+					return nil, err
+				}
+				d[str] = val[i+1]
+			}
+			return d, nil
+		},
 	}).ParseFiles(names...))
 }
 

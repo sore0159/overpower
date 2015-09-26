@@ -12,11 +12,11 @@ func NewGame() *Game {
 	}
 }
 
-func (g *Game) UserToggleDone(fID int) {
+func (g *Game) UserToggleDone(fID int) (ranturn bool) {
 	f, ok := g.Factions[fID]
 	if !ok {
 		Log("Couldn't toggleDone faction", fID, ": not found")
-		return
+		return false
 	}
 	f.TurnDone = !f.TurnDone
 	var wait bool
@@ -29,6 +29,7 @@ func (g *Game) UserToggleDone(fID int) {
 	if !wait {
 		g.RunTurn()
 	}
+	return !wait
 }
 
 func (g *Game) RunTurn() {
@@ -71,14 +72,12 @@ func (g *Game) ExecuteOrders(orders map[int][]Order) {
 	s.TrailGrid = map[[2]int][]ShipTrail{}
 	s.ShipGrid = map[[2]int][]*Ship{}
 	LandList := map[int][]*Ship{}
-	var trailCount int
+	shipCount := pick(1000)
 	for _, shipList := range oldShipGrid {
 		for _, ship := range shipList {
+			shipCount++
+			ship.ShipID = shipCount
 			dist, trailGrid := ship.Move()
-			trailCount++
-			for _, trail := range trailGrid {
-				trail.TrailID = trailCount
-			}
 			s.AddTrailGrid(trailGrid)
 			if ship.AtTarget() {
 				if list, ok := LandList[dist]; ok {
@@ -92,7 +91,7 @@ func (g *Game) ExecuteOrders(orders map[int][]Order) {
 		}
 	}
 	// Ship Landing //
-	for i := 1; i <= CLOUDSPEED; i++ {
+	for i := 1; i <= SHIPSPEED; i++ {
 		if len(LandList[i]) == 0 {
 			continue
 		}

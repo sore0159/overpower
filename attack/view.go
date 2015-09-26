@@ -17,14 +17,19 @@ func NewPlanetView() *PlanetView {
 
 type ShipView struct {
 	FactionID int
+	ShipID    int
 	Size      int
 	Location  [2]int
 	Yours     bool
 	Target    [2]int
+	Left      int
+	Detected  []ShipTrail
 }
 
 func NewShipView() *ShipView {
-	return &ShipView{}
+	return &ShipView{
+	//		Detected: [][2]int{},
+	}
 }
 
 func (s *Sector) MakeView(f *Faction) *SectorView {
@@ -33,6 +38,7 @@ func (s *Sector) MakeView(f *Faction) *SectorView {
 	sv.Faction = factionID
 	sv.Turn = s.Turn
 	sv.PlanetIDs = s.PlanetIDs
+	seen := map[int]*ShipView{}
 	if f.View.PlanetGrid != nil {
 		sv.PlanetGrid = f.View.PlanetGrid
 	}
@@ -40,9 +46,10 @@ func (s *Sector) MakeView(f *Faction) *SectorView {
 		sv.UpdatePlanet(pl)
 	}
 	for loc, list := range s.ShipGrid {
-		if s.AreaVisible(factionID, loc) {
-			for _, cl := range list {
-				sv.AddShip(cl)
+		vis := s.AreaVisible(factionID, loc)
+		for _, cl := range list {
+			if vis || cl.FactionID == sv.Faction {
+				seen[cl.ShipID] = sv.AddShip(cl)
 			}
 		}
 	}
@@ -50,6 +57,9 @@ func (s *Sector) MakeView(f *Faction) *SectorView {
 		if s.AreaVisible(factionID, loc) {
 			for _, trail := range list {
 				sv.AddShipTrail(loc, trail)
+				if shv, ok := seen[trail.TrailID]; ok {
+					shv.AddShipTrail(trail)
+				}
 			}
 		}
 	}
@@ -122,12 +132,18 @@ func (sv *SectorView) ViewPlanet(pl *Planet) {
 	sv.PlanetGrid[pl.Location] = *pv
 }
 
-func (sv *SectorView) AddShip(cl *Ship) {
+func (sv *SectorView) AddShip(cl *Ship) *ShipView {
 	cv := NewShipView()
 	cv.FactionID = cl.FactionID
 	cv.Size = cl.Size
+	cv.ShipID = cl.ShipID
 	loc := cl.Location()
 	cv.Location = loc
+	cur := (len(cl.Path) - 1 - cl.ILocation)
+	cv.Left = cur / SHIPSPEED
+	if cur%SHIPSPEED != 0 {
+		cv.Left++
+	}
 	if cv.FactionID == sv.Faction {
 		cv.Yours = true
 		cv.Target = cl.Target()
@@ -136,6 +152,25 @@ func (sv *SectorView) AddShip(cl *Ship) {
 		sv.ShipGrid[loc] = append(list, *cv)
 	} else {
 		sv.ShipGrid[loc] = []ShipView{*cv}
+	}
+	return &(sv.ShipGrid[loc][len(sv.ShipGrid[loc])-1])
+}
+
+func (shv *ShipView) AddShipTrail(trail ShipTrail) {
+	l := len(shv.Detected)
+	if l == 0 {
+		shv.Detected = []ShipTrail{trail}
+		return
+	}
+	for i, test := range shv.Detected {
+		if test.Count > trail.Count {
+			shv.Detected = append(shv.Detected[:i], append([]ShipTrail{trail}, shv.Detected[i:]...)...)
+			break
+		}
+		if i == len(shv.Detected)-1 {
+			shv.Detected = append(shv.Detected, trail)
+			break
+		}
 	}
 }
 

@@ -6,13 +6,14 @@
 {{ $f := . }}
 <h1>Faction {{ .Name }}</h1>
 Turn {{ .View.Turn }}<br>
-<a href="/view/">Back to Game View</a><br>
+<a href="/view/">Back to Main Game Page</a><br>
 <form action="/" method="post">
         <input type="hidden" name="action" value="toggledone">
         <input type="hidden" name="fID" value="{{ $fID }}">
         {{ if .TurnDone }}Turn currently "complete". <input type="submit" value="Cancel Turn Complete" title="Mark your turn as in progress">{{ else }}Turn currently "in progress".<input type="submit" value="Set Turn Complete" title="Mark your turn as complete">{{ end }}
 </form>
 <br>
+<a href="/view/{{ .Name }}/maps/">Map of the Galaxy</a> (for repeated viewing, download rather than visit repeatedly, please) <br>
 <b>View centered on Sector {{ index .TV.PolarC 0 }}, Radius {{ index .TV.PolarC 1 }},  Sweep {{ index .TV.PolarC 2 }} (Grid Coordinate [{{ index .TV.Center 0 }}, {{ index .TV.Center 1 }}]) </b>
 
 <form action="/view/{{ .Name }}" method="post">

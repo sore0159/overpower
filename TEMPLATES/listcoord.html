@@ -20,6 +20,7 @@
         <br>
         {{ end }}<br>
 {{ if .Planet.Name }} 
+        <img src="/static/img/planet.png">
         <b>({{ .Planet.ID }}){{ .Planet.Name }} </b> {{ if not .Planet.Yours }} Last Seen: {{ if .Planet.LastSeen }}{{ .Planet.LastSeen }}{{ else }}Never{{ end }}{{ else }}Your Planet{{ end }}
         <br>
         {{ if .Planet.LastSeen }}
@@ -40,7 +41,15 @@
         {{ else }} No Planetary information available {{ end }}
 {{ end }}
 {{ if .Ships }}
-        Ships!  <br>
+        <img src="/static/img/ship.png">
+        <b>Ships detected:</b><br>
+        {{ range .Ships }}
+        {{ if .Yours }}
+        Your Ship; Size {{ .Size }}; Target: {{ (index $f.View.PlanetGrid .Target).Name }}; Turns To Target: {{ .Left }}<br>
+        {{ else }}
+        {{ index $fNames .FactionID }} Ship; Size {{ .Size }}; Passage: {{ range .Detected }} {{ .Location}} {{ end }}<br>
+        {{ end }}
+        {{ end }}
 {{ end }}
 {{ if $orders }}
         Orders:<br>
@@ -60,6 +69,7 @@
         {{ end }}
 {{ end }}
 {{ if .Trails }}
+        <img src="/static/img/trail.png">
         <b>Ship passage detected:</b><br>
         {{ range .Trails }}
         Faction {{ index $fNames (index . 0).FactionID }} Size {{ (index . 0).Size }} detected passing through:

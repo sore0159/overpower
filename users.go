@@ -76,7 +76,7 @@ func UserNameInUse(username string) bool {
 			return true
 		}
 	}
-	reserved := []string{"turn", "admin", "mule", "login", "logout"}
+	reserved := []string{"planet", "yours", "static", "turn", "admin", "mule", "login", "logout"}
 	for _, test := range reserved {
 		if name == test {
 			return true

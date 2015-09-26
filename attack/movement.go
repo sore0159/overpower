@@ -7,7 +7,7 @@ func (c *Ship) SetPath(start [2]int, stop [2]int) {
 func (c *Ship) Move() (dist int, trailGrid map[[2]int]ShipTrail) {
 	trailGrid = map[[2]int]ShipTrail{}
 	pathLen := len(c.Path) - 1
-	for i := 0; i <= CLOUDSPEED; i++ {
+	for i := 0; i < SHIPSPEED; i++ {
 		if c.ILocation == pathLen {
 			break
 		}
