@@ -3,3 +3,38 @@ div.box {
         border: 2px solid #000000;
         border-radius: 5px;
 }
+
+div.title {
+        margin: 3px;padding:0;
+        margin-top: 0px;
+        margin-left:20px;
+        float: left;
+}
+
+div.loginarea {
+        margin: 3px;padding:0;
+        text-align: right;
+        margin-top: 0px;
+        margin-right: 20px;
+}
+
+div.titlebox {
+        margin: 3px; padding: 3px;
+        border: 2px solid #000000;
+        border-radius: 5px;
+        text-align: right;
+        height:30px;
+        padding-top: 10px;
+        vertical-align: center;
+        margin-bottom: 20px;
+}
+
+div.errorbox {
+        margin: 3px; padding: 3px;
+        border: 2px solid #FF0000;
+        border-radius: 5px;
+}
+
+form.noblock {
+        display:inline;
+}

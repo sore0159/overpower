@@ -1,0 +1,39 @@
+{{ define "title"}}Planet Attack! Game View Page{{end}}
+{{ define "css"}}main{{end}}
+{{define "body"}}
+Game Creation Page<br>
+{{ $user := index . "user" }}
+{{ if index . "signups" }}
+        Factions currently signed up:<br>
+        {{ range $fName, $uName := (index . "signups") }}
+        {{ $fName }} 
+        {{ if $user }} {{ if eq $uName $user }}
+        (You)
+        {{ end }}{{ end }}
+        <br>
+        {{ end }}
+{{ else }}
+        Nobody currently signed up!<br>
+{{ end }}
+{{ if (and $user (not (index . "signed")))  }}
+        <div class="box">
+        Do you want to play in this game?<br> 
+        <form action="" method="post">
+        <input type="hidden" name="action" value="signup">
+        Faction Name:<input type="text" name="factionname">
+        (Only letters or numbers, no spaces)<br>
+        <input type="submit" value="Sign up" title="Sign up to play!">
+        </form>
+        </div>
+{{ end }}
+{{ if (index . "admin") }}
+        <div class="box">
+        ADMIN:<br>
+        <form action="" method="post">
+        <input type="hidden" name="action" value="startgame">
+        <input type="submit" value="Start Game" title="Start the Game!">
+        </form>
+        </div>
+{{ end }}
+{{ end }}
+

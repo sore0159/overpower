@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-var TPLIST = MixTemp("frame", "listview", "listcoord")
+var TPLIST = MixTemp("frame", "titlebar", "listview", "listcoord")
 
-func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Faction) {
+func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Faction, v *View) {
 	if r.Method == "POST" {
 		action := r.FormValue("action")
 		var err error
@@ -22,14 +22,15 @@ func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Fac
 			return
 		}
 		if err == nil {
-			//g.Save()
+			g.Save()
 		} else {
 			fmt.Println(err)
 		}
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return
 	}
-	Apply(TPLIST, w, f)
+	v.SetApp(f)
+	v.Apply(TPLIST, w)
 }
 
 func UserRecenter(r *http.Request, f *attack.Faction) error {
@@ -51,12 +52,16 @@ func UserSetLaunchOrder(r *http.Request, f *attack.Faction) error {
 	if !ok || !source.Yours {
 		return makeE("Bad launch order:", m["sourceID"], "not found/owned by", f.Name)
 	}
-	if f.NumAvail(source.Location) < amount {
-		return makeE("Bad launch order:", amount, "not avail at", source.Location)
-	}
 	target, ok := f.GetPlanetView(m["tarID"])
 	if !ok {
 		return makeE("Bad launch order:", m["tarID"], "not found by", f.Name)
+	}
+	numAvail := f.NumAvail(source.Location)
+	if o, ok := f.BuildOrders[[4]int{source.Location[0], source.Location[1], target.Location[0], target.Location[1]}]; ok {
+		numAvail += o.Size
+	}
+	if numAvail < amount {
+		return makeE("Bad launch order:", amount, "not avail at", source.Location)
 	}
 	f.SetOrder(amount, source, target)
 	return nil

@@ -1,0 +1,24 @@
+{{ define "titlebar" }}
+        <div class="titlebox">
+        <div class="title">
+        <a href="/">Planet Attack!</a>
+        </div>
+        <div class="loginarea">
+{{ if .User }} 
+        Logged in as <a href="/view">{{ .User }}</a> -- <a href="/logout">Log out?</a>
+{{ else }}
+        <form action="/login" method="post">
+        <input type="hidden" name="action" value="login">
+        Username:<input type="text" name="username"> Password:<input name="password" type="password">
+        <input type="submit" value="Log in" title="Log in">
+        (or <a href="/login">Create Account</a>)
+        </form>
+{{ end }}
+        </div>
+        </div>
+{{ if .Error }} 
+        <div class="errorbox">
+        ERROR: {{ .Error }}
+        </div>
+{{ end }}
+{{ end }}

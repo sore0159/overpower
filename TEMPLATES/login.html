@@ -1,6 +1,13 @@
 {{ define "title"}}Planet Attack! Login Page{{end}}
 {{ define "css"}}main{{end}}
 {{define "body"}}
-TEMPLATE LOGIN PAGE<br>
-{{ . }}
+        <form action="/login" method="post">
+        <input type="radio" name="create" value="false" {{ if (ne (index . "create") "true") }}checked{{ end }} >Existing Account
+        <input type="radio" name="create" value="true" {{ if (eq (index . "create") "true") }}checked{{ end }} >Create Account<br>
+        <input type="hidden" name="action" value="login">
+        UserName:<input type="text" name="username" value="{{ index . "username" }}"> <br>
+        Password:<input name="password" type="password" value="{{ index . "password" }}"><br>
+        <input type="submit" value="Log in" title="Log in">
+        </form>
 {{ end }}
+

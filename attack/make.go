@@ -42,7 +42,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 	orion.ID = 999
 	s.PlanetIDs[999] = [2]int{0, 0}
 	s.PlanetGrid[[2]int{0, 0}] = orion
-	names := shuffleWords(ADJECTIVES[:])
+	names := shuffleWords(GetAdj())
 	bigN := num/4 - 1
 	bigPlanets := make([]*Planet, bigN)
 	littlePlanets := make([]*Planet, num-bigN-1)

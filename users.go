@@ -53,10 +53,14 @@ func CreateUser(userName, password string) error {
 		Log(err)
 		return err
 	}
+	USERSPWS[userName] = password
 	return nil
 }
 
 func ValidPassword(password string) bool {
+	if password == "" {
+		return false
+	}
 	for _, rn := range password {
 		if !unicode.In(rn, unicode.L, unicode.N) {
 			return false
@@ -72,10 +76,19 @@ func UserNameInUse(username string) bool {
 			return true
 		}
 	}
+	reserved := []string{"turn", "admin", "mule", "login", "logout"}
+	for _, test := range reserved {
+		if name == test {
+			return true
+		}
+	}
 	return false
 }
 
 func ValidUserName(username string) bool {
+	if username == "" {
+		return false
+	}
 	for _, rn := range username {
 		if !unicode.In(rn, unicode.L, unicode.N) {
 			return false

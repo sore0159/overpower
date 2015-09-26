@@ -1,50 +1,71 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
-var TPLOGIN = MixTemp("frame", "login")
+var TPLOGIN = MixTemp("frame", "titlebar", "login")
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
-	//d := NewTPContext()
+	v := MakeView(r)
+	m := map[string]string{}
+	v.SetApp(m)
 	if r.Method == "POST" {
 		userName := r.FormValue("username")
 		password := r.FormValue("password")
 		create := r.FormValue("create")
+		m["username"] = userName
+		m["password"] = password
+		if create == "true" {
+			m["create"] = create
+		}
 		if create != "true" {
 			if Login(userName, password, w) {
-				Apply(TPLOGIN, w, fmt.Sprintf("LOGIN AS", userName, "SUCCESSFUL"))
+				http.Redirect(w, r, "/view", http.StatusFound)
 			} else {
-				Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: FAILURE: INCORRECT PASSWORD"))
+				delete(m, "password")
+				v.SetError("LOGIN PAGE: FAILURE: INCORRECT PASSWORD")
+				v.Apply(TPLOGIN, w)
 			}
 			return
 		}
 		if !ValidUserName(userName) {
-			Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: CREATE: BAD USERNAME"))
+			delete(m, "username")
+			v.SetError("LOGIN PAGE: CREATE: BAD USERNAME")
+			v.Apply(TPLOGIN, w)
 			return
 		}
 		if UserNameInUse(userName) {
-			Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: CREATE: USERNAME ALREADY IN USE"))
+			delete(m, "username")
+			v.SetError("LOGIN PAGE: CREATE: USERNAME ALREADY IN USE")
+			v.Apply(TPLOGIN, w)
 			return
 		}
 		if !ValidPassword(password) {
-			Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: CREATE: BAD PASSWORD"))
+			delete(m, "password")
+			v.SetError("LOGIN PAGE: CREATE: BAD PASSWORD")
+			v.Apply(TPLOGIN, w)
 			return
 		}
 		if err := CreateUser(userName, password); err != nil {
-			Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: CREATE: ERROR:", err))
+			v.SetError("LOGIN PAGE: CREATE: ERROR:", err)
+			v.Apply(TPLOGIN, w)
 			return
 		}
 		if !Login(userName, password, w) {
 			Log(userName, "failed creation login")
-			Apply(TPLOGIN, w, fmt.Sprintf("CREATION COMPLETE, LOGIN ERROR"))
+			v.SetError("CREATION COMPLETE, LOGIN ERROR")
+			v.Apply(TPLOGIN, w)
 			return
 		}
-		Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: ACCOUNT", userName, "CREATED SUCCESSFULLY"))
+		http.Redirect(w, r, "/view", http.StatusFound)
 		return
 	} else {
-		Apply(TPLOGIN, w, fmt.Sprintf("LOGIN PAGE: GET"))
+		v.Apply(TPLOGIN, w)
 	}
+}
+
+func LogoutPage(w http.ResponseWriter, r *http.Request) {
+	Logout(w)
+	http.Redirect(w, r, "/", http.StatusFound)
 }

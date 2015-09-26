@@ -28,14 +28,13 @@ func Load(fileName string) (*Game, error) {
 	dataFile, err := os.Open(SAVEDIR + fileName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			Log("GAME %s NOT FOUND", SAVEDIR+fileName)
-			//g = MakeGame()
+			Log("GAME", SAVEDIR+fileName, "NOT FOUND")
 			return nil, nil
 		}
 		Log(err)
 		return nil, err
 	}
-	//g = NewGame()
+	g = NewGame()
 	defer dataFile.Close()
 	dataDecoder := gob.NewDecoder(dataFile)
 	err = dataDecoder.Decode(g)

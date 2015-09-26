@@ -9,7 +9,7 @@ func Login(userName, password string, w http.ResponseWriter) bool {
 		Log("Bad attempt at login for user", userName, ":", password)
 		return false
 	}
-	Log(userName, "logging in")
+	//Log(userName, "logging in")
 	cookie := &http.Cookie{
 		Name:  "username",
 		Value: userName,

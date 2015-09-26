@@ -7,7 +7,7 @@
 <h1>Faction {{ .Name }}</h1>
 Turn {{ .View.Turn }}<br>
 <a href="/view/">Back to Game View</a><br>
-<form action="/view/" method="post">
+<form action="/" method="post">
         <input type="hidden" name="action" value="toggledone">
         <input type="hidden" name="fID" value="{{ $fID }}">
         {{ if .TurnDone }}Turn currently "complete". <input type="submit" value="Cancel Turn Complete" title="Mark your turn as in progress">{{ else }}Turn currently "in progress".<input type="submit" value="Set Turn Complete" title="Mark your turn as complete">{{ end }}
