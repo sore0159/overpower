@@ -2,6 +2,7 @@ package attack
 
 type Sector struct {
 	Turn       int
+	Size       int
 	PlanetIDs  map[int][2]int
 	PlanetGrid map[[2]int]*Planet
 	ShipGrid   map[[2]int][]*Ship

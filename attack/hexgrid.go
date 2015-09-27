@@ -30,7 +30,7 @@ func Hex2Plane(radius int, coord [2]int) (plane [2]int) {
 	x := 2 * radius * coord[0]
 	// y^2 + (r/2)^2 = r^2
 	// y = sqrt( r^2 - (r/2)^2 )
-	y := float64(coord[1]*2) * math.Sqrt(float64(3*radius*radius)/4.0)
+	y := float64(coord[1]*2-coord[0]) * math.Sqrt(float64(3*radius*radius)/4.0)
 	return [2]int{x, int(y)}
 }
 
@@ -246,4 +246,8 @@ func HexAngle2Grid(radius, theta int) (loc [2]int) {
 	legDir = [2]int{legDir[0] * extra, legDir[1] * extra}
 	// Viola!
 	return [2]int{extend[0] + legDir[0], extend[1] + legDir[1]}
+}
+
+func CoordAdd(a, b [2]int) [2]int {
+	return [2]int{a[0] + b[0], a[1] + b[1]}
 }

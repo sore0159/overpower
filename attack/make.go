@@ -2,6 +2,7 @@ package attack
 
 import (
 	//"fmt"
+	//	"math"
 	"strings"
 )
 
@@ -31,7 +32,35 @@ func MakeGame(facNames []string) *Game {
 }
 
 func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*Planet) {
-	num := 100
+	/*num := 120
+	bigN := num/4 - 1
+	bigRange := 40
+	littleRange := 80
+	hwRange := [2]int{70, 75}
+	*/
+	num := 16 * homeworlds
+	bigN := num/4 - 1
+	littleN := num - (bigN + 1)
+	bigArea := bigN * 126
+	littleArea := littleN*125 + bigArea
+	// a = 3*n*(n+1) + 1
+	// n^2 + n = (a-1)/3
+	var bigRange, littleRange int
+	for i := 1; ; i++ {
+		if 3*i*(i+1)+1 > bigArea {
+			bigRange = i
+			break
+		}
+	}
+	for i := bigRange; ; i++ {
+		if 3*i*(i+1)+1 > littleArea {
+			littleRange = i
+			break
+		}
+	}
+	s.Size = littleRange
+	hwRange := [2]int{bigRange + (littleRange-bigRange)/2, littleRange - (littleRange-bigRange)/4}
+
 	orion := NewPlanet()
 	orion.Name = "Planet Borion" // DO YOU WANT TO GET US ALL SUED, BOY?
 	orion.Inhabitants[1] = 20
@@ -40,7 +69,6 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 	s.PlanetIDs[999] = [2]int{0, 0}
 	s.PlanetGrid[[2]int{0, 0}] = orion
 	names := shuffleWords(GetAdj())
-	bigN := num/4 - 1
 	bigPlanets := make([]*Planet, bigN)
 	littlePlanets := make([]*Planet, num-bigN-1)
 	homePlanets := make([]*Planet, homeworlds)
@@ -68,7 +96,6 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 		pl.Launchers = 5
 		homePlanets[i] = pl
 	}
-	bigRange := 50
 	for i := 0; i < len(bigPlanets); {
 		radius := pick(bigRange)
 		circ := 6 * radius
@@ -79,7 +106,6 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 			i++
 		}
 	}
-	littleRange := 100
 	for i := 0; i < len(littlePlanets); {
 		radius := pick(littleRange-bigRange) + bigRange
 		circ := 6 * radius
@@ -90,7 +116,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 			i++
 		}
 	}
-	homeCoords := s.SplitSector(homeworlds, 70, 90)
+	homeCoords := s.SplitSector(homeworlds, hwRange)
 	for i, coord := range homeCoords {
 		s.AddPlanet(homePlanets[i], coord)
 		homePlanetMap[coord] = homePlanets[i]
@@ -98,7 +124,8 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 	return homePlanetMap
 }
 
-func (s *Sector) SplitSector(homeworlds, minD, maxD int) [][2]int {
+func (s *Sector) SplitSector(homeworlds int, hwRange [2]int) [][2]int {
+	minD, maxD := hwRange[0], hwRange[1]
 	coords := [][2]int{}
 	for i := 0; i < homeworlds; {
 		radius := minD + pick(maxD-minD)

@@ -3,7 +3,7 @@ package attack
 const (
 	SHIPSPEED = 10
 	VISRANGE  = 20
-	CLEARDIST = 6
+	CLEARDIST = 4
 )
 
 func GetAdj() []string {

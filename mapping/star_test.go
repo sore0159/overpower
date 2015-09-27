@@ -11,6 +11,8 @@ func TestFirst(t *testing.T) {
 }
 
 func TestSecond(t *testing.T) {
-	g := attack.MakeGame([]string{"test"})
+	n := 2
+	g := attack.MakeGame([]string{"test", "test6", "test7", "test8", "test5", "test2", "test3", "test4"}[:n])
+	fmt.Println("MAPPING")
 	MakeMap(g.Factions[1])
 }

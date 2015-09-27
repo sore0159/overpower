@@ -37,6 +37,7 @@ func (s *Sector) MakeView(f *Faction) *SectorView {
 	factionID := f.FactionID
 	sv.Faction = factionID
 	sv.Turn = s.Turn
+	sv.Size = s.Size
 	sv.PlanetIDs = s.PlanetIDs
 	seen := map[int]*ShipView{}
 	if f.View.PlanetGrid != nil {
@@ -78,6 +79,7 @@ func (s *Sector) AreaVisible(factionID int, area [2]int) bool {
 
 type SectorView struct {
 	Faction    int
+	Size       int
 	Turn       int
 	PlanetIDs  map[int][2]int
 	PlanetGrid map[[2]int]PlanetView

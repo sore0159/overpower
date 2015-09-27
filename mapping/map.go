@@ -31,9 +31,10 @@ func SetMapDir(dirName string) {
 
 func MakeMap(f *attack.Faction) (string, error) {
 	sv := f.View
-	galaxyRad := 100
-	hexR := 7
-	size := 2 * (galaxyRad + 15) * hexR * 2
+	//numF := len(f.OtherNames)
+	galaxyRad := sv.Size
+	hexR := 10
+	size := 2 * (galaxyRad + 5) * hexR * 2
 	Plane := func(in [2]int) (out [2]int) {
 		out = attack.Hex2Plane(hexR, in)
 		out = [2]int{out[0] + size/2, size/2 - out[1]}
@@ -44,9 +45,18 @@ func MakeMap(f *attack.Faction) (string, error) {
 	black := color.RGBA{0, 0, 0, 255}
 	draw.Draw(starMap, starMap.Bounds(), &image.Uniform{black}, image.ZP, draw.Src)
 	// Stars //
-	numStars := 3000
+	numStars := galaxyRad * galaxyRad / 3
 	for i := 0; i < numStars; i++ {
-		starColor := color.RGBA{uint8(rand.Intn(155)), uint8(rand.Intn(155)), uint8(rand.Intn(155)), 255}
+		var starColor color.RGBA
+		switch rand.Intn(3) {
+		case 1:
+			starColor = color.RGBA{uint8(rand.Intn(55)), uint8(0), 50 + uint8(rand.Intn(155)), 255}
+		case 2:
+			bright := 150 + uint8(rand.Intn(105))
+			starColor = color.RGBA{bright, bright, bright, 255}
+		default:
+			starColor = color.RGBA{50 + uint8(rand.Intn(155)), uint8(0), uint8(rand.Intn(55)), 255}
+		}
 		starX := rand.Intn(size)
 		starY := rand.Intn(size)
 		starRadius := 1 + rand.Intn(1)
