@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"image/jpeg"
 	"image/png"
 	"mule/planetattack/attack"
 	"mule/planetattack/mapping"
@@ -46,6 +47,7 @@ func MapView(w http.ResponseWriter, r *http.Request, f *attack.Faction, v *View)
 		http.Error(w, Log(err).Error(), http.StatusInternalServerError)
 		return
 	}
+	//img, err := jpeg.Decode(file)
 	img, err := png.Decode(file)
 	if err != nil {
 		http.Error(w, Log(err).Error(), http.StatusInternalServerError)
@@ -53,6 +55,8 @@ func MapView(w http.ResponseWriter, r *http.Request, f *attack.Faction, v *View)
 	}
 	w.Header().Set("Content-type", "image/png")
 	err = png.Encode(w, img)
+	//w.Header().Set("Content-type", "image/jpeg")
+	//err = jpeg.Encode(w, img, nil)
 	if err != nil {
 		Log(err)
 	}

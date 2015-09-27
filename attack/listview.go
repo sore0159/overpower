@@ -43,6 +43,9 @@ func MakeTextView(center [2]int, sector *SectorView) *TextView {
 		for _, trail := range list {
 			if list2, ok := mList[trail.TrailID]; ok {
 				for i, test := range list2 {
+					if test.FactionID == sector.Faction {
+						continue
+					}
 					if test.Count > trail.Count {
 						mList[trail.TrailID] = append(list2[:i], append([]ShipTrail{trail}, list2[i:]...)...)
 						break
@@ -86,9 +89,9 @@ func MakeTextView(center [2]int, sector *SectorView) *TextView {
 		}
 		tv.OrderedCoords = append(tv.OrderedCoords, *c)
 	}
-	r := make([][]ShipTrail, len(mList))
-	for i, list := range mList {
-		r[i] = list
+	r := [][]ShipTrail{}
+	for _, list := range mList {
+		r = append(r, list)
 	}
 	tv.Trails = r
 	tv.SortCoords()

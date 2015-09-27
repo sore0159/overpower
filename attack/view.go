@@ -54,8 +54,9 @@ func (s *Sector) MakeView(f *Faction) *SectorView {
 		}
 	}
 	for loc, list := range s.TrailGrid {
-		if s.AreaVisible(factionID, loc) {
-			for _, trail := range list {
+		vis := s.AreaVisible(factionID, loc)
+		for _, trail := range list {
+			if vis || trail.FactionID == factionID {
 				sv.AddShipTrail(loc, trail)
 				if shv, ok := seen[trail.TrailID]; ok {
 					shv.AddShipTrail(trail)

@@ -17,9 +17,6 @@ func MakeGame(facNames []string) *Game {
 		g.Factions[i+1] = f
 		nameMap[i+1] = name
 		f.View = *g.Sector.MakeView(f)
-		if i != 0 {
-			f.TurnDone = true
-		}
 		for coord, pl := range homePlanets {
 			if pl.Faction() == f.FactionID {
 				f.TV = MakeTextView(coord, &f.View)

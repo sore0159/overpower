@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	//"image/jpeg"
 	"image/png"
 	"io/ioutil"
 	"math/rand"
@@ -35,7 +36,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 	size := 2 * (galaxyRad + 15) * hexR * 2
 	Plane := func(in [2]int) (out [2]int) {
 		out = attack.Hex2Plane(hexR, in)
-		out = [2]int{out[0] + size/2, out[1] + size/2}
+		out = [2]int{out[0] + size/2, size/2 - out[1]}
 		return
 	}
 	starMap := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{size, size}})
@@ -55,7 +56,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 	trailR := 7
 	for loc, trList := range sv.TrailGrid {
 		_ = trList
-		tColor := color.RGBA{55, 55, 55, 155}
+		tColor := color.RGBA{55, 55, 55, 255}
 		DrawBlip(starMap, tColor, Plane(loc), trailR, size)
 	}
 	// Planets //
@@ -97,7 +98,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 		pixels := Plane(loc)
 		pixels[1] -= (hexR + 2)
 		pt := freetype.Pt(pixels[0], pixels[1])
-		_, err := typer.DrawString(plv.Name, pt)
+		_, err := typer.DrawString(fmt.Sprintf("%s (%d)", plv.Name, plv.ID), pt)
 		if err != nil {
 			return "", Log(err)
 		}
@@ -124,7 +125,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 		DrawBlip(starMap, sColor, Plane(loc), useR, size)
 		typer.SetSrc(&image.Uniform{sColor})
 		pixels := Plane(loc)
-		pixels[1] -= (hexR + 2)
+		pixels[1] += (2 * hexR)
 		pt := freetype.Pt(pixels[0], pixels[1])
 		_, err := typer.DrawString(shStr, pt)
 		if err != nil {
@@ -138,6 +139,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 		return "", err
 	}
 	png.Encode(starfile, starMap)
+	//jpeg.Encode(starfile, starMap, nil)
 	return fileName, nil
 }
 
@@ -178,4 +180,5 @@ func Color(yours bool, enemy bool) color.RGBA {
 
 func Filename(name string, turn int) string {
 	return fmt.Sprintf("%s%03d_%s.png", MAPDIR, turn, name)
+	//return fmt.Sprintf("%s%03d_%s.jpeg", MAPDIR, turn, name)
 }

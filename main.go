@@ -26,5 +26,9 @@ func main() {
 	http.HandleFunc("/", gameMux)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
 	log.Println("STARTING SERVER AT", SERVPORT)
-	http.ListenAndServe(SERVPORT, nil)
+	err = http.ListenAndServe(SERVPORT, nil)
+	if err != nil {
+		Log(err)
+	}
+	log.Println("STOPPING SERVER")
 }
