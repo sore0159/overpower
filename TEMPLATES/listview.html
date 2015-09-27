@@ -13,6 +13,7 @@ Turn {{ .View.Turn }}<br>
         {{ if .TurnDone }}Turn currently "complete". <input type="submit" value="Cancel Turn Complete" title="Mark your turn as in progress">{{ else }}Turn currently "in progress".<input type="submit" value="Set Turn Complete" title="Mark your turn as complete">{{ end }}
 </form>
 <br>
+{{ if ne .View.Turn 1 }}<a href="/view/{{.Name}}/reports/">Incident Reports</a><br>{{ end }}
 <a href="/view/{{ .Name }}/maps/">Map of the Galaxy</a> (for repeated viewing, download rather than visit repeatedly, please) <br>
 <b>View centered on Sector {{ index .TV.PolarC 0 }}, Radius {{ index .TV.PolarC 1 }},  Sweep {{ index .TV.PolarC 2 }} (Grid Coordinate [{{ index .TV.Center 0 }}, {{ index .TV.Center 1 }}]) </b>
 

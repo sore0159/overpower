@@ -24,7 +24,10 @@
         <b>({{ .Planet.ID }}){{ .Planet.Name }} </b> {{ if not .Planet.Yours }} Last Seen: {{ if .Planet.LastSeen }}{{ .Planet.LastSeen }}{{ else }}Never{{ end }}{{ else }}Your Planet{{ end }}
         <br>
         {{ if .Planet.LastSeen }}
-        {{ if not .Planet.Yours}}Faction: {{ index $fNames (index .Planet.Inhabitants 0) }}{{ else }}Ship Parts: {{ index .Planet.Launchers }}{{end}} Inhabitants: {{ index .Planet.Inhabitants 1 }} Resources: {{ .Planet.Resources }}<br>
+                {{ if not .Planet.Yours}}
+        Faction: {{ if (index .Planet.Inhabitants 0) }} {{ index $fNames (index .Planet.Inhabitants 0) }}{{ else }}Hostile Natives{{ end }}
+                {{ else }}
+        Ship Parts: {{ index .Planet.Launchers }}{{end}} Inhabitants: {{ index .Planet.Inhabitants 1 }} Resources: {{ .Planet.Resources }}<br>
         {{ if (and .Planet.Yours $nAvail) }}
         <div class="box">
         <form action="" method="post">

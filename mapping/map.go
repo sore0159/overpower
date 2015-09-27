@@ -70,7 +70,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 		DrawBlip(starMap, tColor, Plane(loc), trailR, size)
 	}
 	// Planets //
-	plR := 5
+	plR := 7
 	var plColor color.RGBA
 	for loc, plv := range sv.PlanetGrid {
 		if plv.Yours {
@@ -114,7 +114,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 		}
 	}
 	// Ships //
-	shipR := 5
+	shipR := 10
 	for loc, sList := range sv.ShipGrid {
 		var useR int
 		if len(sList) > 1 {
@@ -132,7 +132,7 @@ func MakeMap(f *attack.Faction) (string, error) {
 				shStr += "Yours:" + strconv.Itoa(sh.Size) + " "
 			}
 		}
-		DrawBlip(starMap, sColor, Plane(loc), useR, size)
+		DrawDiamond(starMap, sColor, Plane(loc), useR, size)
 		typer.SetSrc(&image.Uniform{sColor})
 		pixels := Plane(loc)
 		pixels[1] += (2 * hexR)
@@ -165,6 +165,23 @@ func DrawBlip(img *image.RGBA, color color.RGBA, center [2]int, rad, imgSize int
 			/*if rad > 3 && abs(y-center[1])+abs(x-center[0]) >= rad {
 				continue
 			}*/
+			img.Set(x, y, color)
+		}
+	}
+}
+
+func DrawDiamond(img *image.RGBA, color color.RGBA, center [2]int, rad, imgSize int) {
+	for x := center[0] - rad; x < center[0]+rad; x++ {
+		if x < 0 || x > imgSize {
+			continue
+		}
+		for y := center[1] - rad; y < center[1]+rad; y++ {
+			if y < 0 || y > imgSize {
+				continue
+			}
+			if rad > 3 && abs(y-center[1])+abs(x-center[0]) >= rad {
+				continue
+			}
 			img.Set(x, y, color)
 		}
 	}

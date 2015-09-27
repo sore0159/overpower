@@ -56,7 +56,9 @@ func MakeTextView(center [2]int, sector *SectorView) *TextView {
 					}
 				}
 			} else {
-				mList[trail.TrailID] = []ShipTrail{trail}
+				if trail.FactionID != sector.Faction {
+					mList[trail.TrailID] = []ShipTrail{trail}
+				}
 			}
 		}
 	}

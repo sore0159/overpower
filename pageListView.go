@@ -9,9 +9,14 @@ import (
 var TPLIST = MixTemp("frame", "titlebar", "listview", "listcoord")
 
 func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Faction, v *View) {
-	if len(v.path) > 3 && v.path[3] == "maps" {
-		MapView(w, r, f, v)
-		return
+	if len(v.path) > 3 {
+		if v.path[3] == "maps" {
+			MapView(w, r, f, v)
+			return
+		} else if v.path[3] == "reports" {
+			ReportView(w, r, f, v)
+			return
+		}
 	}
 	if r.Method == "POST" {
 		action := r.FormValue("action")

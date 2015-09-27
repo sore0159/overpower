@@ -1,5 +1,7 @@
 package attack
 
+import "strconv"
+
 type Planet struct {
 	Name        string
 	ID          int
@@ -32,14 +34,16 @@ func (pl *Planet) BuildLaunchers() {
 	pl.Arrivals = 0
 }
 
-func (pl *Planet) FireLaunchers(size int, target [2]int) *Ship {
+func (g *Game) FireLaunchers(pl *Planet, size int, target [2]int) (c *Ship, report string) {
 	if pl.Launchers < size {
 		LogF("Bad firelaunchers size", size, "for planet", pl.Name, "with launchers", pl.Launchers)
+		return nil, ""
 	}
 	pl.Launchers -= size
-	c := NewShip()
+	c = NewShip()
 	c.FactionID = pl.Faction()
 	c.Size = size
 	c.SetPath(pl.Location, target)
-	return c
+	report = pl.Name + " launched ship sized " + strconv.Itoa(size) + " toward " + g.Sector.PlanetGrid[target].Name
+	return
 }

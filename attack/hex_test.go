@@ -9,7 +9,7 @@ func TestFirst(t *testing.T) {
 	fmt.Println("TESTING")
 }
 
-func TestHex2Plane(t *testing.T) {
+func XTestHex2Plane(t *testing.T) {
 	for _, a := range [][2]int{[2]int{0, 0}, [2]int{3, 1}, [2]int{-10, 60}, [2]int{-40, -50}, [2]int{5, -4}, [2]int{5, 5}} {
 		fmt.Println("Point:", a, "to plane:", Hex2Plane(30, a))
 	}
@@ -18,8 +18,8 @@ func TestHex2Plane(t *testing.T) {
 	}
 }
 
-func XTestPath(t *testing.T) {
-	fmt.Println("PATH:", HexPath([2]int{-70, -1}, [2]int{-51, 11}))
+func TestPath(t *testing.T) {
+	fmt.Println("PATH:", HexPath([2]int{19, 32}, [2]int{0, 0}))
 }
 
 func XTestMake(t *testing.T) {
@@ -28,13 +28,18 @@ func XTestMake(t *testing.T) {
 	fmt.Println(g)
 }
 
-func XTestDist(t *testing.T) {
+func TestDist(t *testing.T) {
 	for _, a := range [][2]int{[2]int{0, 0}, [2]int{3, 1}, [2]int{-10, 60}, [2]int{-40, -50}, [2]int{5, -4}, [2]int{5, 5}} {
 		for _, b := range [][2]int{[2]int{2, 5}, [2]int{4, 1}, [2]int{-2, 5}, [2]int{-2, -5}, [2]int{2, -5}} {
-			fmt.Println("A:", a, "B:", b, "Dist:", HexDist(a, b))
+			//		fmt.Println("A:", a, "B:", b, "Dist:", HexDist(a, b))
+			fmt.Println("------------------------------------------")
+			d := HexDist(a, b)
 			p := HexPath(a, b)
 
 			fmt.Println("A:", a, "B:", b, "PathD:", len(p), "Path:", p)
+			if p[len(p)-1] != b || len(p) != d+1 {
+				fmt.Println("============= FAILED =============")
+			}
 		}
 	}
 }

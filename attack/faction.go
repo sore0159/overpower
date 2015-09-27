@@ -9,12 +9,14 @@ type Faction struct {
 	BuildOrders map[[4]int]Order
 	View        SectorView
 	TV          *TextView
+	Reports     [][]string
 }
 
 func NewFaction() *Faction {
 	return &Faction{
 		OtherNames:  map[int]string{},
 		BuildOrders: map[[4]int]Order{},
+		Reports:     [][]string{},
 	}
 }
 
@@ -77,4 +79,9 @@ func (f *Faction) IDat(loc [2]int) int {
 	} else {
 		return -1
 	}
+}
+
+func (f *Faction) AddReport(report string) {
+	l := len(f.Reports) - 1
+	f.Reports[l] = append(f.Reports[l], report)
 }

@@ -1,6 +1,9 @@
 package attack
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 /*
  ========== HEX GRID ==========
@@ -192,15 +195,177 @@ func HexPathSteps(a, b [2]int) (steps [3]int) {
 // indifferent to what those steptypes are
 // It returns a bool slice to use for determining which type to
 // use in a sequence
-func StepSplit(larger, smaller int) (useSmall []bool) {
+func XStepSplit(larger, smaller int) (useSmall []bool) {
+	fmt.Println("L,S:", larger, smaller)
 	useSmall = make([]bool, larger+smaller)
 	if smaller <= 0 {
 		return
 	}
-	beat := (larger + smaller) / (smaller + 1)
+	if larger == smaller {
+		for i, _ := range useSmall {
+			useSmall[i] = i%2 == 1
+		}
+		return
+	}
+	beat := (larger + smaller) / smaller
+	if larger%smaller == 0 {
+		//beat--
+	}
+	fmt.Println("beat", beat)
 	for i := 1; i < (smaller + 1); i++ {
 		useSmall[i*beat] = true
 	}
+	fmt.Println("list:", useSmall)
+	return
+}
+
+func XXStepSplit(larger, smaller int) (useSmall []bool) {
+	fmt.Println("L,S:", larger, smaller)
+	useSmall = make([]bool, larger+smaller)
+	if smaller <= 0 {
+		return
+	}
+	if larger == smaller {
+		for i, _ := range useSmall {
+			useSmall[i] = i%2 == 1
+		}
+		return
+	}
+	SplitRecurse(useSmall, larger, smaller, 0)
+	fmt.Println(useSmall)
+	var sm, lr int
+	for _, val := range useSmall {
+		if val {
+			sm++
+		} else {
+			lr++
+		}
+	}
+	fmt.Println("Sums:L,S:", lr, sm)
+	return
+}
+
+func SplitRecurse(useSmall []bool, f, t, d int) {
+	l := len(useSmall)
+	var tab string
+	for i := 0; i < d; i++ {
+		tab += " "
+	}
+	d++
+	fmt.Println(tab+"Recurser gets:", l, f, t)
+	if t < 0 || f < 0 || l == 0 {
+		panic("BAD")
+	}
+	if l == f {
+		fmt.Println(tab+"gives:", useSmall)
+		return
+	}
+	if l == t {
+		for i, _ := range useSmall {
+			useSmall[i] = true
+		}
+		fmt.Println(tab+"gives:", useSmall)
+		return
+	}
+	f1, f2 := f/2, f/2+f%2
+	t1, t2 := t/2+t%2, t/2
+	if d%2 == 0 {
+		f1, f2 = f2, f1
+		t1, t2 = t2, t1
+	}
+	if l%2 == 0 {
+		d--
+		fmt.Println(tab + "path1")
+		SplitRecurse(useSmall[:(l/2)], f1, t1, d)
+		SplitRecurse(useSmall[(l/2):], f2, t2, d)
+		fmt.Println(tab+"gives:", useSmall)
+		return
+	} else {
+		if t > f {
+			fmt.Println(tab + "path2")
+			t--
+			SplitRecurse(useSmall[:(l/2)], f1, t1, d)
+			useSmall[(l / 2)] = true
+			SplitRecurse(useSmall[(l/2)+1:], f2, t2, d)
+		} else {
+			fmt.Println(tab + "path3")
+			f--
+			SplitRecurse(useSmall[:(l/2)], f1, t1, d)
+			SplitRecurse(useSmall[(l/2)+1:], f2, t2, d)
+		}
+	}
+	fmt.Println(tab+"gives:", useSmall)
+}
+
+func StepSplit(larger, smaller int) (useSmall []bool) {
+	//fmt.Println("Got L,S:", larger, smaller)
+	useSmall = make([]bool, larger+smaller)
+	if smaller <= 0 {
+		return
+	}
+	if larger == smaller {
+		for i, _ := range useSmall {
+			useSmall[i] = i%2 == 1
+		}
+		return
+	}
+	beat := (larger + smaller) / (smaller + 1)
+	beats := make([]int, smaller)
+	for i, _ := range beats {
+		beats[i] = beat*(i+1) - 1
+	}
+	left := (larger + smaller) - beat*smaller
+	midbeat := len(beats) / 2
+	//fmt.Println("Beat:", beat, "beats:", beats, "midbeat:", midbeat)
+	for i := 0; left > (beat - 1); left-- {
+		boost := midbeat + i
+		if i <= 0 {
+			i *= -1
+			i++
+		} else {
+			i *= -1
+		}
+		for j, val := range beats {
+			if j >= boost {
+				beats[j] = val + 1
+			}
+		}
+	}
+	//fmt.Println("beats:", beats)
+	for i, _ := range useSmall {
+		if len(beats) > 0 && i == beats[0] {
+			useSmall[i] = true
+			if len(beats) > 1 {
+				beats = beats[1:]
+			} else {
+				beats = nil
+			}
+		}
+	}
+	//fmt.Println("Giving:", useSmall)
+	/*var sm, lr int
+	for _, val := range useSmall {
+		if val {
+			sm++
+		} else {
+			lr++
+		}
+	}
+	fmt.Println("Sums:L,S:", lr, sm)
+	*/
+	/*path := []int{0}
+	dir := 1
+	for i, val := range useSmall {
+		path[len(path)-1] += dir
+		if i < len(useSmall)-1 {
+			if useSmall[i+1] != val {
+				path = append(path, 0)
+				dir *= -1
+			}
+		}
+	}
+	fmt.Println("Switches:", path)
+	*/
 	return
 }
 

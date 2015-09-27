@@ -35,6 +35,7 @@ func (g *Game) UserToggleDone(fID int) (ranturn bool) {
 func (g *Game) RunTurn() {
 	orders := map[int][]Order{}
 	for fID, faction := range g.Factions {
+		faction.Reports = append(faction.Reports, []string{})
 		fOrders := []Order{}
 		for _, o := range faction.BuildOrders {
 			fOrders = append(fOrders, o)
@@ -59,12 +60,19 @@ func (g *Game) ExecuteOrders(orders map[int][]Order) {
 			pl, ok := s.PlanetGrid[order.Location]
 			if !ok {
 				LogF("Bad order", order, "by faction", fac, ": no planet found at", order.Location)
+				continue
 			}
 			if pl.Faction() != fac {
 				LogF("Bad faction", fac, "ordering", order, "to planet", pl.Name, "belonging to", pl.Faction())
+				continue
 			}
-			cl := pl.FireLaunchers(order.Size, order.Target)
-			s.AddShip(cl)
+			cl, report := g.FireLaunchers(pl, order.Size, order.Target)
+			if cl != nil {
+				if report != "" {
+					g.Factions[cl.FactionID].AddReport(report)
+				}
+				s.AddShip(cl)
+			}
 		}
 	}
 	// Ship Movement //
@@ -101,7 +109,13 @@ func (g *Game) ExecuteOrders(orders map[int][]Order) {
 			if !ok {
 				LogF("Bad ship landing: no planet at", ship.Location(), "for ship", ship)
 			}
-			ship.Land(pl)
+			reports, fIDs := g.LandShip(ship, pl)
+			for i, report := range reports {
+				if report == "" || fIDs[i] == 0 {
+					continue
+				}
+				g.Factions[fIDs[i]].AddReport(report)
+			}
 			g.Factions[ship.FactionID].View.ViewPlanet(pl)
 		}
 	}
