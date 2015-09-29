@@ -77,9 +77,7 @@ func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*P
 		pl := NewPlanet()
 		pl.Name = "Planet " + strings.Title(names[i])
 		pl.Resources = 10 + pick(10)
-		if pick(3) == 1 {
-			pl.Inhabitants[1] = pick(10)
-		}
+		pl.Inhabitants[1] = pick(10)
 		bigPlanets[i] = pl
 	}
 	for i := 0; i < len(littlePlanets); i++ {
