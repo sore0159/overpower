@@ -11,9 +11,10 @@ func Login(userName, password string, w http.ResponseWriter) bool {
 	}
 	//Log(userName, "logging in")
 	cookie := &http.Cookie{
-		Name:  "username",
-		Value: userName,
-		Path:  "/",
+		Name:   "username",
+		Value:  userName,
+		MaxAge: 30000000,
+		Path:   "/",
 	}
 	http.SetCookie(w, cookie)
 	return true
