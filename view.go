@@ -31,9 +31,23 @@ func MakeView(r *http.Request) *View {
 }
 
 func (v *View) Apply(t *template.Template, w http.ResponseWriter) {
-	Apply(t, w, v)
+	t2 := t.Funcs(template.FuncMap{
+		"link": v.Link,
+	})
+	Apply(t2, w, v)
 }
 
 func (v *View) newpath(n int) string {
 	return strings.Join(v.path[:n], "/")
+}
+
+func (v *View) Link(str string) string {
+	r := []string{""}
+	for _, part := range append(v.path, strings.Split(str, "/")...) {
+		if part != "" {
+			r = append(r, part)
+		}
+	}
+	r = append(r, "")
+	return strings.Join(r, "/")
 }

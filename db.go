@@ -6,8 +6,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const PWFILE = DATADIR + "passwords.txt"
-
 var USERDB *sql.DB
 
 func LoadUserData() (*sql.DB, error) {

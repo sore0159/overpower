@@ -42,6 +42,9 @@ func MixTemp(fileNames ...string) *template.Template {
 		names[i] = TPDIR + val + ".html"
 	}
 	return template.Must(template.New("").Funcs(template.FuncMap{
+		"link": func(placeholder string) string {
+			return ""
+		},
 		"polar": HexPolar,
 		"dict": func(val ...interface{}) (map[string]interface{}, error) {
 			if len(val)%2 != 0 {
