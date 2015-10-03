@@ -1,64 +1,43 @@
 package main
 
 import (
-	"bufio"
-	"os"
+	"database/sql"
 	"strings"
 	"unicode"
 )
 
-const PWFILE = DATADIR + "passwords.txt"
-
-var USERSPWS map[string]string
-
-func LoadUserData() (map[string]string, error) {
-	pwdfile, err := os.Open(PWFILE)
-	if err != nil {
-		Log(err)
-		return nil, err
-	}
-	defer pwdfile.Close()
-	m := map[string]string{}
-	pwdfileText := bufio.NewScanner(pwdfile)
-	for pwdfileText.Scan() {
-		text := pwdfileText.Text()
-		line := strings.Split(text, "=")
-		if len(line) != 2 || strings.TrimSpace(line[0]) == "" || strings.TrimSpace(line[1]) == "" {
-			Log("Bad PWFILE line:", text)
-			continue
-		}
-		m[strings.TrimSpace(line[0])] = strings.TrimSpace(line[1])
-	}
-	if err = pwdfileText.Err(); err != nil {
-		Log(err)
-		return nil, err
-	}
-	return m, nil
-}
-
 func ValidLogin(userName, password string) bool {
-	pw, ok := USERSPWS[userName]
-	return ok && pw == password
+	var pass string
+	err := USERDB.QueryRow("SELECT password FROM userinfo WHERE name = $1", userName).Scan(&pass)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false
+		}
+		Log(err)
+		return false
+	}
+	if pass == "" {
+		return false
+	}
+	return pass == password
 }
 
 func CreateUser(userName, password string) error {
-	f, err := os.OpenFile(PWFILE, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	query := "INSERT INTO userinfo (name, password) VALUES($1, $2)"
+	res, err := USERDB.Exec(query, userName, password)
 	if err != nil {
-		Log(err)
-		return err
+		return Log(err)
 	}
-	defer f.Close()
-
-	if _, err = f.WriteString(userName + " = " + password + "\n"); err != nil {
-		Log(err)
-		return err
+	if aff, err := res.RowsAffected(); err != nil {
+		return Log(err)
+	} else if aff == 0 {
+		return Log("Database update failed")
 	}
-	USERSPWS[userName] = password
 	return nil
 }
 
 func ValidPassword(password string) bool {
-	if password == "" {
+	if password == "" || len(password) > 15 {
 		return false
 	}
 	for _, rn := range password {
@@ -71,22 +50,27 @@ func ValidPassword(password string) bool {
 
 func UserNameInUse(username string) bool {
 	name := strings.ToLower(username)
-	for test, _ := range USERSPWS {
-		if name == strings.ToLower(test) {
-			return true
-		}
-	}
 	reserved := []string{"planet", "yours", "static", "turn", "admin", "mule", "login", "logout"}
 	for _, test := range reserved {
 		if name == test {
 			return true
 		}
 	}
-	return false
+	query := "SELECT name FROM userinfo WHERE lower(name) = $1"
+	var found string
+	err := USERDB.QueryRow(query, username).Scan(&found)
+	if err == nil {
+		return true
+	}
+	if err == sql.ErrNoRows {
+		return false
+	}
+	Log(err)
+	return true
 }
 
 func ValidUserName(username string) bool {
-	if username == "" {
+	if username == "" || len(username) > 15 {
 		return false
 	}
 	for _, rn := range username {

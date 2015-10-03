@@ -12,10 +12,11 @@ const (
 
 func main() {
 	var err error
-	USERSPWS, err = LoadUserData()
+	USERDB, err = LoadUserData()
 	if err != nil {
 		log.Fatal("Can't load userdata:", err)
 	}
+	defer USERDB.Close()
 	TEMPGAME, err = Load(SAVEFL)
 	if err != nil {
 		log.Fatal("Can't load savefile:", err)
