@@ -4,6 +4,7 @@
 {{ $fID := .FactionID }}
 {{ $fNames := .OtherNames }}
 {{ $f := . }}
+{{ $filter := .TV.Filter }}
 <h1>Faction {{ .Name }}</h1>
 Turn {{ .View.Turn }}<br>
 <a href="/view/">Back to Main Game Page</a><br>
@@ -23,9 +24,22 @@ Turn {{ .View.Turn }}<br>
         <input type="submit" value="Change Center" title="Recenter List Data">
         Grid X:<input type="text" size="4" name="adjX"> Grid Y: <input name="adjY" type="text" size="4">
 </form>
+
+<form action="/view/{{ .Name }}" method="post">
+        <input type="hidden" name="action" value="togglefilter">
+        <input type="hidden" name="fID" value="{{ $fID }}">
+        {{ if $filter }} 
+        <input type="submit" value="Turn off Filter" title="Turn off Filter">
+        {{ else }}
+        <input type="submit" value="Filter Planets" title="Filter Planets">
+        {{ end }}
+</form>
+
 {{ range .TV.OrderedCoords }}
+{{ if or (not $filter) ($f.PassFilter .) }}
 <div class="box">
 {{ template "listcoord" dict "val" . "f" $f }}
 </div>
+{{ end }}
 {{ end }}
 {{ end }}

@@ -6,9 +6,12 @@ import (
 	"net/http"
 )
 
-var TPLIST = MixTemp("frame", "titlebar", "listview", "listcoord")
+var (
+	TPLIST = MixTemp("frame", "titlebar", "listview", "listcoord")
+)
 
 func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Faction, v *View) {
+	temp := TPLIST
 	if len(v.path) > 3 {
 		if v.path[3] == "maps" {
 			MapView(w, r, f, v)
@@ -22,6 +25,8 @@ func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Fac
 		action := r.FormValue("action")
 		var err error
 		switch action {
+		case "togglefilter":
+			err = UserToggleFilter(r, f)
 		case "recenter":
 			err = UserRecenter(r, f)
 		case "setlorder":
@@ -39,7 +44,7 @@ func (g *Game) FactionView(w http.ResponseWriter, r *http.Request, f *attack.Fac
 		return
 	}
 	v.SetApp(f)
-	v.Apply(TPLIST, w)
+	v.Apply(temp, w)
 }
 
 func UserRecenter(r *http.Request, f *attack.Faction) error {
@@ -73,5 +78,10 @@ func UserSetLaunchOrder(r *http.Request, f *attack.Faction) error {
 		return makeE("Bad launch order:", amount, "not avail at", source.Location)
 	}
 	f.SetOrder(amount, source, target)
+	return nil
+}
+
+func UserToggleFilter(r *http.Request, f *attack.Faction) error {
+	f.ToggleFilter()
 	return nil
 }

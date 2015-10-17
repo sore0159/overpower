@@ -44,6 +44,10 @@ func (f *Faction) CenterTV(center [2]int) {
 	f.TV.Recenter(center)
 }
 
+func (f *Faction) ToggleFilter() {
+	f.TV.Filter = !f.TV.Filter
+}
+
 func (f *Faction) NumAvail(source [2]int) (num int) {
 	num = f.View.PlanetGrid[source].Launchers
 	for _, o := range f.BuildOrders {
@@ -53,6 +57,17 @@ func (f *Faction) NumAvail(source [2]int) (num int) {
 	}
 	return
 }
+
+func (f *Faction) PassFilter(c CoordView) bool {
+	if c.Planet.ID == 0 {
+		return false
+	}
+	if !c.Planet.Yours {
+		return false
+	}
+	return f.NumAvail(c.Coord) > 0
+}
+
 func (f *Faction) OrdersFor(source [2]int) []Order {
 	r := []Order{}
 	for _, o := range f.BuildOrders {

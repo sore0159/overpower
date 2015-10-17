@@ -14,7 +14,6 @@ func (tv *TextView) SortTool(reOrder bool, center [2]int) {
 		cv.Trails = [][]ShipTrail{}
 		if reOrder {
 			d := HexDist(center, cv.Coord)
-			//tv.OrderedCoords[i].Dist = d
 			cv.Dist = d
 		}
 		if cv.Dist > highest {

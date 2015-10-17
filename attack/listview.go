@@ -1,11 +1,13 @@
 package attack
 
 type TextView struct {
-	Center        [2]int
-	PolarC        [3]int
-	PlanetIDs     map[int][2]int
-	OrderedCoords []CoordView
-	Trails        [][]ShipTrail
+	Center         [2]int
+	PolarC         [3]int
+	PlanetIDs      map[int][2]int
+	OrderedCoords  []CoordView
+	Filter         bool
+	FilteredCoords []CoordView
+	Trails         [][]ShipTrail
 }
 
 func NewTextView() *TextView {
