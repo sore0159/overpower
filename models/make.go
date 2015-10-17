@@ -1,68 +1,119 @@
 package models
 
-//import "fmt"
+import (
+	"database/sql"
+	"fmt"
+	"strings"
+)
 
-func MakeGame(name, owner string, facs map[string]string) *Game {
-	g := &Game{}
-	g.Name = name
-	g.Owner = owner
-	g.Turn = 1
+func MakeGame(db *sql.DB, name, owner string, facs map[string]string) Game {
+	// GAME //
+	var gid int
 	query := "INSERT INTO games (name, owner, turn) VALUES($1, $2, $3) RETURNING id"
-	err := DB.QueryRow(query, name, owner, g.Turn).Scan(&(g.GID))
+	err := db.QueryRow(query, name, owner, 1).Scan(&gid)
 	if err != nil {
 		Log(err)
 		return nil
 	}
-	g.Factions = make(map[int]*Faction, len(facs))
+	g := GameDB{db, gid}
+	// FACTIONS //
 	query = "INSERT INTO factions (gid, owner, name) VALUES ($1, $2, $3) RETURNING fid"
 	stm, err := DB.Prepare(query)
 	if err != nil {
 		Log(err)
 		return nil
 	}
+	var fids []int
 	for fName, uName := range facs {
-		f := NewFaction()
-		f.GID = g.GID
-		f.Owner = uName
-		f.Name = fName
-		err = stm.QueryRow(g.GID, uName, fName).Scan(&(f.FID))
+		var fid int
+		err = stm.QueryRow(gid, uName, fName).Scan(&fid)
 		if err != nil {
 			Log(err)
 			stm.Close()
 			return nil
 		}
-		g.Factions[f.FID] = f
+		fids = append(fids, fid)
 	}
 	stm.Close()
-	query = "INSERT INTO planets (pid, gid, name, loc) VALUES ($1, $2, $3, POINT($4, $5) )"
+	// PLANETS //
+	query = "INSERT INTO planets (gid, pid, name, loc) VALUES "
+	queryParts := []string{}
+	viewQuery := "INSERT INTO planetviews (gid, fid, pid, name, loc, turn) VALUES "
+	vQueryParts := []string{}
+	fNum := len(facs)
+	pNum := fNum * 20
+	names := shuffleWords(GetAdj())
+	usedNums := map[int]bool{0: true}
+	usedLocs := map[[2]int]bool{}
+	for i := 0; i < pNum; i++ {
+		name = names[i]
+		var pid int
+		for usedNums[pid] {
+			pid = pick(898) + 99
+		}
+		usedNums[pid] = true
+		var loc [2]int
+		for UsedSpace(usedLocs, loc) {
+			loc = [2]int{pick(200) - 100, pick(200) - 100}
+		}
+		usedLocs[loc] = true
+		queryParts = append(queryParts, fmt.Sprintf("(%d, %d, '%s', POINT(%d, %d))", gid, pid, name, loc[0], loc[1]))
+		for _, fid := range fids {
+			vQueryParts = append(vQueryParts, fmt.Sprintf("(%d, %d, %d, '%s', POINT(%d, %d), 0)", gid, fid, pid, name, loc[0], loc[1]))
+		}
+	}
+	query += strings.Join(queryParts, ", ")
 	stm, err = DB.Prepare(query)
 	if err != nil {
+		Log(query)
 		Log(err)
 		return nil
 	}
 	defer stm.Close()
-	g.MakeSector()
-	for _, pl := range g.Sector.Planets {
-		//fmt.Println("Making planet", pl)
-		res, err := stm.Exec(pl.PID, g.GID, pl.Name, pl.Loc[0], pl.Loc[1])
-		if err != nil {
-			Log(err)
-			return nil
-		}
-		if aff, err := res.RowsAffected(); err != nil {
-			Log(err)
-			return nil
-		} else if aff == 0 {
-			Log("Planet creation failed")
-			return nil
-		}
+	viewQuery += strings.Join(vQueryParts, ", ")
+	stmV, err := DB.Prepare(viewQuery)
+	if err != nil {
+		Log(viewQuery)
+		Log(err)
+		return nil
 	}
+	defer stmV.Close()
+	res, err := stm.Exec()
+	if err != nil {
+		Log(err)
+		return nil
+	}
+	if aff, err := res.RowsAffected(); err != nil {
+		Log(err)
+		return nil
+	} else if aff == 0 {
+		Log("Planet creation failed")
+		return nil
+	}
+	res, err = stmV.Exec()
+	if err != nil {
+		Log(err)
+		return nil
+	}
+	if aff, err := res.RowsAffected(); err != nil {
+		Log(err)
+		return nil
+	} else if aff == 0 {
+		Log("Planet view creation failed")
+		return nil
+	}
+
 	return g
 }
 
-func DelGame(id int) {
+func UsedSpace(used map[[2]int]bool, test [2]int) bool {
+	_, ok := used[test]
+	return ok
+}
+
+func DelGame(db *sql.DB, id int) {
 	query := "DELETE FROM games where id = $1"
-	res, err := DB.Exec(query, id)
+	res, err := db.Exec(query, id)
 	if err != nil {
 		Log("failed to delete game", id, ":", err)
 		return
@@ -71,34 +122,4 @@ func DelGame(id int) {
 		Log("failed to delete game", id, ": 0 rows affected")
 		return
 	}
-}
-
-func (g *Game) MakeSector() {
-	fNum := len(g.Factions)
-	g.Sector = NewSector()
-	pNum := fNum * 20
-	names := shuffleWords(GetAdj())
-	usedNums := map[int]bool{0: true}
-	for i := 0; i < pNum; i++ {
-		pl := NewPlanet()
-		pl.Name = names[i]
-		var pID int
-		for usedNums[pID] {
-			pID = pick(898) + 99
-		}
-		pl.GID = g.GID
-		pl.PID = pID
-		usedNums[pl.PID] = true
-		var loc [2]int
-		for !g.Sector.Clear(loc) {
-			loc = [2]int{pick(200) - 100, pick(200) - 100}
-		}
-		pl.Loc = loc
-		g.Sector.Planets[loc] = pl
-	}
-}
-
-func (s *Sector) Clear(loc [2]int) bool {
-	_, ok := s.Planets[loc]
-	return !ok
 }

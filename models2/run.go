@@ -1,0 +1,4 @@
+package attack
+
+func Run() {
+}
