@@ -1,4 +1,8 @@
-package models
+package attack
+
+import (
+	"math/rand"
+)
 
 const (
 	SHIPSPEED = 10
@@ -6,8 +10,8 @@ const (
 	CLEARDIST = 4
 )
 
-func GetAdj() []string {
-	return []string{"whispering",
+func GetAdj(n int) []string {
+	list := []string{"whispering",
 		"complex",
 		"boiling",
 		"thoughtless",
@@ -202,4 +206,13 @@ func GetAdj() []string {
 		"guttural",
 		"madly",
 	}
+	if n > len(list) {
+		panic("Calling for more planets than we have names for!")
+	}
+	order := rand.Perm(len(list))
+	r := make([]string, n)
+	for i, _ := range r {
+		r[i] = list[order[i]]
+	}
+	return r
 }

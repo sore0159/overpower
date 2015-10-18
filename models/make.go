@@ -1,109 +1,130 @@
-package models
+package attack
 
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 )
 
-func MakeGame(db *sql.DB, name, owner string, facs map[string]string) Game {
-	// GAME //
-	var gid int
-	query := "INSERT INTO games (name, owner, turn) VALUES($1, $2, $3) RETURNING id"
-	err := db.QueryRow(query, name, owner, 1).Scan(&gid)
+func MakeGame(db *sql.DB, gameName, owner string) (g *Game, err error) {
+	g = &Game{Db: db, Name: gameName, Owner: owner}
+	err = g.Insert()
 	if err != nil {
-		Log(err)
-		return nil
+		return nil, err
 	}
-	g := GameDB{db, gid}
-	// FACTIONS //
-	query = "INSERT INTO factions (gid, owner, name) VALUES ($1, $2, $3) RETURNING fid"
-	stm, err := DB.Prepare(query)
-	if err != nil {
-		Log(err)
-		return nil
-	}
-	var fids []int
-	for fName, uName := range facs {
-		var fid int
-		err = stm.QueryRow(gid, uName, fName).Scan(&fid)
-		if err != nil {
-			Log(err)
-			stm.Close()
-			return nil
-		}
-		fids = append(fids, fid)
-	}
-	stm.Close()
-	// PLANETS //
-	query = "INSERT INTO planets (gid, pid, name, loc) VALUES "
-	queryParts := []string{}
-	viewQuery := "INSERT INTO planetviews (gid, fid, pid, name, loc, turn) VALUES "
-	vQueryParts := []string{}
-	fNum := len(facs)
-	pNum := fNum * 20
-	names := shuffleWords(GetAdj())
-	usedNums := map[int]bool{0: true}
-	usedLocs := map[[2]int]bool{}
-	for i := 0; i < pNum; i++ {
-		name = names[i]
-		var pid int
-		for usedNums[pid] {
-			pid = pick(898) + 99
-		}
-		usedNums[pid] = true
-		var loc [2]int
-		for UsedSpace(usedLocs, loc) {
-			loc = [2]int{pick(200) - 100, pick(200) - 100}
-		}
-		usedLocs[loc] = true
-		queryParts = append(queryParts, fmt.Sprintf("(%d, %d, '%s', POINT(%d, %d))", gid, pid, name, loc[0], loc[1]))
-		for _, fid := range fids {
-			vQueryParts = append(vQueryParts, fmt.Sprintf("(%d, %d, %d, '%s', POINT(%d, %d), 0)", gid, fid, pid, name, loc[0], loc[1]))
-		}
-	}
-	query += strings.Join(queryParts, ", ")
-	stm, err = DB.Prepare(query)
-	if err != nil {
-		Log(query)
-		Log(err)
-		return nil
-	}
-	defer stm.Close()
-	viewQuery += strings.Join(vQueryParts, ", ")
-	stmV, err := DB.Prepare(viewQuery)
-	if err != nil {
-		Log(viewQuery)
-		Log(err)
-		return nil
-	}
-	defer stmV.Close()
-	res, err := stm.Exec()
-	if err != nil {
-		Log(err)
-		return nil
-	}
-	if aff, err := res.RowsAffected(); err != nil {
-		Log(err)
-		return nil
-	} else if aff == 0 {
-		Log("Planet creation failed")
-		return nil
-	}
-	res, err = stmV.Exec()
-	if err != nil {
-		Log(err)
-		return nil
-	}
-	if aff, err := res.RowsAffected(); err != nil {
-		Log(err)
-		return nil
-	} else if aff == 0 {
-		Log("Planet view creation failed")
-		return nil
-	}
+	return g, nil
+}
 
-	return g
+func (g *Game) AddFac(fName, uName string) (f *Faction, err error) {
+	f = &Faction{Db: g.Db, Gid: g.Gid, Name: fName, Owner: uName}
+	err = f.Insert()
+	if err != nil {
+		return nil, err
+	}
+	if g.CacheFactions != nil {
+		g.CacheFactions[f.Fid] = f
+	}
+	return f, nil
+}
+
+func (g *Game) Start() (err error) {
+	facs := g.Factions()
+	fids := make([]int, len(facs))
+	var i int
+	for fid, _ := range facs {
+		fids[i] = fid
+		i++
+	}
+	num := 16 * len(facs)
+	bigN := num/4 - 1
+	littleN := num - (bigN + 1)
+	bigArea := bigN * 126
+	littleArea := littleN*125 + bigArea
+	// a = 3*n*(n+1) + 1
+	// n^2 + n = (a-1)/3
+	var bigRange, littleRange int
+	for i := 1; ; i++ {
+		if 3*i*(i+1)+1 > bigArea {
+			bigRange = i
+			break
+		}
+	}
+	for i := bigRange; ; i++ {
+		if 3*i*(i+1)+1 > littleArea {
+			littleRange = i
+			break
+		}
+	}
+	// PLANETS //
+	planets := make([]*Planet, num)
+	planets[0] = &Planet{Db: g.Db, Gid: g.Gid, Pid: 999, Name: "Planet Borion", Loc: [2]int{0, 0}, Inhabitants: 15, Resources: 30}
+	names := GetAdj(num)
+	usedNums := map[int]bool{0: true}
+	usedLocs := map[[2]int]bool{[2]int{0, 0}: true}
+	for i := 1; i < bigN; i++ {
+		p := &Planet{Db: g.Db, Gid: g.Gid, Inhabitants: pick(10), Resources: 10 + pick(10), Name: "Planet " + names[i]}
+		for usedNums[p.Pid] {
+			p.Pid = pick(898) + 99
+		}
+		for UsedSpace(usedLocs, p.Loc) {
+			p.Loc = RandBigPlLoc(bigRange)
+		}
+		usedNums[p.Pid] = true
+		usedLocs[p.Loc] = true
+		planets[i] = p
+	}
+	for i := bigN; i < num-len(facs); i++ {
+		p := &Planet{Db: g.Db, Gid: g.Gid, Resources: pick(10), Name: "Planet " + names[i]}
+		for usedNums[p.Pid] {
+			p.Pid = pick(898) + 99
+		}
+		for UsedSpace(usedLocs, p.Loc) {
+			p.Loc = RandLittlePlLoc(bigRange, littleRange)
+		}
+		usedNums[p.Pid] = true
+		usedLocs[p.Loc] = true
+		planets[i] = p
+	}
+	for i := 0; i < len(facs); i++ {
+		p := &Planet{Db: g.Db, Gid: g.Gid, Controller: fids[i], Inhabitants: 5, Resources: 15, Parts: 5, Name: "Planet " + names[num-1-i]}
+		for usedNums[p.Pid] {
+			p.Pid = pick(898) + 99
+		}
+		for UsedSpace(usedLocs, p.Loc) {
+			p.Loc = RandHomePlLoc(bigRange, littleRange, i, len(facs))
+		}
+		usedNums[p.Pid] = true
+		usedLocs[p.Loc] = true
+		planets[num-1-i] = p
+	}
+	fmt.Println("Made planets:", planets, num, littleRange, bigRange, len(facs))
+	for _, pl := range planets {
+		fmt.Printf("%d||", pl.Loc)
+	}
+	fmt.Println("")
+	query := PlanetMassInsertQ(planets)
+	res, err := g.Db.Exec(query)
+	if err != nil {
+		return Log(err)
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		return Log("failed to insert planets", g.Gid, ": 0 rows affected")
+	} else {
+		fmt.Println(aff, "rows affected in planets make")
+	}
+	query = PlanetViewMassInsertQ(planets, fids)
+	res, err = g.Db.Exec(query)
+	if err != nil {
+		return Log(err)
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		return Log("failed to insert planetsviews", g.Gid, ": 0 rows affected")
+	}
+	// GAME //
+	err = g.IncTurn()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func UsedSpace(used map[[2]int]bool, test [2]int) bool {
@@ -112,7 +133,7 @@ func UsedSpace(used map[[2]int]bool, test [2]int) bool {
 }
 
 func DelGame(db *sql.DB, id int) {
-	query := "DELETE FROM games where id = $1"
+	query := "DELETE FROM games where gid = $1"
 	res, err := db.Exec(query, id)
 	if err != nil {
 		Log("failed to delete game", id, ":", err)

@@ -1,53 +1,86 @@
-package models
+package attack
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
-/*
-create table factions (
-	fid SERIAL,
-	gid integer NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-	owner varchar(20) NOT NULL,
-	name varchar(20) NOT NULL,
-	done bool NOT NULL,
-	UNIQUE(gid, name)
-	PRIMARY KEY(gid, fid)
-);
-*/
-
-type Faction interface {
-	ID() [2]int // GID FID
-	Owner() string
-	Name() string
+type Faction struct {
+	Db    *sql.DB
+	Gid   int
+	Fid   int
+	Owner string
+	Name  string
+	Done  bool
+	//
+	CachePlanetViews map[Point]*PlanetView
+	CacheShipViews   map[Point]*ShipView
 }
 
-type FactionDB struct {
-	db  *sql.DB
-	GID int
-	FID int
-}
-
-func (f FactionDB) ID() [2]int {
-	return [2]int{f.GID, f.FID}
-}
-
-func (f FactionDB) Owner() (owner string) {
-	err := f.db.QueryRow("SELECT owner FROM factions WHERE gid = $1 AND fid = $2", f.GID, f.FID).Scan(&owner)
+func (f *Faction) Insert() error {
+	query := "INSERT INTO factions (gid, owner, name, done) VALUES ($1, $2, $3, false) RETURNING fid"
+	err := f.Db.QueryRow(query, f.Gid, f.Owner, f.Name).Scan(&(f.Fid))
 	if err != nil {
-		Log(err)
-		return "ERROR"
+		return Log(err)
 	}
-	return
+	return nil
 }
 
-func (f FactionDB) Name() (name string) {
-	err := f.db.QueryRow("SELECT name FROM factions WHERE gid = $1 AND fid = $2", f.GID, f.FID).Scan(&name)
+func (f *Faction) Select() error {
+	query := "SELECT owner, name, done, FROM factions WHERE gid = $1 AND fid = $2"
+	err := f.Db.QueryRow(query, f.Gid, f.Fid).Scan(&(f.Owner), &(f.Name), &(f.Done))
 	if err != nil {
-		Log(err)
-		return "ERROR"
+		return Log(err)
 	}
-	return
+	return nil
 }
 
-func (g GameDB) GetFaction(fid int) Faction {
-	return FactionDB{g.db, g.GID, fid}
+func (f *Faction) ToggleDone() error {
+	f.Done = !f.Done
+	query := "UPDATE factions SET done = !done WHERE gid = $1 and fid = $2"
+	res, err := f.Db.Exec(query, f.Gid, f.Fid)
+	if err != nil {
+		return Log("failed to toggle done", f.Gid, f.Fid, ":", err)
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		return Log("failed to toggle done", f.Gid, f.Fid, ": no rows affected")
+	}
+	return nil
+}
+
+func (f *Faction) PlanetViews() map[Point]*PlanetView {
+	if f.CachePlanetViews == nil {
+		f.CachePlanetViews = map[Point]*PlanetView{}
+		query := "SELECT pid, name, loc, turn, controller, inhabitants, resources, parts FROM planetviews WHERE gid = $1 AND fid = $2"
+		rows, err := f.Db.Query(query, f.Gid, f.Fid)
+		if err != nil {
+			Log(err)
+			f.CachePlanetViews = nil
+			return nil
+		}
+		defer rows.Close()
+		for rows.Next() {
+			p := &PlanetView{Db: f.Db, Gid: f.Gid, Fid: f.Fid}
+			var turn, controller, resources, parts, inhabitants sql.NullInt64
+			err = rows.Scan(&(p.Pid), &(p.Name), &(p.Loc), &turn, &controller, &inhabitants, &resources, &parts)
+			if err != nil {
+				Log(err)
+				f.CachePlanetViews = nil
+				return nil
+			}
+			x := []sql.NullInt64{turn, controller, resources, parts, inhabitants}
+			y := []*int{&(p.Turn), &(p.Controller), &(p.Resources), &(p.Parts), &(p.Inhabitants)}
+			for i, test := range x {
+				if test.Valid {
+					*(y[i]) = int(test.Int64)
+				}
+			}
+			f.CachePlanetViews[p.Loc] = p
+		}
+		if err = rows.Err(); err != nil {
+			Log(err)
+			f.CachePlanetViews = nil
+			return nil
+		}
+	}
+	return f.CachePlanetViews
 }

@@ -1,80 +1,107 @@
-package models
+package attack
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"strings"
+)
 
-/*
-create table planets (
-	pid integer NOT NULL,
-	gid integer NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-	name varchar(20) NOT NULL,
-	loc point NOT NULL,
-	UNIQUE(gid, name),
-	PRIMARY KEY(gid, pid)
-);
-*/
-type Planet interface {
-	ID() [2]int // GID, PID
-	/*Name() string
-	Loc() [2]int*/
+type Planet struct {
+	Db          *sql.DB
+	Gid         int
+	Pid         int
+	Name        string
+	Loc         Point
+	Controller  int
+	Inhabitants int
+	Resources   int
+	Parts       int
+	//
+	Arrivals int
 }
 
-type PlanetDB struct {
-	db   *sql.DB
-	GID  int
-	PLID int
-}
-
-func (p PlanetDB) ID() [2]int {
-	return [2]int{p.GID, p.PLID}
-}
-
-func (g GameDB) GetPlanet(plid int) Planet {
-	return PlanetDB{g.db, g.GID, plid}
-}
-
-/*
-create table planetviews (
-	fid integer NOT NULL REFERENCES factions ON DELETE CASCADE,
-	pid integer NOT NULL,
-	gid integer NOT NULL,
-	name varchar(20) NOT NULL,
-	loc point NOT NULL,
-	turn int,
-	FOREIGN KEY(gid, pid) REFERENCES planets ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, pid)
-);
-*/
-
-type PlanetView interface {
-	ID() [3]int //GID, FID, PID
-	/*Name()
-	Loc() [2]int*/
-}
-type PlanetViewDB struct {
-	db   *sql.DB
-	GID  int
-	FID  int
-	PLID int
-}
-
-func (p PlanetViewDB) ID() [3]int {
-	return [3]int{p.GID, p.FID, p.PLID}
-}
-
-func (f FactionDB) GetPlanetView(plid int) PlanetView {
-	return PlanetViewDB{f.db, f.GID, f.FID, plid}
-}
-
-func (g GameDB) UpdateView(f Faction, pl Planet) PlanetView {
-	query := "UPDATE planetviews SET turn = $1 WHERE gid = $2 AND fid = $3 and pid = $4"
-	res, err := g.db.Exec(query, g.Turn(), g.GID, f.ID()[1], pl.ID()[1])
+func (p *Planet) Select() error {
+	query := "SELECT name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1 AND pid = $2"
+	var controller sql.NullInt64
+	err := p.Db.QueryRow(query, p.Gid, p.Pid).Scan(&(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
 	if err != nil {
-		Log("failed to update view:", g.GID, f.ID(), pl.ID(), err)
-		return nil
+		return Log(err)
+	}
+	if controller.Valid {
+		p.Controller = int(controller.Int64)
+	}
+	return nil
+}
+
+func (*Planet) InsertQStart() string {
+	return "INSERT INTO planets VALUES (gid, pid, name, loc, controller, inhabitants, resources, parts) "
+
+}
+
+func (p *Planet) InsertQVals() string {
+	if p.Controller == 0 {
+		return fmt.Sprintf("(%d, %d, '%s', %s, NULL, %d, %d, %d)", p.Gid, p.Pid, p.Name, p.Loc, p.Inhabitants, p.Resources, p.Parts)
+	} else {
+		return fmt.Sprintf("(%d, %d, '%s', %s, %d, %d, %d, %d)", p.Gid, p.Pid, p.Name, p.Loc, p.Controller, p.Inhabitants, p.Resources, p.Parts)
+	}
+
+}
+
+func (p *Planet) ViewInsertQVals(fid int) string {
+	if fid == p.Controller {
+		return fmt.Sprintf("(%d, %d, %d, '%s', %s, 1, %d, %d, %d, %d)", p.Gid, fid, p.Pid, p.Name, p.Loc, p.Controller, p.Inhabitants, p.Resources, p.Parts)
+	} else {
+		return fmt.Sprintf("(%d, %d, %d, '%s', %s, 0, NULL, NULL, NULL, NULL)", p.Gid, fid, p.Pid, p.Name, p.Loc)
+	}
+}
+
+func (g *Game) UpdateViewStmt() (*sql.Stmt, error) {
+	query := "UPDATE planetviews SET turn = $1, controller = $2, inhabitants = $3, resources = $4, parts = $5 WHERE gid = $6 AND fid = $7 AND pid = $8"
+	stmt, err := g.Db.Prepare(query)
+	if err != nil {
+		return nil, Log(err)
+	}
+	return stmt, nil
+}
+
+func (p *Planet) UpdateView(stmt *sql.Stmt, fid, turn int) error {
+	controller := sql.NullInt64{}
+	if p.Controller == 0 {
+		controller.Valid = false
+	} else {
+		controller.Int64 = int64(p.Controller)
+	}
+	res, err := stmt.Exec(turn, controller, p.Inhabitants, p.Resources, p.Parts, p.Gid, fid, p.Pid)
+	if err != nil {
+		return Log("failed to update view", p.Gid, p.Pid, fid, ":", err)
 	}
 	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
-		Log("failed to update view", f.ID(), pl.ID(), ": 0 rows affected")
-		return nil
+		return Log("failed to update view", p.Gid, p.Pid, fid, ": No rows affected")
 	}
-	return PlanetViewDB{g.db, g.GID, f.ID()[1], pl.ID()[1]}
+	return nil
+}
+
+func PlanetMassInsertQ(pls []*Planet) string {
+	q := "INSERT INTO planets (gid, pid, name, loc, controller, inhabitants, resources, parts) VALUES "
+	qStr := make([]string, len(pls))
+	for i, pl := range pls {
+		qStr[i] = pl.InsertQVals()
+	}
+	q += strings.Join(qStr, ", ")
+	return q
+}
+
+func PlanetViewMassInsertQ(pls []*Planet, fids []int) string {
+	q := "INSERT INTO planetviews (gid, fid, pid, name, loc, turn, controller, inhabitants, resources, parts) VALUES "
+	allStr := make([]string, len(fids))
+	for j, fid := range fids {
+		qStr := make([]string, len(pls))
+
+		for i, pl := range pls {
+			qStr[i] = pl.ViewInsertQVals(fid)
+		}
+		allStr[j] = strings.Join(qStr, ", ")
+	}
+	q += strings.Join(allStr, ", ")
+	return q
 }

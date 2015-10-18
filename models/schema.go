@@ -7,7 +7,7 @@ create table games(
 	owner varchar(20) NOT NULL UNIQUE,
 	name varchar(20) NOT NULL,
 	size int,
-	turn int
+	turn int NOT NULL
 );
 
 create table factions (
@@ -16,8 +16,7 @@ create table factions (
 	owner varchar(20) NOT NULL,
 	name varchar(20) NOT NULL,
 	done bool NOT NULL,
-	reports text[][],
-	UNIQUE(gid, name),
+	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
 );
 
@@ -40,8 +39,8 @@ create table ships (
 	fid int NOT NULL,
 	sid SERIAL NOT NULL,
 	size int NOT NULL,
-	loc point NOT NULL,
-	path point[],
+	loc point,
+	path point[] NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, sid)
 );

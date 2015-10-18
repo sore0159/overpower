@@ -31,13 +31,7 @@ func MakeGame(facNames []string) *Game {
 	return g
 }
 
-func (s *Sector) MakePlanets(homeworlds, total int) (homePlanetMap map[[2]int]*Planet) {
-	/*num := 120
-	bigN := num/4 - 1
-	bigRange := 40
-	littleRange := 80
-	hwRange := [2]int{70, 75}
-	*/
+func (s *Sector) MakePlanets(homeworlds int) (homePlanetMap map[[2]int]*Planet) {
 	num := 16 * homeworlds
 	bigN := num/4 - 1
 	littleN := num - (bigN + 1)

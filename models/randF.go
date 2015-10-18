@@ -1,4 +1,4 @@
-package models
+package attack
 
 import (
 	"math/rand"
@@ -30,16 +30,17 @@ func pick(n int) int {
 	return rand.Intn(n) + 1
 }
 
-/*func shuffleShips(in []*Ship) (out []*Ship) {
-	l := len(in)
-	if l < 1 {
-		return []*Ship{}
-	} else if l == 1 {
-		return []*Ship{in[0]}
-	}
-	out = make([]*Ship, l)
-	for i, j := range rand.Perm(l) {
-		out[i] = in[j]
-	}
-	return out
-}*/
+func RandBigPlLoc(bigRange int) [2]int {
+	loc := [2]int{pick(bigRange), pick(bigRange)}
+	return loc
+}
+
+func RandLittlePlLoc(bigRange, littleRange int) [2]int {
+	loc := [2]int{bigRange + pick(littleRange-bigRange), bigRange + pick(littleRange-bigRange)}
+	return loc
+}
+
+func RandHomePlLoc(bigRange, littleRange, i, numF int) [2]int {
+	loc := [2]int{bigRange + pick(littleRange-bigRange), bigRange + pick(littleRange-bigRange)}
+	return loc
+}
