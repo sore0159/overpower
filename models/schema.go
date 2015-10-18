@@ -39,7 +39,7 @@ create table ships (
 	fid int NOT NULL,
 	sid SERIAL NOT NULL,
 	size int NOT NULL,
-	loc point,
+	loc int,
 	path point[] NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, sid)
@@ -66,8 +66,7 @@ create table shipviews (
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	controller integer NOT NULL,
 	viewer integer NOT NULL,
-	sid SERIAL NOT NULL,
-	name varchar(20) NOT NULL,
+	sid integer NOT NULL,
 	loc point,
 	trail point[],
 	size int NOT NULL,

@@ -69,6 +69,7 @@ func (p *Planet) UpdateView(stmt *sql.Stmt, fid, turn int) error {
 	if p.Controller == 0 {
 		controller.Valid = false
 	} else {
+		controller.Valid = true
 		controller.Int64 = int64(p.Controller)
 	}
 	res, err := stmt.Exec(turn, controller, p.Inhabitants, p.Resources, p.Parts, p.Gid, fid, p.Pid)

@@ -81,7 +81,7 @@ func XTestThird(t *testing.T) {
 	log.Println("Planets:", g.Planets())
 }
 
-func TestFourth(t *testing.T) {
+func XTestFourth(t *testing.T) {
 	str := []byte("(305,5)")
 	log.Println(str)
 	p := Point{}

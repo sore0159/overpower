@@ -3,6 +3,7 @@ package attack
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 func MakeGame(db *sql.DB, gameName, owner string) (g *Game, err error) {
@@ -61,7 +62,7 @@ func (g *Game) Start() (err error) {
 	usedNums := map[int]bool{0: true}
 	usedLocs := map[[2]int]bool{[2]int{0, 0}: true}
 	for i := 1; i < bigN; i++ {
-		p := &Planet{Db: g.Db, Gid: g.Gid, Inhabitants: pick(10), Resources: 10 + pick(10), Name: "Planet " + names[i]}
+		p := &Planet{Db: g.Db, Gid: g.Gid, Inhabitants: pick(10), Resources: 10 + pick(10), Name: Nameify(names[i])}
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
@@ -73,7 +74,7 @@ func (g *Game) Start() (err error) {
 		planets[i] = p
 	}
 	for i := bigN; i < num-len(facs); i++ {
-		p := &Planet{Db: g.Db, Gid: g.Gid, Resources: pick(10), Name: "Planet " + names[i]}
+		p := &Planet{Db: g.Db, Gid: g.Gid, Resources: pick(10), Name: Nameify(names[i])}
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
@@ -85,7 +86,7 @@ func (g *Game) Start() (err error) {
 		planets[i] = p
 	}
 	for i := 0; i < len(facs); i++ {
-		p := &Planet{Db: g.Db, Gid: g.Gid, Controller: fids[i], Inhabitants: 5, Resources: 15, Parts: 5, Name: "Planet " + names[num-1-i]}
+		p := &Planet{Db: g.Db, Gid: g.Gid, Controller: fids[i], Inhabitants: 5, Resources: 15, Parts: 5, Name: Nameify(names[num-1-i])}
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
@@ -143,4 +144,8 @@ func DelGame(db *sql.DB, id int) {
 		Log("failed to delete game", id, ": 0 rows affected")
 		return
 	}
+}
+
+func Nameify(str string) string {
+	return "Planet " + strings.Title(str)
 }

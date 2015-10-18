@@ -15,7 +15,7 @@ type Game struct {
 	//
 	CacheFactions map[int]*Faction
 	CachePlanets  map[Point]*Planet
-	CacheShips    map[Point][]*Ship
+	CacheShips    []*Ship
 }
 
 func (g *Game) Insert() error {
@@ -117,9 +117,9 @@ func (g *Game) Planets() map[Point]*Planet {
 	return g.CachePlanets
 }
 
-func (g *Game) Ships() map[Point][]*Ship {
+func (g *Game) Ships() []*Ship {
 	if g.CacheShips == nil {
-		g.CacheShips = map[Point][]*Ship{}
+		g.CacheShips = []*Ship{}
 		query := "SELECT fid, sid, size, loc, path WHERE gid = $1"
 		rows, err := g.Db.Query(query, g.Gid)
 		if err != nil {
@@ -136,11 +136,7 @@ func (g *Game) Ships() map[Point][]*Ship {
 				g.CacheShips = nil
 				return nil
 			}
-			if list, ok := g.CacheShips[s.Loc]; ok {
-				g.CacheShips[s.Loc] = append(list, s)
-			} else {
-				g.CacheShips[s.Loc] = []*Ship{s}
-			}
+			g.CacheShips = append(g.CacheShips, s)
 		}
 		if err = rows.Err(); err != nil {
 			Log(err)
