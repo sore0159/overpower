@@ -1,4 +1,4 @@
-package attack
+package planetattack
 
 /*
 
@@ -6,7 +6,6 @@ create table games(
 	gid SERIAL PRIMARY KEY,
 	owner varchar(20) NOT NULL UNIQUE,
 	name varchar(20) NOT NULL,
-	size int,
 	turn int NOT NULL
 );
 

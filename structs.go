@@ -1,4 +1,4 @@
-package attack
+package planetattack
 
 import (
 	"database/sql"
@@ -13,13 +13,4 @@ type ShipView struct {
 	Loc        Point
 	Trail      []Point
 	Size       int
-}
-
-type Order struct {
-	Db     *sql.DB
-	Gid    int
-	Fid    int
-	Source Point
-	Target Point
-	Size   Point
 }

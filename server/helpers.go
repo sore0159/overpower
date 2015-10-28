@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"mule/mylog"
-	"mule/planetattack/attack"
-	"mule/planetattack/mapping"
+	//	"mule/planetattack/mapping"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,14 +17,14 @@ const (
 )
 
 var (
-	HexPolar = attack.HexPolar
-	Log      = mylog.Err
+	Log = mylog.Err
 )
 
 func init() {
 	mylog.SetErr(DATADIR + "errors.txt")
-	mapping.SetFont(DATADIR + "DroidSansMono.ttf")
-	mapping.SetMapDir(MAPDIR)
+	mylog.SetMain(DATADIR + "mainlog.txt")
+	//mapping.SetFont(DATADIR + "DroidSansMono.ttf")
+	//mapping.SetMapDir(MAPDIR)
 }
 
 func Apply(t *template.Template, w http.ResponseWriter, d interface{}) {
@@ -45,7 +44,6 @@ func MixTemp(fileNames ...string) *template.Template {
 		"link": func(placeholder string) string {
 			return ""
 		},
-		"polar": HexPolar,
 		"dict": func(val ...interface{}) (map[string]interface{}, error) {
 			if len(val)%2 != 0 {
 				err := errors.New("Template dict needs even args")

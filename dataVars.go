@@ -1,4 +1,4 @@
-package attack
+package planetattack
 
 import (
 	"math/rand"

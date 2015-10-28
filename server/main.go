@@ -17,13 +17,11 @@ func main() {
 		log.Fatal("Can't load userdata:", err)
 	}
 	defer USERDB.Close()
-	TEMPGAME, err = Load(SAVEFL)
+	ATTACKDB, err = LoadPlanetDB()
 	if err != nil {
-		log.Fatal("Can't load savefile:", err)
+		log.Fatal("Can't load planet db:", err)
 	}
-	if TEMPGAME == nil {
-		TEMPGAME = NewGame()
-	}
+	defer ATTACKDB.Close()
 	http.HandleFunc("/", gameMux)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
 	log.Println("STARTING SERVER AT", SERVPORT)

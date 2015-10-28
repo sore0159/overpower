@@ -50,7 +50,7 @@ func ValidPassword(password string) bool {
 
 func UserNameInUse(username string) bool {
 	name := strings.ToLower(username)
-	reserved := []string{"planet", "yours", "static", "turn", "admin", "themule", "mule", "login", "logout"}
+	reserved := []string{"home", "planet", "yours", "static", "turn", "admin", "themule", "mule", "login", "logout"}
 	for _, test := range reserved {
 		if name == test {
 			return true

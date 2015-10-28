@@ -1,4 +1,0 @@
-package attack
-
-func View() {
-}

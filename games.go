@@ -1,7 +1,8 @@
-package attack
+package planetattack
 
 import (
 	"database/sql"
+	"errors"
 	//	"fmt"
 )
 
@@ -10,7 +11,6 @@ type Game struct {
 	Gid   int
 	Owner string
 	Name  string
-	Size  int
 	Turn  int
 	//
 	CacheFactions map[int]*Faction
@@ -19,8 +19,8 @@ type Game struct {
 }
 
 func (g *Game) Insert() error {
-	query := "INSERT INTO games (name, owner, size, turn) VALUES($1, $2, $3, $4) RETURNING gid"
-	err := g.Db.QueryRow(query, g.Name, g.Owner, g.Size, g.Turn).Scan(&(g.Gid))
+	query := "INSERT INTO games (name, owner, turn) VALUES($1, $2, $3) RETURNING gid"
+	err := g.Db.QueryRow(query, g.Name, g.Owner, g.Turn).Scan(&(g.Gid))
 	if err != nil {
 		return Log(err)
 	}
@@ -28,14 +28,18 @@ func (g *Game) Insert() error {
 }
 
 func (g *Game) Select() error {
-	var size sql.NullInt64
-	query := "SELECT owner, name, size, turn FROM games WHERE gid = $1"
-	err := g.Db.QueryRow(query, g.Gid).Scan(&(g.Owner), &(g.Name), &size, &(g.Turn))
+	var err error
+	if g.Gid != 0 {
+		query := "SELECT owner, name, turn FROM games WHERE gid = $1"
+		err = g.Db.QueryRow(query, g.Gid).Scan(&(g.Owner), &(g.Name), &(g.Turn))
+	} else if g.Owner != "" {
+		query := "SELECT gid, name, turn FROM games WHERE owner = $1"
+		err = g.Db.QueryRow(query, g.Owner).Scan(&(g.Gid), &(g.Name), &(g.Turn))
+	} else {
+		err = errors.New("tried to SELECT game with no gid/owner")
+	}
 	if err != nil {
 		return Log(err)
-	}
-	if size.Valid {
-		g.Size = int(size.Int64)
 	}
 	return nil
 }
