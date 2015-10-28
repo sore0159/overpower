@@ -2,6 +2,7 @@ package planetattack
 
 import (
 	"database/sql"
+	"mule/hexagon"
 )
 
 type Faction struct {
@@ -12,8 +13,8 @@ type Faction struct {
 	Name  string
 	Done  bool
 	//
-	CachePlanetViews map[Point]*PlanetView
-	CacheShipViews   map[Point]*ShipView
+	CachePlanetViews map[hexagon.Coord]*PlanetView
+	CacheShipViews   map[hexagon.Coord]*ShipView
 }
 
 func (f *Faction) Insert() error {
@@ -26,12 +27,37 @@ func (f *Faction) Insert() error {
 }
 
 func (f *Faction) Select() error {
-	query := "SELECT owner, name, done, FROM factions WHERE gid = $1 AND fid = $2"
+	query := "SELECT owner, name, done FROM factions WHERE gid = $1 AND fid = $2"
 	err := f.Db.QueryRow(query, f.Gid, f.Fid).Scan(&(f.Owner), &(f.Name), &(f.Done))
 	if err != nil {
 		return Log(err)
 	}
 	return nil
+}
+
+func AllFactions(db *sql.DB, owner string) []*Faction {
+	r := make([]*Faction, 0)
+	query := "SELECT gid, fid, name, done FROM factions WHERE owner = $1"
+	rows, err := db.Query(query, owner)
+	if err != nil {
+		Log(err)
+		return []*Faction{}
+	}
+	defer rows.Close()
+	for rows.Next() {
+		f := &Faction{Db: db, Owner: owner}
+		err = rows.Scan(&(f.Gid), &(f.Fid), &(f.Name), &(f.Done))
+		if err != nil {
+			Log(err)
+			return []*Faction{}
+		}
+		r = append(r, f)
+	}
+	if err = rows.Err(); err != nil {
+		Log(err)
+		return []*Faction{}
+	}
+	return r
 }
 
 func (f *Faction) ToggleDone() error {
@@ -47,9 +73,9 @@ func (f *Faction) ToggleDone() error {
 	return nil
 }
 
-func (f *Faction) PlanetViews() map[Point]*PlanetView {
+func (f *Faction) PlanetViews() map[hexagon.Coord]*PlanetView {
 	if f.CachePlanetViews == nil {
-		f.CachePlanetViews = map[Point]*PlanetView{}
+		f.CachePlanetViews = map[hexagon.Coord]*PlanetView{}
 		query := "SELECT pid, name, loc, turn, controller, inhabitants, resources, parts FROM planetviews WHERE gid = $1 AND fid = $2"
 		rows, err := f.Db.Query(query, f.Gid, f.Fid)
 		if err != nil {

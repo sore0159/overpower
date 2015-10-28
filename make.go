@@ -42,6 +42,7 @@ func (g *Game) Start() (err error) {
 	}
 	fmt.Println("")
 	query := PlanetMassInsertQ(planets)
+	fmt.Println("first query:\n", query, "\n")
 	res, err := g.Db.Exec(query)
 	if err != nil {
 		return Log(err)

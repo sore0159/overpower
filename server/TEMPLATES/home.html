@@ -1,6 +1,25 @@
 {{ define "title"}}Planet Attack! Home Page{{end}}
 {{ define "css"}}main{{end}}
 {{define "body"}}
-HOME PAGE GOES HERE
+USER NAME: {{ index . "userN" }}<br>
+{{ if index . "mygame" }} 
+MYGAME: {{ index . "mygame" }}<br>
+ADMIN?<br>
+{{ else }} 
+NO GAME OWNED: CREATE?<br>
+<form action="" method="post">
+        <input type="hidden" name="action" value="creategame">
+        Game Name:<input name="gamename" type="text"><br>
+        <input type="submit" value="Create!">
+</form>
+{{ end }}<br>
+<br>
+{{ if index . "facs" }}
+{{ range index . "facs" }}
+GAME FACTION: {{ . }} found<br>
+{{ end }}
+{{ else }}
+NO GAMES IN PROGRESS<br>
+{{ end }}
 {{ end }}
 

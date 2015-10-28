@@ -27,3 +27,21 @@ func LoadUserData() (*sql.DB, error) {
 func LoadPlanetDB() (*sql.DB, error) {
 	return planetattack.LoadDB()
 }
+
+func NewGame() *Game {
+	return &Game{
+		Game: planetattack.Game{
+			Db: ATTACKDB,
+		},
+	}
+}
+
+func NewFaction() *planetattack.Faction {
+	return &planetattack.Faction{
+		Db: ATTACKDB,
+	}
+}
+
+func AllFactions(userN string) []*planetattack.Faction {
+	return planetattack.AllFactions(ATTACKDB, userN)
+}

@@ -3,6 +3,7 @@ package planetattack
 import (
 	"database/sql"
 	"fmt"
+	"mule/hexagon"
 	"strings"
 )
 
@@ -11,7 +12,7 @@ type Planet struct {
 	Gid         int
 	Pid         int
 	Name        string
-	Loc         Point
+	Loc         hexagon.Coord
 	Controller  int
 	Inhabitants int
 	Resources   int
@@ -40,18 +41,18 @@ func (*Planet) InsertQStart() string {
 
 func (p *Planet) InsertQVals() string {
 	if p.Controller == 0 {
-		return fmt.Sprintf("(%d, %d, '%s', %s, NULL, %d, %d, %d)", p.Gid, p.Pid, p.Name, p.Loc, p.Inhabitants, p.Resources, p.Parts)
+		return fmt.Sprintf("(%d, %d, '%s', POINT(%d,%d), NULL, %d, %d, %d)", p.Gid, p.Pid, p.Name, p.Loc[0], p.Loc[1], p.Inhabitants, p.Resources, p.Parts)
 	} else {
-		return fmt.Sprintf("(%d, %d, '%s', %s, %d, %d, %d, %d)", p.Gid, p.Pid, p.Name, p.Loc, p.Controller, p.Inhabitants, p.Resources, p.Parts)
+		return fmt.Sprintf("(%d, %d, '%s', POINT(%d,%d), %d, %d, %d, %d)", p.Gid, p.Pid, p.Name, p.Loc[0], p.Loc[1], p.Controller, p.Inhabitants, p.Resources, p.Parts)
 	}
 
 }
 
 func (p *Planet) ViewInsertQVals(fid int) string {
 	if fid == p.Controller {
-		return fmt.Sprintf("(%d, %d, %d, '%s', %s, 1, %d, %d, %d, %d)", p.Gid, fid, p.Pid, p.Name, p.Loc, p.Controller, p.Inhabitants, p.Resources, p.Parts)
+		return fmt.Sprintf("(%d, %d, %d, '%s', POINT(%d,%d), 1, %d, %d, %d, %d)", p.Gid, fid, p.Pid, p.Name, p.Loc[0], p.Loc[1], p.Controller, p.Inhabitants, p.Resources, p.Parts)
 	} else {
-		return fmt.Sprintf("(%d, %d, %d, '%s', %s, 0, NULL, NULL, NULL, NULL)", p.Gid, fid, p.Pid, p.Name, p.Loc)
+		return fmt.Sprintf("(%d, %d, %d, '%s', POINT(%d,%d), 0, NULL, NULL, NULL, NULL)", p.Gid, fid, p.Pid, p.Name, p.Loc[0], p.Loc[1])
 	}
 }
 

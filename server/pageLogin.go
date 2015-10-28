@@ -21,7 +21,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		}
 		if create != "true" {
 			if Login(userName, password, w) {
-				http.Redirect(w, r, "/view", http.StatusFound)
+				http.Redirect(w, r, "/home", http.StatusFound)
 			} else {
 				delete(m, "password")
 				v.SetError("LOGIN PAGE: FAILURE: INCORRECT PASSWORD")
@@ -58,7 +58,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 			v.Apply(TPLOGIN, w)
 			return
 		}
-		http.Redirect(w, r, "/view", http.StatusFound)
+		http.Redirect(w, r, "/home", http.StatusFound)
 		return
 	} else {
 		v.Apply(TPLOGIN, w)

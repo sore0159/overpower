@@ -28,7 +28,7 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		}
 	}
 	planets = make([]*Planet, num)
-	planets[0] = &Planet{Db: g.Db, Gid: g.Gid, Pid: 999, Name: "Planet Borion", Loc: Point{0, 0}, Inhabitants: 15, Resources: 30}
+	planets[0] = &Planet{Db: g.Db, Gid: g.Gid, Pid: 999, Name: "Planet Borion", Loc: hexagon.Coord{0, 0}, Inhabitants: 15, Resources: 30}
 	names := GetAdj(num)
 	usedNums := map[int]bool{0: true}
 	usedLocs := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
@@ -37,13 +37,11 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
-		var test hexagon.Coord
-		for UsedSpace(usedLocs, test) {
-			test = RandBigPlLoc(bigRange)
+		for UsedSpace(usedLocs, p.Loc) {
+			p.Loc = RandBigPlLoc(bigRange)
 		}
 		usedNums[p.Pid] = true
-		usedLocs[test] = true
-		p.Loc = Point(test)
+		usedLocs[p.Loc] = true
 		planets[i] = p
 	}
 	for i := bigN; i < num-len(fids); i++ {
@@ -51,13 +49,11 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
-		var test hexagon.Coord
-		for UsedSpace(usedLocs, test) {
-			test = RandLittlePlLoc(bigRange, littleRange)
+		for UsedSpace(usedLocs, p.Loc) {
+			p.Loc = RandLittlePlLoc(bigRange, littleRange)
 		}
 		usedNums[p.Pid] = true
-		usedLocs[test] = true
-		p.Loc = Point(test)
+		usedLocs[p.Loc] = true
 		planets[i] = p
 	}
 	for i := 0; i < len(fids); i++ {
@@ -65,13 +61,11 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
-		var test hexagon.Coord
-		for UsedSpace(usedLocs, test) {
-			test = RandHomePlLoc(bigRange, littleRange, i, len(fids))
+		for UsedSpace(usedLocs, p.Loc) {
+			p.Loc = RandHomePlLoc(bigRange, littleRange, i, len(fids))
 		}
 		usedNums[p.Pid] = true
-		usedLocs[test] = true
-		p.Loc = Point(test)
+		usedLocs[p.Loc] = true
 		planets[num-1-i] = p
 	}
 	return planets

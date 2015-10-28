@@ -2,6 +2,7 @@ package planetattack
 
 import (
 	"log"
+	"mule/hexagon"
 	"testing"
 )
 
@@ -64,6 +65,23 @@ func TestSecond(t *testing.T) {
 	for _, pv := range fac.PlanetViews() {
 		log.Println("Found planetview:", pv)
 	}
+	query := "SELECT name FROM planets WHERE loc ~= $1"
+	loc := hexagon.Coord{0, 0}
+	var name string
+	err = db.QueryRow(query, loc).Scan(&name)
+	if err != nil {
+		log.Println("Error fetching planet at", loc, ":", err)
+	} else {
+		log.Println("Found planet:", name)
+	}
+	factions := AllFactions(db, "user2")
+	if len(factions) < 1 {
+		log.Println("Can't find any factions for user2")
+	} else {
+		for _, f := range factions {
+			log.Println("Found faction", f, "for user2")
+		}
+	}
 	DelGame(db, g.Gid)
 }
 
@@ -76,15 +94,18 @@ func XTestThird(t *testing.T) {
 	}
 	log.Println("Got db")
 	g := &Game{Db: db, Gid: gid}
-	g.Select()
-	log.Println("Got", g)
-	log.Println("Planets:", g.Planets())
+	if g.Select() {
+		log.Println("Got", g)
+		log.Println("Planets:", g.Planets())
+	} else {
+		log.Println("game select failed")
+	}
 }
 
-func XTestFourth(t *testing.T) {
+func TestFourth(t *testing.T) {
 	str := []byte("(305,5)")
 	log.Println(str)
-	p := Point{}
+	p := hexagon.Coord{}
 	(&p).Scan(str)
 	log.Println("POINT:", p)
 }

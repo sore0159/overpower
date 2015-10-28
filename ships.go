@@ -3,6 +3,7 @@ package planetattack
 import (
 	"database/sql"
 	"fmt"
+	"mule/hexagon"
 	"strings"
 )
 
@@ -13,10 +14,10 @@ type Ship struct {
 	Sid  int
 	Size int
 	Loc  int
-	Path []Point
+	Path []hexagon.Coord
 }
 
-func (s *Ship) InsertViewQVals(fid int, viewpoints []Point) string {
+func (s *Ship) InsertViewQVals(fid int, viewpoints []hexagon.Coord) string {
 	// q := "INSERT INTO shipviews (gid, viewer, controller, sid, size, loc, trail) VALUES "
 	parts := []string{}
 	for _, pt := range s.JustTravelled() {
@@ -94,19 +95,19 @@ func (p *Planet) SpawnShip(size int, target *Planet) *Ship {
 	return nil
 }
 
-func Pathfind(begin, end *Planet) []Point {
-	return []Point{begin.Loc, end.Loc}
+func Pathfind(begin, end *Planet) []hexagon.Coord {
+	return []hexagon.Coord{begin.Loc, end.Loc}
 }
 
-func Visible(pt1, pt2 Point) bool {
+func Visible(pt1, pt2 hexagon.Coord) bool {
 	return Dist(pt1, pt2) < 26
 }
 
-func Dist(pt1, pt2 Point) int {
+func Dist(pt1, pt2 hexagon.Coord) int {
 	return (pt1[0]-pt2[0])*(pt1[0]-pt2[0]) + (pt1[1]-pt2[1])*(pt1[1]-pt2[1])
 }
 
-func (s *Ship) JustTravelled() []Point {
+func (s *Ship) JustTravelled() []hexagon.Coord {
 	if s.Loc == -1 {
 		if len(s.Path) < SHIPSPEED {
 			return s.Path
@@ -120,9 +121,9 @@ func (s *Ship) JustTravelled() []Point {
 	}
 }
 
-func (s *Ship) CurLoc() (Point, bool) {
+func (s *Ship) CurLoc() (hexagon.Coord, bool) {
 	if s.Loc == -1 {
-		return Point{}, false
+		return hexagon.Coord{}, false
 	}
 	return s.Path[s.Loc], true
 }

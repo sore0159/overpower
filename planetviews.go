@@ -2,6 +2,7 @@ package planetattack
 
 import (
 	"database/sql"
+	"mule/hexagon"
 )
 
 type PlanetView struct {
@@ -10,7 +11,7 @@ type PlanetView struct {
 	Fid         int
 	Pid         int
 	Name        string
-	Loc         Point
+	Loc         hexagon.Coord
 	Turn        int
 	Controller  int
 	Inhabitants int

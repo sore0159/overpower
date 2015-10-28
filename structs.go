@@ -2,6 +2,7 @@ package planetattack
 
 import (
 	"database/sql"
+	"mule/hexagon"
 )
 
 type ShipView struct {
@@ -10,7 +11,7 @@ type ShipView struct {
 	Fid        int
 	Sid        int
 	Controller int
-	Loc        Point
-	Trail      []Point
+	Loc        hexagon.Coord
+	Trail      []hexagon.Coord
 	Size       int
 }

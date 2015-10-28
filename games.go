@@ -3,6 +3,7 @@ package planetattack
 import (
 	"database/sql"
 	"errors"
+	"mule/hexagon"
 	//	"fmt"
 )
 
@@ -14,7 +15,7 @@ type Game struct {
 	Turn  int
 	//
 	CacheFactions map[int]*Faction
-	CachePlanets  map[Point]*Planet
+	CachePlanets  map[hexagon.Coord]*Planet
 	CacheShips    []*Ship
 }
 
@@ -27,7 +28,7 @@ func (g *Game) Insert() error {
 	return nil
 }
 
-func (g *Game) Select() error {
+func (g *Game) Select() bool {
 	var err error
 	if g.Gid != 0 {
 		query := "SELECT owner, name, turn FROM games WHERE gid = $1"
@@ -38,10 +39,13 @@ func (g *Game) Select() error {
 	} else {
 		err = errors.New("tried to SELECT game with no gid/owner")
 	}
-	if err != nil {
-		return Log(err)
+	if err == sql.ErrNoRows {
+		return false
+	} else if err != nil {
+		Log(err)
+		return false
 	}
-	return nil
+	return true
 }
 
 func (g *Game) IncTurn() error {
@@ -87,9 +91,9 @@ func (g *Game) Factions() map[int]*Faction {
 	return g.CacheFactions
 }
 
-func (g *Game) Planets() map[Point]*Planet {
+func (g *Game) Planets() map[hexagon.Coord]*Planet {
 	if g.CachePlanets == nil {
-		g.CachePlanets = map[Point]*Planet{}
+		g.CachePlanets = map[hexagon.Coord]*Planet{}
 		query := "SELECT pid, name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1"
 		rows, err := g.Db.Query(query, g.Gid)
 		if err != nil {

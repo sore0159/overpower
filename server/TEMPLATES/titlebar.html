@@ -5,7 +5,7 @@
         </div>
         <div class="loginarea">
 {{ if .User }} 
-        Logged in as <a href="/view">{{ .User }}</a> -- <a href="/logout">Log out?</a>
+        Logged in as <a href="/home">{{ .User }}</a> -- <a href="/logout">Log out?</a>
 {{ else }}
         <form action="/login" method="post">
         <input type="hidden" name="action" value="login">
