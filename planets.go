@@ -8,7 +8,7 @@ import (
 )
 
 type Planet struct {
-	Db          *sql.DB
+	db          *sql.DB
 	Gid         int
 	Pid         int
 	Name        string
@@ -24,7 +24,7 @@ type Planet struct {
 func (p *Planet) Select() error {
 	query := "SELECT name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1 AND pid = $2"
 	var controller sql.NullInt64
-	err := p.Db.QueryRow(query, p.Gid, p.Pid).Scan(&(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
+	err := p.db.QueryRow(query, p.Gid, p.Pid).Scan(&(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
 	if err != nil {
 		return Log(err)
 	}
@@ -58,7 +58,7 @@ func (p *Planet) ViewInsertQVals(fid int) string {
 
 func (g *Game) UpdateViewStmt() (*sql.Stmt, error) {
 	query := "UPDATE planetviews SET turn = $1, controller = $2, inhabitants = $3, resources = $4, parts = $5 WHERE gid = $6 AND fid = $7 AND pid = $8"
-	stmt, err := g.Db.Prepare(query)
+	stmt, err := g.db.Prepare(query)
 	if err != nil {
 		return nil, Log(err)
 	}

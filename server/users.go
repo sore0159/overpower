@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"strings"
-	"unicode"
 )
 
 func ValidLogin(userName, password string) bool {
@@ -37,46 +36,47 @@ func CreateUser(userName, password string) error {
 }
 
 func ValidPassword(password string) bool {
-	if password == "" || len(password) > 15 {
-		return false
-	}
-	for _, rn := range password {
-		if !unicode.In(rn, unicode.L, unicode.N) {
-			return false
-		}
-	}
-	return true
+	return ValidText(password)
 }
 
-func UserNameInUse(username string) bool {
+func UserNameAvail(username string) bool {
+	if !ValidUserName(username) {
+		return false
+	}
 	name := strings.ToLower(username)
 	reserved := []string{"home", "planet", "yours", "static", "turn", "admin", "themule", "mule", "login", "logout"}
 	for _, test := range reserved {
 		if name == test {
-			return true
+			return false
 		}
 	}
 	query := "SELECT name FROM userinfo WHERE lower(name) = $1"
 	var found string
 	err := USERDB.QueryRow(query, username).Scan(&found)
 	if err == nil {
-		return true
-	}
-	if err == sql.ErrNoRows {
 		return false
 	}
+	if err == sql.ErrNoRows {
+		return true
+	}
 	Log(err)
-	return true
+	return false
+}
+
+func UserExists(userN string) bool {
+	if !ValidUserName(userN) {
+		return false
+	}
+	query := "SELECT name FROM userinfo WHERE lower(name) = $1"
+	name := strings.ToLower(userN)
+	var found string
+	err := USERDB.QueryRow(query, name).Scan(&found)
+	if err == nil && found != "" {
+		return true
+	}
+	return false
 }
 
 func ValidUserName(username string) bool {
-	if username == "" || len(username) > 15 {
-		return false
-	}
-	for _, rn := range username {
-		if !unicode.In(rn, unicode.L, unicode.N) {
-			return false
-		}
-	}
-	return true
+	return ValidText(username)
 }

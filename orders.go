@@ -6,7 +6,7 @@ import (
 )
 
 type Order struct {
-	Db     *sql.DB
+	db     *sql.DB
 	Gid    int
 	Fid    int
 	Source hexagon.Coord

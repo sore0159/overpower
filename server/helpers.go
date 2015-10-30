@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -85,4 +86,16 @@ func GetInts(r *http.Request, varNames ...string) (map[string]int, error) {
 
 func makeE(v ...interface{}) error {
 	return errors.New(fmt.Sprint(v...))
+}
+
+func ValidText(test string) bool {
+	if test == "" || len(test) > 15 {
+		return false
+	}
+	for _, rn := range test {
+		if !unicode.In(rn, unicode.L, unicode.N) {
+			return false
+		}
+	}
+	return true
 }

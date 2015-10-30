@@ -31,7 +31,9 @@ func TestSecond(t *testing.T) {
 	var fid int
 	var fac *Faction
 	for fName, uName := range facs {
-		f, err := g.AddFac(fName, uName)
+		rq := Request{g.db, g.Gid, uName, fName}
+		rq.Insert()
+		f, err := rq.Approve()
 		if err != nil {
 			log.Println("FAC", fName, "CONSTRUCTION FAILED")
 			return
@@ -93,7 +95,7 @@ func XTestThird(t *testing.T) {
 		return
 	}
 	log.Println("Got db")
-	g := &Game{Db: db, Gid: gid}
+	g := &Game{db: db, Gid: gid}
 	if g.Select() {
 		log.Println("Got", g)
 		log.Println("Planets:", g.Planets())

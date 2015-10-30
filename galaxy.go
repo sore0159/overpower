@@ -28,12 +28,12 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		}
 	}
 	planets = make([]*Planet, num)
-	planets[0] = &Planet{Db: g.Db, Gid: g.Gid, Pid: 999, Name: "Planet Borion", Loc: hexagon.Coord{0, 0}, Inhabitants: 15, Resources: 30}
+	planets[0] = &Planet{db: g.db, Gid: g.Gid, Pid: 999, Name: "Planet Borion", Loc: hexagon.Coord{0, 0}, Inhabitants: 15, Resources: 30}
 	names := GetAdj(num)
 	usedNums := map[int]bool{0: true}
 	usedLocs := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
 	for i := 1; i < bigN; i++ {
-		p := &Planet{Db: g.Db, Gid: g.Gid, Inhabitants: pick(10), Resources: 10 + pick(10), Name: Nameify(names[i])}
+		p := &Planet{db: g.db, Gid: g.Gid, Inhabitants: pick(10), Resources: 10 + pick(10), Name: Nameify(names[i])}
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
@@ -45,7 +45,7 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		planets[i] = p
 	}
 	for i := bigN; i < num-len(fids); i++ {
-		p := &Planet{Db: g.Db, Gid: g.Gid, Resources: pick(10), Name: Nameify(names[i])}
+		p := &Planet{db: g.db, Gid: g.Gid, Resources: pick(10), Name: Nameify(names[i])}
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}
@@ -57,7 +57,7 @@ func (g *Game) MakeGalaxy(fids []int) (planets []*Planet) {
 		planets[i] = p
 	}
 	for i := 0; i < len(fids); i++ {
-		p := &Planet{Db: g.Db, Gid: g.Gid, Controller: fids[i], Inhabitants: 5, Resources: 15, Parts: 5, Name: Nameify(names[num-1-i])}
+		p := &Planet{db: g.db, Gid: g.Gid, Controller: fids[i], Inhabitants: 5, Resources: 15, Parts: 5, Name: Nameify(names[num-1-i])}
 		for usedNums[p.Pid] {
 			p.Pid = pick(898) + 99
 		}

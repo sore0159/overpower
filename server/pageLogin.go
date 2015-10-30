@@ -35,9 +35,9 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 			v.Apply(TPLOGIN, w)
 			return
 		}
-		if UserNameInUse(userName) {
+		if !UserNameAvail(userName) {
 			delete(m, "username")
-			v.SetError("LOGIN PAGE: CREATE: USERNAME ALREADY IN USE")
+			v.SetError("LOGIN PAGE: CREATE: USERNAME NOT AVAILABLE")
 			v.Apply(TPLOGIN, w)
 			return
 		}

@@ -3,23 +3,64 @@
 {{define "body"}}
 USER NAME: {{ index . "userN" }}<br>
 {{ if index . "mygame" }} 
-MYGAME: {{ index . "mygame" }}<br>
-ADMIN?<br>
+<div class="box">
+{{$g := index . "mygame" }}
+Your game: [ <a href="/game/{{ $g.Gid }}">{{ $g.Name }}</a> ] --
+{{ if $g.Turn }}
+Turn: {{ $g.Turn }}
+{{ else }}
+Assembling Players
+{{ end }}<br>
+<form action="" method="post">
+        <input type="hidden" name="action" value="deletegame">
+        <input type="submit" value="Delete Game!">
+</form>
+<hr>
+FACTIONS:<br>
+{{ range index . "mygamefactions" }}
+FACTION: {{ . }}<BR>
+{{ else }}
+NONE<br>
+{{ end }}
+{{ if not $g.Turn }}
+<br>JOIN REQUESTS:<br>
+{{ range index . "mygamerequests" }}
+REQUEST: USER {{ .Owner }} FACTION NAME {{ .Name }}<BR>
+<form action="" method="post">
+        <input type="hidden" name="action" value="approverq">
+        <input type="hidden" name="owner" value="{{ .Owner }}">
+        <input type="submit" value="Approve Request">
+</form>
+{{ else }}
+NONE<br>
+{{ end }}
+{{ end }}
+</div>
 {{ else }} 
+<div class="box">
 NO GAME OWNED: CREATE?<br>
 <form action="" method="post">
         <input type="hidden" name="action" value="creategame">
         Game Name:<input name="gamename" type="text"><br>
         <input type="submit" value="Create!">
 </form>
+</div>
 {{ end }}<br>
-<br>
-{{ if index . "facs" }}
-{{ range index . "facs" }}
-GAME FACTION: {{ . }} found<br>
-{{ end }}
+<div class="box">
+        YOUR FACTIONS/REQUESTS:<br>
+{{ $fgames := index . "fgames" }}
+{{ range $key, $val := (index . "facs") }}
+{{ $fgm := index $fgames $key }}
+FACTION: {{ $val.Name }} FOUND FOR GAME <a href="/game/{{ $fgm.Gid }}">{{ $fgm.Name }}</a> OF USER {{ $fgm.Owner }}{{ if $fgm.Turn}} (Turn {{ $fgm.Turn}}){{end}}<br> 
 {{ else }}
-NO GAMES IN PROGRESS<br>
+CURRENTLY PLAYING NO GAMES<br>
 {{ end }}
+<br>
+{{ $rqgames := index . "rqgames" }}
+{{ range $key, $val := (index . "requests") }}
+{{ $rgm := index $rqgames $key }}
+REQUESTING FACTION {{ $val.Name }} FOR GAME <a href="/game/{{ $rgm.Gid }}">{{ $rgm.Name }}</a> OF USER {{ $rgm.Owner }}<br> 
+{{ end }}
+</div>
 {{ end }}
 

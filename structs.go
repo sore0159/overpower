@@ -6,7 +6,7 @@ import (
 )
 
 type ShipView struct {
-	Db         *sql.DB
+	db         *sql.DB
 	Gid        int
 	Fid        int
 	Sid        int

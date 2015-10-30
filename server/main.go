@@ -22,6 +22,7 @@ func main() {
 		log.Fatal("Can't load planet db:", err)
 	}
 	defer ATTACKDB.Close()
+	http.HandleFunc("/game/", GamePage)
 	http.HandleFunc("/", gameMux)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
 	log.Println("STARTING SERVER AT", SERVPORT)

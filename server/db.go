@@ -30,18 +30,24 @@ func LoadPlanetDB() (*sql.DB, error) {
 
 func NewGame() *Game {
 	return &Game{
-		Game: planetattack.Game{
-			Db: ATTACKDB,
-		},
+		Game: *planetattack.NewGame(ATTACKDB),
 	}
 }
 
-func NewFaction() *planetattack.Faction {
-	return &planetattack.Faction{
-		Db: ATTACKDB,
-	}
+func GetGame(gid int) (*Game, bool) {
+	g := NewGame()
+	g.Gid = gid
+	return g, g.Select()
 }
 
 func AllFactions(userN string) []*planetattack.Faction {
 	return planetattack.AllFactions(ATTACKDB, userN)
+}
+
+func AllRequests(userN string) []planetattack.Request {
+	return planetattack.AllRequests(ATTACKDB, userN)
+}
+
+func GetGames(gids []int) []*planetattack.Game {
+	return planetattack.GetGames(ATTACKDB, gids)
 }

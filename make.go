@@ -6,24 +6,12 @@ import (
 )
 
 func MakeGame(db *sql.DB, gameName, owner string) (g *Game, err error) {
-	g = &Game{Db: db, Name: gameName, Owner: owner}
+	g = &Game{db: db, Name: gameName, Owner: owner}
 	err = g.Insert()
 	if err != nil {
 		return nil, err
 	}
 	return g, nil
-}
-
-func (g *Game) AddFac(fName, uName string) (f *Faction, err error) {
-	f = &Faction{Db: g.Db, Gid: g.Gid, Name: fName, Owner: uName}
-	err = f.Insert()
-	if err != nil {
-		return nil, err
-	}
-	if g.CacheFactions != nil {
-		g.CacheFactions[f.Fid] = f
-	}
-	return f, nil
 }
 
 func (g *Game) Start() (err error) {
@@ -43,7 +31,7 @@ func (g *Game) Start() (err error) {
 	fmt.Println("")
 	query := PlanetMassInsertQ(planets)
 	fmt.Println("first query:\n", query, "\n")
-	res, err := g.Db.Exec(query)
+	res, err := g.db.Exec(query)
 	if err != nil {
 		return Log(err)
 	}
@@ -53,7 +41,7 @@ func (g *Game) Start() (err error) {
 		fmt.Println(aff, "rows affected in planets make")
 	}
 	query = PlanetViewMassInsertQ(planets, fids)
-	res, err = g.Db.Exec(query)
+	res, err = g.db.Exec(query)
 	if err != nil {
 		return Log(err)
 	}

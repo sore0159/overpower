@@ -6,7 +6,7 @@ import (
 )
 
 type PlanetView struct {
-	Db          *sql.DB
+	db          *sql.DB
 	Gid         int
 	Fid         int
 	Pid         int

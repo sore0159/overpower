@@ -8,7 +8,7 @@ import (
 )
 
 type Ship struct {
-	Db   *sql.DB
+	db   *sql.DB
 	Gid  int
 	Fid  int
 	Sid  int
@@ -80,10 +80,10 @@ func (s *Ship) InsertQVals() string {
 }
 
 func (p *Planet) SpawnShip(size int, target *Planet) *Ship {
-	s := &Ship{Db: p.Db, Gid: p.Gid, Fid: p.Controller, Size: size}
+	s := &Ship{db: p.db, Gid: p.Gid, Fid: p.Controller, Size: size}
 	s.Path = Pathfind(p, target)
 	query := "UPDATE planets SET parts = parts - $1 WHERE gid = $2 AND pid = $3"
-	res, err := p.Db.Exec(query, size, p.Gid, p.Pid)
+	res, err := p.db.Exec(query, size, p.Gid, p.Pid)
 	if err != nil {
 		Log(err)
 		return nil
