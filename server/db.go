@@ -44,10 +44,6 @@ func AllFactions(userN string) []*planetattack.Faction {
 	return planetattack.AllFactions(ATTACKDB, userN)
 }
 
-func AllRequests(userN string) []planetattack.Request {
-	return planetattack.AllRequests(ATTACKDB, userN)
-}
-
 func GetGames(gids []int) []*planetattack.Game {
 	return planetattack.GetGames(ATTACKDB, gids)
 }

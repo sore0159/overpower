@@ -44,7 +44,13 @@ func (v *View) newpath(n int) string {
 func (v *View) Link(str string) string {
 	r := []string{""}
 	for _, part := range append(v.path, strings.Split(str, "/")...) {
-		if part != "" {
+		if part == "" {
+			continue
+		} else if part == ".." {
+			if len(r) > 1 {
+				r = r[:len(r)-1]
+			}
+		} else {
 			r = append(r, part)
 		}
 	}

@@ -5,11 +5,11 @@ USER NAME: {{ index . "userN" }}<br>
 {{ if index . "mygame" }} 
 <div class="box">
 {{$g := index . "mygame" }}
-Your game: [ <a href="/game/{{ $g.Gid }}">{{ $g.Name }}</a> ] --
-{{ if $g.Turn }}
-Turn: {{ $g.Turn }}
-{{ else }}
-Assembling Players
+Your game: [ <a href="/game/{{ $g.Gid }}">{{ $g.Name }}</a> ] -- {{ if $g.Turn }} Turn: {{ $g.Turn }} {{ else }} Assembling Players
+<form action="" method="post">
+        <input type="hidden" name="action" value="startgame">
+        <input type="submit" value="Start Game">
+</form>
 {{ end }}<br>
 <form action="" method="post">
         <input type="hidden" name="action" value="deletegame">
@@ -18,22 +18,9 @@ Assembling Players
 <hr>
 FACTIONS:<br>
 {{ range index . "mygamefactions" }}
-FACTION: {{ . }}<BR>
+FACTION: {{ .Name }} (USER {{ .Owner }})<BR>
 {{ else }}
 NONE<br>
-{{ end }}
-{{ if not $g.Turn }}
-<br>JOIN REQUESTS:<br>
-{{ range index . "mygamerequests" }}
-REQUEST: USER {{ .Owner }} FACTION NAME {{ .Name }}<BR>
-<form action="" method="post">
-        <input type="hidden" name="action" value="approverq">
-        <input type="hidden" name="owner" value="{{ .Owner }}">
-        <input type="submit" value="Approve Request">
-</form>
-{{ else }}
-NONE<br>
-{{ end }}
 {{ end }}
 </div>
 {{ else }} 
@@ -42,25 +29,21 @@ NO GAME OWNED: CREATE?<br>
 <form action="" method="post">
         <input type="hidden" name="action" value="creategame">
         Game Name:<input name="gamename" type="text"><br>
+        Password (leave blank for open game):<input name="password" type="text"><br>
         <input type="submit" value="Create!">
 </form>
 </div>
 {{ end }}<br>
 <div class="box">
-        YOUR FACTIONS/REQUESTS:<br>
+        YOUR FACTIONS:<br>
 {{ $fgames := index . "fgames" }}
 {{ range $key, $val := (index . "facs") }}
 {{ $fgm := index $fgames $key }}
-FACTION: {{ $val.Name }} FOUND FOR GAME <a href="/game/{{ $fgm.Gid }}">{{ $fgm.Name }}</a> OF USER {{ $fgm.Owner }}{{ if $fgm.Turn}} (Turn {{ $fgm.Turn}}){{end}}<br> 
+FACTION: {{ $val.Name }} FOUND FOR GAME <a href="/game/{{ $fgm.Gid }}">{{ $fgm.Name }}</a> OF USER {{ $fgm.Owner }} {{ if $fgm.Turn}}(Turn {{ $fgm.Turn}}, {{ if $val.Done }}Complete{{else}}In Progress{{end}}){{ else }}(Assembling Players){{end}}<br> 
 {{ else }}
 CURRENTLY PLAYING NO GAMES<br>
 {{ end }}
 <br>
-{{ $rqgames := index . "rqgames" }}
-{{ range $key, $val := (index . "requests") }}
-{{ $rgm := index $rqgames $key }}
-REQUESTING FACTION {{ $val.Name }} FOR GAME <a href="/game/{{ $rgm.Gid }}">{{ $rgm.Name }}</a> OF USER {{ $rgm.Owner }}<br> 
-{{ end }}
 </div>
 {{ end }}
 

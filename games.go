@@ -9,11 +9,12 @@ import (
 )
 
 type Game struct {
-	db    *sql.DB
-	Gid   int
-	Owner string
-	Name  string
-	Turn  int
+	db       *sql.DB
+	Gid      int
+	Owner    string
+	Name     string
+	Turn     int
+	Password string
 	//
 	CacheFactions map[int]*Faction
 	CachePlanets  map[hexagon.Coord]*Planet
@@ -27,6 +28,9 @@ func NewGame(db *sql.DB) *Game {
 }
 
 func GetGames(db *sql.DB, gids []int) []*Game {
+	if len(gids) < 1 {
+		return []*Game{}
+	}
 	query := "SELECT gid, owner, name, turn FROM games WHERE "
 	parts := make([]string, len(gids))
 	games := make([]*Game, len(gids))
@@ -63,8 +67,13 @@ func GetGames(db *sql.DB, gids []int) []*Game {
 }
 
 func (g *Game) Insert() error {
-	query := "INSERT INTO games (name, owner, turn) VALUES($1, $2, $3) RETURNING gid"
-	err := g.db.QueryRow(query, g.Name, g.Owner, g.Turn).Scan(&(g.Gid))
+	query := "INSERT INTO games (name, owner, turn, password) VALUES($1, $2, $3, $4) RETURNING gid"
+	var pswd sql.NullString
+	if g.Password != "" {
+		pswd.Valid = true
+		pswd.String = g.Password
+	}
+	err := g.db.QueryRow(query, g.Name, g.Owner, g.Turn, pswd).Scan(&(g.Gid))
 	if err != nil {
 		return Log(err)
 	}
@@ -73,20 +82,24 @@ func (g *Game) Insert() error {
 
 func (g *Game) Select() bool {
 	var err error
+	var pswd sql.NullString
 	if g.Gid != 0 {
-		query := "SELECT owner, name, turn FROM games WHERE gid = $1"
-		err = g.db.QueryRow(query, g.Gid).Scan(&(g.Owner), &(g.Name), &(g.Turn))
+		query := "SELECT owner, name, turn, password FROM games WHERE gid = $1"
+		err = g.db.QueryRow(query, g.Gid).Scan(&(g.Owner), &(g.Name), &(g.Turn), &pswd)
 	} else if g.Owner != "" {
-		query := "SELECT gid, name, turn FROM games WHERE owner = $1"
-		err = g.db.QueryRow(query, g.Owner).Scan(&(g.Gid), &(g.Name), &(g.Turn))
+		query := "SELECT gid, name, turn, password FROM games WHERE owner = $1"
+		err = g.db.QueryRow(query, g.Owner).Scan(&(g.Gid), &(g.Name), &(g.Turn), &pswd)
 	} else {
 		err = errors.New("tried to SELECT game with no gid/owner")
 	}
 	if err == sql.ErrNoRows {
 		return false
 	} else if err != nil {
-		Log(err)
+		Log("GAME SELECT ERROR FOR GAME", g, ":", err)
 		return false
+	}
+	if pswd.Valid {
+		g.Password = pswd.String
 	}
 	return true
 }

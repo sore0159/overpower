@@ -6,7 +6,8 @@ create table games(
 	gid SERIAL PRIMARY KEY,
 	owner varchar(20) NOT NULL UNIQUE,
 	name varchar(20) NOT NULL,
-	turn int NOT NULL
+	turn int NOT NULL,
+	password varchar(20)
 );
 
 create table requests (
@@ -24,6 +25,15 @@ create table factions (
 	done bool NOT NULL,
 	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
+);
+
+create table views (
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid integer NOT NULL,
+	center point NOT NULL,
+	zoom int NOT NULL,
+	UNIQUE (gid, fid),
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE
 );
 
 create table planets (

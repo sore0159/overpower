@@ -3,7 +3,9 @@ package planetattack
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"mule/hexagon"
+	"strings"
 )
 
 type Faction struct {
@@ -29,6 +31,20 @@ func (f *Faction) Insert() error {
 	err := f.db.QueryRow(query, f.Gid, f.Owner, f.Name).Scan(&(f.Fid))
 	if err != nil {
 		return Log(err)
+	}
+	return nil
+}
+
+func (f *Faction) Delete() error {
+	query := "DELETE FROM factions where gid = $1 AND fid = $2"
+	res, err := f.db.Exec(query, f.Gid, f.Fid)
+	if err != nil {
+		Log("failed to delete faction", f, ":", err)
+		return err
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		Log("failed to delete faction", f, ": 0 rows affected")
+		return err
 	}
 	return nil
 }
@@ -84,15 +100,22 @@ func AllFactions(db *sql.DB, owner string) []*Faction {
 }
 
 func (f *Faction) ToggleDone() error {
-	f.Done = !f.Done
-	query := "UPDATE factions SET done = !done WHERE gid = $1 and fid = $2"
-	res, err := f.db.Exec(query, f.Gid, f.Fid)
+	return f.SetDone(!f.Done)
+}
+
+func (f *Faction) SetDone(done bool) error {
+	if f.Done == done {
+		return nil
+	}
+	query := "UPDATE factions SET done = $1 WHERE gid = $2 and fid = $3"
+	res, err := f.db.Exec(query, done, f.Gid, f.Fid)
 	if err != nil {
-		return Log("failed to toggle done", f.Gid, f.Fid, ":", err)
+		return Log("failed to set done", f.Gid, f.Fid, ":", err)
 	}
 	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
-		return Log("failed to toggle done", f.Gid, f.Fid, ": no rows affected")
+		return Log("failed to set done", f.Gid, f.Fid, ": no rows affected")
 	}
+	f.Done = done
 	return nil
 }
 
@@ -132,4 +155,40 @@ func (f *Faction) PlanetViews() map[hexagon.Coord]*PlanetView {
 		}
 	}
 	return f.CachePlanetViews
+}
+
+func (f *Faction) GetView() (center hexagon.Coord, zoom int) {
+	query := "SELECT center, zoom FROM views WHERE gid = $1 AND fid = $2"
+	err := f.db.QueryRow(query, f.Gid, f.Fid).Scan(&(center), &(zoom))
+	if err == sql.ErrNoRows {
+		Log("View not found for f:", f)
+		return center, -1
+	} else if err != nil {
+		Log(err)
+		return center, -1
+	}
+	return
+}
+
+func (f *Faction) SetView(center hexagon.Coord, zoom int) error {
+	query := "UPDATE views SET center = $1 AND zoom = $2 WHERE gid = $3 and fid = $4"
+	res, err := f.db.Exec(query, center, zoom, f.Gid, f.Fid)
+	if err != nil {
+		return Log("failed to set view", f.Gid, f.Fid, ":", err)
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		return Log("failed to set view", f.Gid, f.Fid, ": no rows affected")
+	}
+	return nil
+}
+
+func ViewMassInsertQ(planets []*Planet) string {
+	query := "INSERT INTO views (gid, fid, center, zoom) VALUES "
+	parts := []string{}
+	for _, pl := range planets {
+		if pl.Controller != 0 {
+			parts = append(parts, fmt.Sprintf("(%d, %d, POINT(%d,%d), 0)", pl.Gid, pl.Controller, pl.Loc[0], pl.Loc[1]))
+		}
+	}
+	return query + strings.Join(parts, ", ")
 }

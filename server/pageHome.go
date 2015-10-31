@@ -24,23 +24,22 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		action := r.FormValue("action")
 		switch action {
-		case "approverq":
+		case "startgame":
 			if m["mygame"] == nil {
-				v.SetError("USER", userN, "HAS NO GAME TO APPROVE REQUESTS")
+				v.SetError("USER", userN, "HAS NO GAME BEGIN")
 				goto GET
 			}
-			facOwner := r.FormValue("owner")
-			if !UserExists(facOwner) {
-				v.SetError("USER", facOwner, "NOT FOUND")
+			if g.Turn > 0 {
+				v.SetError("USER", userN, "GAME", g.Name, "HAS ALREADY BEGUN!")
 				goto GET
 			}
-			rq, ok := g.GetRequest(facOwner)
-			if !ok {
-				v.SetError("REQUEST FOR USER", facOwner, "NOT FOUND")
+			if len(g.Factions()) < 1 {
+				v.SetError("USER", userN, "GAME", g.Name, "HAS NO PLAYERS!")
 				goto GET
 			}
-			if _, err := rq.Approve(); err != nil {
-				v.SetError("APRROVAL ERROR FOR USER", facOwner, ":", err)
+			err := g.Start()
+			if err != nil {
+				v.SetError("GAME START ERROR:", err)
 				goto GET
 			}
 		case "deletegame":
@@ -60,7 +59,12 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 				v.SetError("INVALID GAME NAME: '", gName, "'")
 				goto GET
 			}
-			_, err := planetattack.MakeGame(ATTACKDB, gName, userN)
+			password := r.FormValue("password")
+			if password != "" && !ValidText(password) {
+				v.SetError("INVALID GAME PASSWORD: '", password, "'")
+				goto GET
+			}
+			_, err := planetattack.MakeGame(ATTACKDB, gName, userN, password)
 			if err != nil {
 				v.SetError("Creation error:", err)
 				goto GET
@@ -78,33 +82,15 @@ GET:
 	for _, f := range myfacs {
 		gids = append(gids, f.Gid)
 	}
-	reqs := AllRequests(userN)
-	for _, rq := range reqs {
-		gids = append(gids, rq.Gid)
-	}
-	games := GetGames(gids)
-	fGames := make([]*planetattack.Game, len(myfacs))
-	rqGames := make([]*planetattack.Game, len(reqs))
-	for i, gm := range games {
-		if i >= len(myfacs) {
-			rqGames[i-len(myfacs)] = gm
-		} else {
-			fGames[i] = gm
-		}
-	}
 	if len(myfacs) > 0 {
-		m["facs"] = myfacs
-		m["fgames"] = fGames
-	}
-	if len(reqs) > 0 {
-		m["requests"] = reqs
-		m["rqgames"] = rqGames
+		games := GetGames(gids)
+		if len(games) > 0 {
+			m["facs"] = myfacs
+			m["fgames"] = games
+		}
 	}
 	if m["mygame"] != nil {
 		m["mygamefactions"] = g.Factions()
-		if g.Turn == 0 {
-			m["mygamerequests"] = g.AllRequests()
-		}
 	}
 	v.Apply(TPHOME, w)
 }
