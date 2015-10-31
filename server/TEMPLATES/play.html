@@ -1,0 +1,29 @@
+{{ define "title"}}Planet Attack! Play Page{{end}}
+{{ define "css"}}main{{end}}
+{{define "body"}}
+{{ $g := index . "game" }}
+{{ $turn := $g.Turn }}
+{{ $fNames := index . "fNames" }}
+{{ $f := index . "myfac" }}
+{{ $center :=  index . "center" }}
+PLAY PAGE FOR GAME <a href="/game/{{ $g.Gid }}">{{ $g.Name }}</a> Turn: {{ $turn }}<br>
+FOR FACTION {{ $f.Name }}<br>
+Center: {{ $center }} Zoom: {{ index . "zoom" }}
+<hr>
+{{ range (index . "pvs") }}
+<div class="box">
+        Location: {{ .Loc }} {{ if and (eq (index .Loc 0) (index $center 0)) (eq (index .Loc 1) (index $center 1)) }}(Center){{ else }}(Dist: {{ .DistTo $center }}){{end}} {{ .Name }} ({{ .Pid }})<br>
+{{ if .Turn }}
+{{ if eq .Controller $f.Fid }}Your Planet{{ else }}
+{{ if .Controller }}Controller: Faction {{ index $fNames .Controller }} {{ else }}Unaligned{{end}} Last Seen: Turn {{ .Turn }} {{ end }}<br>
+Population: {{ .Inhabitants }} Ship Parts: {{ .Parts }} Planetary Resources: {{ .Resources }}<br>
+{{ else }}
+No planetary information available<br>
+{{ end }}
+</div><br>
+
+
+{{ else }}
+NO PVS<br>
+{{ end }}
+{{ end }}
