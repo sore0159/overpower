@@ -11,14 +11,34 @@ FOR FACTION {{ $f.Name }}<br>
 Center: {{ $center }} Zoom: {{ index . "zoom" }}
 <hr>
 {{ range (index . "pvs") }}
+{{ $yours := (eq .Controller $f.Fid) }}
 <div class="box">
-        Location: {{ .Loc }} {{ if and (eq (index .Loc 0) (index $center 0)) (eq (index .Loc 1) (index $center 1)) }}(Center){{ else }}(Dist: {{ .DistTo $center }}){{end}} {{ .Name }} ({{ .Pid }})<br>
+        Location: {{ .Loc }} {{ if not .Dist }}(Center){{ else }}(Dist: {{ .Dist }}){{end}} {{ .Name }} ({{ .Pid }})<br>
 {{ if .Turn }}
-{{ if eq .Controller $f.Fid }}Your Planet{{ else }}
+{{ if $yours }}Your Planet{{ else }}
 {{ if .Controller }}Controller: Faction {{ index $fNames .Controller }} {{ else }}Unaligned{{end}} Last Seen: Turn {{ .Turn }} {{ end }}<br>
 Population: {{ .Inhabitants }} Ship Parts: {{ .Parts }} Planetary Resources: {{ .Resources }}<br>
 {{ else }}
 No planetary information available<br>
+{{ end }}
+{{ if .Dist }}
+<form action="" method="post">
+        <input type="hidden" name="action" value="centerview">
+        <input type="hidden" name="turn" value="{{ $turn }}">
+        <input type="hidden" name="x" value="{{index .Loc 0}}">
+        <input type="hidden" name="y" value="{{index .Loc 1}}">
+        <input type="submit" value="Set As Center">
+</form>
+{{ end }}
+{{ if $yours }}
+<form action="" method="post">
+        <input type="submit" value="Order Ship Launch">
+        <input type="hidden" name="action" value="orderlaunch">
+        <input type="hidden" name="turn" value="{{ $turn }}">
+        <input type="hidden" name="source" value="{{ .Pid }}">
+        Target Planet ID:<input type="text" size=4 name="target">
+        Ship Size: <input type="text" size=4 name="size">
+</form>
 {{ end }}
 </div><br>
 

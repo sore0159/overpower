@@ -119,44 +119,6 @@ func (f *Faction) SetDone(done bool) error {
 	return nil
 }
 
-func (f *Faction) PlanetViews() map[hexagon.Coord]*PlanetView {
-	if f.CachePlanetViews == nil {
-		f.CachePlanetViews = map[hexagon.Coord]*PlanetView{}
-		query := "SELECT pid, name, loc, turn, controller, inhabitants, resources, parts FROM planetviews WHERE gid = $1 AND fid = $2"
-		rows, err := f.db.Query(query, f.Gid, f.Fid)
-		if err != nil {
-			Log(err)
-			f.CachePlanetViews = nil
-			return nil
-		}
-		defer rows.Close()
-		for rows.Next() {
-			p := &PlanetView{db: f.db, Gid: f.Gid, Fid: f.Fid}
-			var turn, controller, resources, parts, inhabitants sql.NullInt64
-			err = rows.Scan(&(p.Pid), &(p.Name), &(p.Loc), &turn, &controller, &inhabitants, &resources, &parts)
-			if err != nil {
-				Log(err)
-				f.CachePlanetViews = nil
-				return nil
-			}
-			x := []sql.NullInt64{turn, controller, resources, parts, inhabitants}
-			y := []*int{&(p.Turn), &(p.Controller), &(p.Resources), &(p.Parts), &(p.Inhabitants)}
-			for i, test := range x {
-				if test.Valid {
-					*(y[i]) = int(test.Int64)
-				}
-			}
-			f.CachePlanetViews[p.Loc] = p
-		}
-		if err = rows.Err(); err != nil {
-			Log(err)
-			f.CachePlanetViews = nil
-			return nil
-		}
-	}
-	return f.CachePlanetViews
-}
-
 func (f *Faction) GetView() (center hexagon.Coord, zoom int) {
 	query := "SELECT center, zoom FROM views WHERE gid = $1 AND fid = $2"
 	err := f.db.QueryRow(query, f.Gid, f.Fid).Scan(&(center), &(zoom))
@@ -173,6 +135,30 @@ func (f *Faction) GetView() (center hexagon.Coord, zoom int) {
 func (f *Faction) SetView(center hexagon.Coord, zoom int) error {
 	query := "UPDATE views SET center = $1 AND zoom = $2 WHERE gid = $3 and fid = $4"
 	res, err := f.db.Exec(query, center, zoom, f.Gid, f.Fid)
+	if err != nil {
+		return Log("failed to set view", f.Gid, f.Fid, ":", err)
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		return Log("failed to set view", f.Gid, f.Fid, ": no rows affected")
+	}
+	return nil
+}
+
+func (f *Faction) SetViewCenter(center hexagon.Coord) error {
+	query := "UPDATE views SET center = $1 WHERE gid = $2 and fid = $3"
+	res, err := f.db.Exec(query, center, f.Gid, f.Fid)
+	if err != nil {
+		return Log("failed to set view center", f.Gid, f.Fid, ":", err)
+	}
+	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
+		return Log("failed to set view center", f.Gid, f.Fid, ": no rows affected")
+	}
+	return nil
+}
+
+func (f *Faction) SetViewZoom(zoom int) error {
+	query := "UPDATE views SET zoom = $1 WHERE gid = $2 and fid = $3"
+	res, err := f.db.Exec(query, zoom, f.Gid, f.Fid)
 	if err != nil {
 		return Log("failed to set view", f.Gid, f.Fid, ":", err)
 	}

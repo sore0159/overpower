@@ -147,38 +147,80 @@ func (g *Game) Factions() map[int]*Faction {
 	return g.CacheFactions
 }
 
-func (g *Game) Planets() map[hexagon.Coord]*Planet {
+func (g *Game) PlanetsMap() map[hexagon.Coord]*Planet {
 	if g.CachePlanets == nil {
 		g.CachePlanets = map[hexagon.Coord]*Planet{}
-		query := "SELECT pid, name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1"
-		rows, err := g.db.Query(query, g.Gid)
-		if err != nil {
-			Log(err)
-			g.CachePlanets = nil
-			return nil
-		}
-		defer rows.Close()
-		for rows.Next() {
-			p := &Planet{db: g.db, Gid: g.Gid}
-			var controller sql.NullInt64
-			err = rows.Scan(&(p.Pid), &(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
-			if err != nil {
-				Log(err)
-				g.CachePlanets = nil
-				return nil
-			}
-			if controller.Valid {
-				p.Controller = int(controller.Int64)
-			}
-			g.CachePlanets[p.Loc] = p
-		}
-		if err = rows.Err(); err != nil {
-			Log(err)
-			g.CachePlanets = nil
-			return nil
+		for _, pl := range g.AllPlanets() {
+			g.CachePlanets[pl.Loc] = pl
 		}
 	}
 	return g.CachePlanets
+}
+
+func (g *Game) AllPlanets() []*Planet {
+	r := []*Planet{}
+	query := "SELECT pid, name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1"
+	rows, err := g.db.Query(query, g.Gid)
+	if err != nil {
+		Log(err)
+		return nil
+	}
+	defer rows.Close()
+	for rows.Next() {
+		p := &Planet{db: g.db, Gid: g.Gid}
+		var controller sql.NullInt64
+		err = rows.Scan(&(p.Pid), &(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
+		if err != nil {
+			Log(err)
+			return nil
+		}
+		if controller.Valid {
+			p.Controller = int(controller.Int64)
+		}
+		r = append(r, p)
+	}
+	if err = rows.Err(); err != nil {
+		Log(err)
+		return nil
+	}
+	return r
+}
+
+func (g *Game) GetPlanets(pids ...int) []*Planet {
+	if len(pids) < 1 {
+		return nil
+	}
+	r := []*Planet{}
+	query := "SELECT pid, name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1 AND ("
+	parts := make([]string, len(pids))
+	for i, pid := range pids {
+		parts[i] = fmt.Sprintf("pid = %d", pid)
+	}
+	query += strings.Join(parts, " OR ") + ")"
+	rows, err := g.db.Query(query, g.Gid)
+	if err != nil {
+		Log(err)
+		return nil
+	}
+	defer rows.Close()
+	for rows.Next() {
+		p := &Planet{db: g.db, Gid: g.Gid}
+		var controller sql.NullInt64
+		err = rows.Scan(&(p.Pid), &(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
+		if err != nil {
+			Log(err)
+			return nil
+		}
+		if controller.Valid {
+			p.Controller = int(controller.Int64)
+		}
+		r = append(r, p)
+	}
+	if err = rows.Err(); err != nil {
+		Log(err)
+		return nil
+	}
+	return r
 }
 
 func (g *Game) Ships() []*Ship {
