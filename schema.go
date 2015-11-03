@@ -10,13 +10,6 @@ create table games(
 	password varchar(20)
 );
 
-create table requests (
-	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
-	owner varchar(20) NOT NULL,
-	name varchar(20) NOT NULL,
-	PRIMARY KEY(gid, owner)
-);
-
 create table factions (
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid SERIAL NOT NULL,
@@ -108,7 +101,7 @@ create table orders (
 
 
 
-drop table games, requests, planets, factions, ships, shipviews, planetviews, orders CASCADE;
+drop table games, planets, factions, ships, shipviews, planetviews, orders CASCADE;
 
 
 

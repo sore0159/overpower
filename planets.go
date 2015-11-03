@@ -17,8 +17,74 @@ type Planet struct {
 	Inhabitants int
 	Resources   int
 	Parts       int
+	conMod      bool
+	inhMod      bool
+	resMod      bool
+	partsMod    bool
 	//
 	Arrivals int
+}
+
+func (p *Planet) Modified() bool {
+	return p.conMod || p.inhMod || p.resMod || p.partsMod
+}
+
+func (p *Planet) Produce() {
+	if p.Controller != 0 && p.Inhabitants > 0 && p.Resources > 0 {
+		amount := p.Inhabitants
+		if amount > p.Resources {
+			amount = p.Resources
+		}
+		p.SetResources(p.Resources - amount)
+		p.SetParts(p.Parts + amount)
+	}
+	if p.Arrivals > 0 {
+		p.SetInhabitants(p.Inhabitants + p.Arrivals)
+	}
+}
+
+func (p *Planet) MakeView(turn, fid int) *PlanetView {
+	return &PlanetView{
+		db:          p.db,
+		Gid:         p.Gid,
+		Fid:         fid,
+		Pid:         p.Pid,
+		Name:        p.Name,
+		Loc:         p.Loc,
+		Turn:        turn,
+		Controller:  p.Controller,
+		Inhabitants: p.Inhabitants + p.Arrivals,
+		Resources:   p.Resources,
+		Parts:       p.Parts,
+	}
+}
+
+func (p *Planet) SetController(fid int) {
+	if fid != p.Controller {
+		p.Controller = fid
+		p.conMod = true
+	}
+}
+
+func (p *Planet) SetInhabitants(num int) {
+	if p.Inhabitants != num {
+		p.Inhabitants = num
+		p.inhMod = true
+	}
+}
+
+func (p *Planet) SetResources(num int) {
+	if p.Resources != num {
+		p.Resources = num
+		p.resMod = true
+	}
+}
+
+func (p *Planet) SetParts(num int) {
+	if p.Parts != num {
+		p.Parts = num
+		p.partsMod = true
+	}
 }
 
 func (p *Planet) Select() error {

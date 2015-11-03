@@ -156,7 +156,7 @@ func GamePage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 	}
 GET:
-	facs := g.Factions()
+	facs, _ := g.Factions()
 	m["factions"] = facs
 	if userN != "" {
 		for i, f := range facs {

@@ -19,6 +19,7 @@ type PlanetView struct {
 	Resources   int
 	Parts       int
 	Dist        int
+	Avail       int
 }
 
 func (f *Faction) PlanetViewList(center hexagon.Coord) []*PlanetView {

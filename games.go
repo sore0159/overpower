@@ -117,53 +117,39 @@ func (g *Game) IncTurn() error {
 	return nil
 }
 
-func (g *Game) Factions() map[int]*Faction {
+func (g *Game) Factions() (map[int]*Faction, error) {
 	if g.CacheFactions == nil {
 		g.CacheFactions = map[int]*Faction{}
 		query := "SELECT fid, owner, name, done FROM factions WHERE gid = $1"
 		rows, err := g.db.Query(query, g.Gid)
 		if err != nil {
-			Log(err)
 			g.CacheFactions = nil
-			return nil
+			return nil, Log(err)
 		}
 		defer rows.Close()
 		for rows.Next() {
 			f := &Faction{db: g.db, Gid: g.Gid}
 			err = rows.Scan(&(f.Fid), &(f.Owner), &(f.Name), &(f.Done))
 			if err != nil {
-				Log(err)
 				g.CacheFactions = nil
-				return nil
+				return nil, Log(err)
 			}
 			g.CacheFactions[f.Fid] = f
 		}
 		if err = rows.Err(); err != nil {
-			Log(err)
 			g.CacheFactions = nil
-			return nil
+			return nil, Log(err)
 		}
 	}
-	return g.CacheFactions
+	return g.CacheFactions, nil
 }
 
-func (g *Game) PlanetsMap() map[hexagon.Coord]*Planet {
-	if g.CachePlanets == nil {
-		g.CachePlanets = map[hexagon.Coord]*Planet{}
-		for _, pl := range g.AllPlanets() {
-			g.CachePlanets[pl.Loc] = pl
-		}
-	}
-	return g.CachePlanets
-}
-
-func (g *Game) AllPlanets() []*Planet {
+func (g *Game) AllPlanets() ([]*Planet, error) {
 	r := []*Planet{}
 	query := "SELECT pid, name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1"
 	rows, err := g.db.Query(query, g.Gid)
 	if err != nil {
-		Log(err)
-		return nil
+		return nil, Log(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -171,8 +157,7 @@ func (g *Game) AllPlanets() []*Planet {
 		var controller sql.NullInt64
 		err = rows.Scan(&(p.Pid), &(p.Name), &(p.Loc), &controller, &(p.Inhabitants), &(p.Resources), &(p.Parts))
 		if err != nil {
-			Log(err)
-			return nil
+			return nil, Log(err)
 		}
 		if controller.Valid {
 			p.Controller = int(controller.Int64)
@@ -180,20 +165,21 @@ func (g *Game) AllPlanets() []*Planet {
 		r = append(r, p)
 	}
 	if err = rows.Err(); err != nil {
-		Log(err)
-		return nil
+		return nil, Log(err)
 	}
-	return r
+	return r, nil
 }
 
 func (g *Game) GetPlanets(pids ...int) []*Planet {
 	if len(pids) < 1 {
 		return nil
 	}
-	r := []*Planet{}
+	r := make([]*Planet, len(pids))
 	query := "SELECT pid, name, loc, controller, inhabitants, resources, parts FROM planets WHERE gid = $1 AND ("
 	parts := make([]string, len(pids))
+	mp := make(map[int]int, len(pids))
 	for i, pid := range pids {
+		mp[pid] = i
 		parts[i] = fmt.Sprintf("pid = %d", pid)
 	}
 	query += strings.Join(parts, " OR ") + ")"
@@ -214,7 +200,7 @@ func (g *Game) GetPlanets(pids ...int) []*Planet {
 		if controller.Valid {
 			p.Controller = int(controller.Int64)
 		}
-		r = append(r, p)
+		r[mp[p.Pid]] = p
 	}
 	if err = rows.Err(); err != nil {
 		Log(err)
@@ -223,32 +209,29 @@ func (g *Game) GetPlanets(pids ...int) []*Planet {
 	return r
 }
 
-func (g *Game) Ships() []*Ship {
+func (g *Game) AllShips() ([]*Ship, error) {
 	if g.CacheShips == nil {
 		g.CacheShips = []*Ship{}
 		query := "SELECT fid, sid, size, loc, path WHERE gid = $1"
 		rows, err := g.db.Query(query, g.Gid)
 		if err != nil {
-			Log(err)
 			g.CacheShips = nil
-			return nil
+			return nil, Log(err)
 		}
 		defer rows.Close()
 		for rows.Next() {
 			s := &Ship{db: g.db, Gid: g.Gid}
 			err = rows.Scan(&(s.Fid), &(s.Sid), &(s.Size), &(s.Loc), &(s.Path))
 			if err != nil {
-				Log("Ship scan problem: ", err)
 				g.CacheShips = nil
-				return nil
+				return nil, Log(err)
 			}
 			g.CacheShips = append(g.CacheShips, s)
 		}
 		if err = rows.Err(); err != nil {
-			Log(err)
 			g.CacheShips = nil
-			return nil
+			return nil, Log(err)
 		}
 	}
-	return g.CacheShips
+	return g.CacheShips, nil
 }

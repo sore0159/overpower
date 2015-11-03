@@ -33,11 +33,16 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 				v.SetError("USER", userN, "GAME", g.Name, "HAS ALREADY BEGUN!")
 				goto GET
 			}
-			if len(g.Factions()) < 1 {
+			facs, err := g.Factions()
+			if err != nil {
+				v.SetError("ERROR RETRIEVING FACTIONS:", err)
+				goto GET
+			}
+			if len(facs) < 1 {
 				v.SetError("USER", userN, "GAME", g.Name, "HAS NO PLAYERS!")
 				goto GET
 			}
-			err := g.Start()
+			err = g.Start()
 			if err != nil {
 				v.SetError("GAME START ERROR:", err)
 				goto GET
@@ -90,7 +95,8 @@ GET:
 		}
 	}
 	if m["mygame"] != nil {
-		m["mygamefactions"] = g.Factions()
+		facs, _ := g.Factions()
+		m["mygamefactions"] = facs
 	}
 	v.Apply(TPHOME, w)
 }

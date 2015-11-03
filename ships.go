@@ -2,9 +2,8 @@ package planetattack
 
 import (
 	"database/sql"
-	"fmt"
 	"mule/hexagon"
-	"strings"
+	//"strings"
 )
 
 type Ship struct {
@@ -17,6 +16,58 @@ type Ship struct {
 	Path []hexagon.Coord
 }
 
+func (sh *Ship) LandOn(pl *Planet, turn int) (views []*PlanetView, reports []string) {
+	views = []*PlanetView{}
+
+	if pl.Controller == sh.Fid {
+		pl.Arrivals += sh.Size
+		return append(views, pl.MakeView(turn, pl.Controller)), reports
+	}
+	if pl.Controller == 0 {
+		if pl.Inhabitants == 0 {
+			pl.Arrivals += sh.Size
+		} else {
+			pl.SetInhabitants(pl.Inhabitants - sh.Size)
+			if pl.Inhabitants < 0 {
+				pl.Arrivals = pl.Inhabitants * -1
+				pl.SetInhabitants(0)
+				pl.SetController(sh.Fid)
+			}
+		}
+		return append(views, pl.MakeView(turn, pl.Controller)), reports
+	}
+	prev := pl.Controller
+	pl.Arrivals -= sh.Size
+	if pl.Arrivals < 0 {
+		pl.SetInhabitants(pl.Inhabitants + pl.Arrivals)
+		if pl.Inhabitants < 0 {
+			pl.Arrivals = pl.Inhabitants * -1
+			pl.SetInhabitants(0)
+			pl.SetController(sh.Fid)
+		}
+	}
+	return []*PlanetView{pl.MakeView(turn, prev), pl.MakeView(turn, sh.Fid)}, reports
+}
+
+func (sh *Ship) Travel() (atTarget bool, dist int) {
+	dist = len(sh.Path) - sh.Loc
+	sh.Loc += SHIPSPEED
+	return sh.Loc > len(sh.Path)-2, dist
+}
+
+func (source *Planet) LaunchShip(target *Planet, fid, size int) *Ship {
+	source.SetParts(source.Parts - size)
+	return &Ship{
+		db:   source.db,
+		Gid:  source.Gid,
+		Fid:  fid,
+		Size: size,
+		Loc:  0,
+		Path: source.Loc.PathTo(target.Loc),
+	}
+}
+
+/*
 func (s *Ship) InsertViewQVals(fid int, viewpoints []hexagon.Coord) string {
 	// q := "INSERT INTO shipviews (gid, viewer, controller, sid, size, loc, trail) VALUES "
 	parts := []string{}
@@ -78,37 +129,18 @@ func (s *Ship) InsertQVals() string {
 	}
 	return fmt.Sprintf("(%d, %d, %d, %d, %s)", s.Gid, s.Fid, s.Size, loc, pathStr)
 }
+*/
 
-func (p *Planet) SpawnShip(size int, target *Planet) *Ship {
-	s := &Ship{db: p.db, Gid: p.Gid, Fid: p.Controller, Size: size}
-	s.Path = Pathfind(p, target)
-	query := "UPDATE planets SET parts = parts - $1 WHERE gid = $2 AND pid = $3"
-	res, err := p.db.Exec(query, size, p.Gid, p.Pid)
-	if err != nil {
-		Log(err)
-		return nil
-	}
-	if aff, err := res.RowsAffected(); err != nil || aff < 1 {
-		Log("failed to spawn ship", p.Gid, p.Pid, "pt1: 0 rows affected")
-		return nil
-	}
-	return nil
-}
-
-func Pathfind(begin, end *Planet) []hexagon.Coord {
-	return []hexagon.Coord{begin.Loc, end.Loc}
-}
-
-func Visible(pt1, pt2 hexagon.Coord) bool {
+/*func Visible(pt1, pt2 hexagon.Coord) bool {
 	return Dist(pt1, pt2) < 26
 }
 
 func Dist(pt1, pt2 hexagon.Coord) int {
 	return (pt1[0]-pt2[0])*(pt1[0]-pt2[0]) + (pt1[1]-pt2[1])*(pt1[1]-pt2[1])
-}
+}*/
 
 func (s *Ship) JustTravelled() []hexagon.Coord {
-	if s.Loc == -1 {
+	if s.Loc >= len(s.Path) {
 		if len(s.Path) < SHIPSPEED {
 			return s.Path
 		} else {
@@ -122,7 +154,7 @@ func (s *Ship) JustTravelled() []hexagon.Coord {
 }
 
 func (s *Ship) CurLoc() (hexagon.Coord, bool) {
-	if s.Loc == -1 {
+	if s.Loc >= len(s.Path)-1 {
 		return hexagon.Coord{}, false
 	}
 	return s.Path[s.Loc], true

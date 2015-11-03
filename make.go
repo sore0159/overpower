@@ -23,7 +23,10 @@ func (g *Game) MakeFaction(uName, fName string) (f *Faction, err error) {
 }
 
 func (g *Game) Start() (err error) {
-	facs := g.Factions()
+	facs, err := g.Factions()
+	if err != nil {
+		return err
+	}
 	fids := make([]int, len(facs))
 	var i int
 	for fid, _ := range facs {

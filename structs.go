@@ -17,6 +17,39 @@ type ShipView struct {
 	Size       int
 }
 
+func (sh *Ship) MakeView(viewpoints []hexagon.Coord, fid int) *ShipView {
+	shv := &ShipView{
+		db:         sh.db,
+		Gid:        sh.Gid,
+		Fid:        fid,
+		Sid:        sh.Sid,
+		Controller: sh.Fid,
+		Size:       sh.Size,
+	}
+	loc, ok := sh.CurLoc()
+	if ok && CanSee(viewpoints, loc) {
+		shv.LocValid = true
+		shv.Loc = loc
+	}
+	trail := []hexagon.Coord{}
+	for _, pt := range sh.JustTravelled() {
+		if CanSee(viewpoints, pt) {
+			trail = append(trail, pt)
+		}
+	}
+	shv.Trail = trail
+	return shv
+}
+
+func CanSee(viewpoints []hexagon.Coord, pt hexagon.Coord) bool {
+	for _, pt2 := range viewpoints {
+		if pt.StepsTo(pt2) <= VISRANGE {
+			return true
+		}
+	}
+	return false
+}
+
 func (sv *ShipView) SeenFrom(c hexagon.Coord) (c2 hexagon.Coord, d int) {
 	if sv.LocValid {
 		return sv.Loc, c.StepsTo(sv.Loc)

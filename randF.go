@@ -9,6 +9,22 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+func shuffleShips(list []*Ship) []*Ship {
+	if list == nil {
+		return make([]*Ship, 0)
+	}
+	l := len(list)
+	if l < 2 {
+		return list
+	}
+	newList := make([]*Ship, l)
+	newOrder := rand.Perm(l)
+	for i, val := range newOrder {
+		newList[val] = list[i]
+	}
+	return newList
+}
+
 func shuffleWords(list []string) []string {
 	if list == nil {
 		return make([]string, 0)

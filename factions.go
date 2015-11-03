@@ -99,10 +99,6 @@ func AllFactions(db *sql.DB, owner string) []*Faction {
 	return r
 }
 
-func (f *Faction) ToggleDone() error {
-	return f.SetDone(!f.Done)
-}
-
 func (f *Faction) SetDone(done bool) error {
 	if f.Done == done {
 		return nil
