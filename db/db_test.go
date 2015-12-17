@@ -1,0 +1,44 @@
+package db
+
+import (
+	"fmt"
+	"mule/mydb"
+	"testing"
+)
+
+func TestFirst(t *testing.T) {
+	fmt.Println("TESTING")
+}
+
+func TestSecond(t *testing.T) {
+	db, ok := LoadDB()
+	fmt.Println("TEST SECOND Got DB ok:", ok)
+	if !ok {
+		return
+	}
+	g, ok := GetGame(db, 1)
+	if !ok {
+		fmt.Println("FAILED GETGAME")
+		if !g.Insert() {
+			fmt.Println("FAILED INSERT")
+			return
+		}
+		fmt.Println("INSERTED")
+		g, ok = GetGame(db, 1)
+		if !ok {
+			fmt.Println("FAILED SECOND GETGAME")
+			return
+		}
+	}
+	fmt.Println("GOTGAME")
+	fmt.Println("TURN:", g.Turn())
+	g.IncTurn()
+	updateList := []mydb.Updater{}
+	updateList = append(updateList, g)
+	ok = mydb.Update(db, updateList)
+	if !ok {
+		fmt.Println("UPDATE FAILED!")
+		return
+	}
+	fmt.Println("UPDATE PASSED")
+}

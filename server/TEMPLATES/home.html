@@ -1,0 +1,49 @@
+{{ define "title"}}Planet Attack! Home Page{{end}}
+{{ define "css"}}main{{end}}
+{{define "body"}}
+USER NAME: {{ index . "userN" }}<br>
+{{ if index . "mygame" }} 
+<div class="box">
+{{$g := index . "mygame" }}
+Your game: [ <a href="/game/{{ $g.Gid }}">{{ $g.Name }}</a> ] -- {{ if $g.Turn }} Turn: {{ $g.Turn }} {{ else }} Assembling Players
+<form action="" method="post">
+        <input type="hidden" name="action" value="startgame">
+        <input type="submit" value="Start Game">
+</form>
+{{ end }}<br>
+<form action="" method="post">
+        <input type="hidden" name="action" value="deletegame">
+        <input type="submit" value="Delete Game!">
+</form>
+<hr>
+FACTIONS:<br>
+{{ range index . "mygamefactions" }}
+FACTION: {{ .Name }} (USER {{ .Owner }})<BR>
+{{ else }}
+NONE<br>
+{{ end }}
+</div>
+{{ else }} 
+<div class="box">
+NO GAME OWNED: CREATE?<br>
+<form action="" method="post">
+        <input type="hidden" name="action" value="creategame">
+        Game Name:<input name="gamename" type="text"><br>
+        Password (leave blank for open game):<input name="password" type="text"><br>
+        <input type="submit" value="Create!">
+</form>
+</div>
+{{ end }}<br>
+<div class="box">
+        YOUR FACTIONS:<br>
+{{ $fgames := index . "fgames" }}
+{{ range $key, $val := (index . "facs") }}
+{{ $fgm := index $fgames $key }}
+FACTION: {{ $val.Name }} FOUND FOR GAME <a href="/game/{{ $fgm.Gid }}">{{ $fgm.Name }}</a> OF USER {{ $fgm.Owner }} {{ if $fgm.Turn}}(Turn {{ $fgm.Turn}}, {{ if $val.Done }}Complete{{else}}In Progress{{end}}){{ else }}(Assembling Players){{end}}<br> 
+{{ else }}
+CURRENTLY PLAYING NO GAMES<br>
+{{ end }}
+<br>
+</div>
+{{ end }}
+

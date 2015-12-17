@@ -1,0 +1,58 @@
+{{ define "title"}}Planet Attack! Play Page{{end}}
+{{ define "css"}}main{{end}}
+{{define "body"}}
+{{ $g := index . "game" }}
+{{ $turn := $g.Turn }}
+{{ $fNames := index . "fNames" }}
+{{ $plNames := index . "planetnames" }}
+{{ $orders := index . "orders" }}
+{{ $f := index . "myfac" }}
+{{ $center :=  index . "center" }}
+PLAY PAGE FOR GAME <a href="/game/{{ $g.Gid }}">{{ $g.Name }}</a> Turn: {{ $turn }}<br>
+FOR FACTION {{ $f.Name }}<br>
+Center: {{ $center }} Zoom: {{ index . "zoom" }}
+<hr>
+{{ range (index . "pvs") }}
+{{ $yours := (eq .Controller $f.Fid) }}
+<div class="box">
+        Location: {{ .Loc }} {{ if not .Dist }}(Center){{ else }}(Dist: {{ .Dist }}){{end}} {{ .Name }} ({{ .Pid }})<br>
+        <img src="/static/img/planet.png">
+{{ if .Turn }}
+{{ if $yours }}Your Planet{{ else }}
+{{ if .Controller }}Controller: Faction {{ index $fNames .Controller }} {{ else }}Unaligned{{end}} Last Seen: Turn {{ .Turn }} {{ end }}<br>
+Population: {{ .Inhabitants }} Ship Parts: {{ .Parts }} {{ if $yours}}(Available: {{ .Avail}}){{end}} Planetary Resources: {{ .Resources }}<br>
+{{ else }}
+No planetary information available<br>
+{{ end }}
+{{ if .Dist }}
+<form action="" method="post">
+        <input type="hidden" name="action" value="centerview">
+        <input type="hidden" name="turn" value="{{ $turn }}">
+        <input type="hidden" name="x" value="{{index .Loc 0}}">
+        <input type="hidden" name="y" value="{{index .Loc 1}}">
+        <input type="submit" value="Set As Center">
+</form>
+{{ end }}
+{{ if $yours }}
+{{ if index $orders .Pid }}
+Orders:<br>
+{{ range index $orders .Pid }}
+ORDER: FROM {{ index $plNames .Source }} ({{.Source}}) TO {{ index $plNames .Target }} ({{ .Target}}) SIZE {{ .Size }}<br>
+{{ end }}
+{{ end }}
+<form action="" method="post">
+        <input type="submit" value="Order Ship Launch">
+        <input type="hidden" name="action" value="orderlaunch">
+        <input type="hidden" name="turn" value="{{ $turn }}">
+        <input type="hidden" name="source" value="{{ .Pid }}">
+        Target Planet ID:<input type="text" size=4 name="target">
+        Ship Size: <input type="text" size=4 name="size">
+</form>
+{{ end }}
+</div><br>
+
+
+{{ else }}
+NO PVS<br>
+{{ end }}
+{{ end }}

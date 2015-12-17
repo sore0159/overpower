@@ -1,0 +1,15 @@
+{{ define "titlebar" }}
+<div class="titlebox">
+        <div class="title">
+        <a href="/overpower/">Overpower</a>
+        </div>
+        <div class="loginarea">
+                LOGIN AREA HERE<br>
+        </div>
+</div>
+{{ if .Error }} 
+<div class="errorbox">
+        ERROR: {{ .Error }}
+</div>
+{{ end }}
+{{ end }}
