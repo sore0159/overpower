@@ -4,7 +4,14 @@
         <a href="/overpower/">Overpower</a>
         </div>
         <div class="loginarea">
-                LOGIN AREA HERE<br>
+        {{ if .LoggedIn }}
+        Logged in as <a href="/overpower/home">{{ .User }}</a> &nbsp;&bull;&nbsp;
+                <form class="noblock" action="/auth/logout" method="post"><input type="submit" value="Logout"></form>
+        {{ else }}
+                Not logged in:
+                [ <a href="/auth/login">Login</a> ]
+                [ <a href="/auth/create">Create User</a> ]
+        {{ end }}
         </div>
 </div>
 {{ if .Error }} 

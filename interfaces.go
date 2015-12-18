@@ -6,5 +6,6 @@ type Game interface {
 	Gid() int
 	Name() string
 	Owner() string
+	HasPW() bool
 	IsPwd(string) bool
 }

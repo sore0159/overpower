@@ -6,8 +6,8 @@ import (
 
 var (
 	TPINDEX     = MixTemp("frame", "titlebar", "index")
-	TPOPINDEX   = MixTemp("frame", "titlebar", "indexop")
-	TPAUTHINDEX = MixTemp("frame", "titlebar", "indexauth")
+	TPOPINDEX   = MixTemp("frame", "titlebar", "opindex")
+	TPAUTHINDEX = MixTemp("frame", "titlebar", "authindex")
 )
 
 func pageIndex(w http.ResponseWriter, r *http.Request) {

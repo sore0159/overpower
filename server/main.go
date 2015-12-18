@@ -13,8 +13,8 @@ const (
 )
 
 var (
-	USERREG  *users.Registry
-	ATTACKDB *sql.DB
+	USERREG *users.Registry
+	OPDB    *sql.DB
 )
 
 func main() {
@@ -24,10 +24,10 @@ func main() {
 		log.Fatal("Can't load userdata")
 	}
 	defer USERREG.Close()
-	if ATTACKDB, ok = db.LoadDB(); !ok {
+	if OPDB, ok = db.LoadDB(); !ok {
 		log.Fatal("Can't load planet data")
 	}
-	defer ATTACKDB.Close()
+	defer OPDB.Close()
 	SetupMux()
 	log.Println("STARTING SERVER AT", SERVPORT)
 	err := http.ListenAndServe(SERVPORT, nil)

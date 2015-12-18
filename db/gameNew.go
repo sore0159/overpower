@@ -55,3 +55,6 @@ func (g *Game) Name() string {
 func (g *Game) IsPwd(test string) bool {
 	return g.password == test
 }
+func (g *Game) HasPW() bool {
+	return g.password != ""
+}
