@@ -1,0 +1,47 @@
+{{ define "title"}}Overpower User Home Page{{end}}
+{{ define "css"}}overpower{{end}}
+{{define "body"}}
+OVERPOWER USER HOME PAGE FOR {{ index . "user" }} GOES HERE<br>
+{{ $g := index . "game"}}
+{{ $oFacs := index . "ofactions"}}
+{{ $active := index . "active"}}
+{{ if $g }} 
+ <form action="" method="post" style="float:right;margin:10px 10px 10px 10px;">
+<input type="hidden" name="action" value="dropgame">
+<input type="submit" value="DELETE GAME">
+ </form>
+<div class="box">Your Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] 
+&bull; {{ if $active }}Turn {{ $g.Turn }}{{ else }}Not yet begun{{ end }}<br>
+{{ range index . "gfactions" }}
+Faction: {{ . }}<br>
+{{ else }}
+GAME HAS NO USERS SIGNED UP TO PLAY<br>
+{{ end }}
+{{ if $active }}
+    COMPLETE TURN<br>
+{{ else }}
+{{ if index . "gfactions" }}
+    BEGIN GAME<br>
+{{ end }}
+{{ end }}
+</div>
+{{ else }}
+You currently are running no game.
+<form action="" method="post">
+<input type="hidden" name="action" value="newgame">
+Game Name: <input name="gamename" type="text"><br>
+Password (leave blank for open game): <input name="password" type="text"><br>
+<input type="submit" value="CREATE GAME">
+</form>
+{{ end }}
+<hr>
+ALL OF YOUR FACTIONS:<br>
+{{ range $oFacs }}
+FAC: {{ . }} <br>
+{{ else }}
+NO FACTIONS FOUND<br>
+{{ end }}
+
+
+{{ end }}
+

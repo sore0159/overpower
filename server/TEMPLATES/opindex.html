@@ -1,7 +1,11 @@
 {{ define "title"}}Overpower Index Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
-[ <a href="/">Main Index Link</a> ]
-<hr>
 OVERPOWER INDEX PAGE GOES HERE<br>
+{{ if index . "loggedin" }}
+Go to <a href="/overpower/home">Your home base</a>.
+{{ else }}
+Go <a href="/auth/login">log in</a>.
+{{ end }}<br>
+Go to the <a href="/overpower/view/">Games List</a>.
 {{ end }}

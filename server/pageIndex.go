@@ -7,10 +7,10 @@ import (
 var (
 	TPINDEX     = MixTemp("frame", "titlebar", "index")
 	TPOPINDEX   = MixTemp("frame", "titlebar", "opindex")
-	TPAUTHINDEX = MixTemp("frame", "titlebar", "authindex")
+	TPVIEWINDEX = MixTemp("frame", "titlebar", "viewindex")
 )
 
-func pageIndex(w http.ResponseWriter, r *http.Request) {
+func pageMainIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -25,14 +25,21 @@ func pageOPIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h := MakeHandler(w, r)
+	m := h.DefaultApp()
+	m["loggedin"] = h.LoggedIn
 	h.Apply(TPOPINDEX, w)
 }
 
-func pageAuthIndex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/auth/" {
-		http.Redirect(w, r, "/auth/", http.StatusFound)
+func (h *Handler) pageOPViewIndex(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/overpower/view/" {
+		http.Redirect(w, r, "/overpower/view/", http.StatusFound)
 		return
 	}
-	h := MakeHandler(w, r)
-	h.Apply(TPAUTHINDEX, w)
+	games, ok := OPDB.AllGames()
+	if !ok {
+		h.SetError("DATABASE ERROR")
+	} else {
+		h.SetApp(games)
+	}
+	h.Apply(TPVIEWINDEX, w)
 }

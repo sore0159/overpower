@@ -1,18 +1,10 @@
 package db
 
-import (
-	"database/sql"
-	"mule/overpower"
-)
-
-var gIntfTest overpower.Game = NewGame()
-
 func NewGame() *Game {
 	return &Game{}
 }
 
 type Game struct {
-	db      *sql.DB
 	turnMod bool
 	//
 	gid      int
@@ -39,12 +31,6 @@ func (g *Game) Turn() int {
 }
 func (g *Game) Gid() int {
 	return g.gid
-}
-func (g *Game) DB() *sql.DB {
-	return g.db
-}
-func (g *Game) SetDB(db *sql.DB) {
-	g.db = db
 }
 func (g *Game) Owner() string {
 	return g.owner

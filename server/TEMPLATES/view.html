@@ -1,0 +1,42 @@
+{{ define "title"}}Overpower Game Page{{end}}
+{{ define "css"}}overpower{{end}}
+{{define "body"}}
+{{ $g := index . "game" }}
+{{ $active := index . "active" }}
+{{ $ownedf := index . "ownedf" }}
+GAME VIEW PAGE GOES HERE<br>
+GAME:  {{ $g.Name }} &bull; OWNER: {{ $g.Owner }} &bull; {{ if $active }}TURN: {{ $g.Turn }}{{ else }}NOT STARTED{{ end }}<br>
+{{ range index . "factions" }}{{ if . }}
+FAC: {{ . }}<br>
+{{ end }}{{ else }}
+NO FACTIONS<br>
+{{ end }}
+
+{{ if $ownedf }}
+<div class="box">
+YOUR FAC:  {{ $ownedf }}<br>
+{{ if not $active }}
+<form action="" method="post">
+<input type="hidden" name="action" value="dropfac">
+<input type="submit" value="LEAVE GAME" class="noblock">
+</form>
+{{ end }}
+</div>
+{{ else }}
+{{ if not $active }}
+{{ if index . "user" }}
+<div class="box">
+        Do you wish to join this game?
+<form action="" method="post">
+<input type="hidden" name="action" value="newfac">
+Faction Name: <input name="facname" type="text">
+{{ if $g.HasPW }} Password: <input name="password" type="text"> {{ end }}
+<input type="submit" value="JOIN GAME" class="noblock">
+</form>
+</div>
+{{ else }}
+If you wish to join this game, first you must <a href="/auth/login">login</a> or <a href="/auth/create">create a user</a>.<br>
+{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}

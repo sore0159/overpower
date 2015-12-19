@@ -16,7 +16,7 @@ func TestSecond(t *testing.T) {
 	if !ok {
 		return
 	}
-	g, ok := GetGame(db, 1)
+	g, ok := db.GetGame(1)
 	if !ok {
 		fmt.Println("FAILED GETGAME")
 		if !g.Insert() {
@@ -24,7 +24,7 @@ func TestSecond(t *testing.T) {
 			return
 		}
 		fmt.Println("INSERTED")
-		g, ok = GetGame(db, 1)
+		g, ok = db.GetGame(1)
 		if !ok {
 			fmt.Println("FAILED SECOND GETGAME")
 			return
@@ -35,7 +35,7 @@ func TestSecond(t *testing.T) {
 	g.IncTurn()
 	updateList := []mydb.Updater{}
 	updateList = append(updateList, g)
-	ok = mydb.Update(db, updateList)
+	ok = db.Update(updateList)
 	if !ok {
 		fmt.Println("UPDATE FAILED!")
 		return

@@ -2,9 +2,8 @@
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
 [ <a href="/">Main Index Link</a> ]
-[ <a href="/auth/">Auth Index Link</a> ]
-[ <a href="/auth/create">Auth Create Link</a> ]
 [ <a href="/overpower/">Overpower Index Link</a> ]
+[ <a href="/auth/">Auth Index Link</a> ]
 <hr>
 {{ if index . "loggedin" }}
 You are already logged in: <form action="/auth/logout" method="post"><input type="submit" value="Logout?"></form>
@@ -14,6 +13,7 @@ AUTH LOGIN PAGE GOES HERE<br>
 Username: <input name="username" type="text" {{ if index . "username" }} value="{{ index . "username" }}"{{end}}><br>
 Password: <input name="password" type="password" {{ if index . "password" }} value="{{ index . "password" }}"{{end}}><br>
 <input type="submit" value="LOGIN">
-</form>
+</form><br>
+Or go to the <a href="/auth/create">User Creation Page</a>.<br>
 {{ end }}
 {{ end }}

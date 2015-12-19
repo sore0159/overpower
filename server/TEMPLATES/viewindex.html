@@ -1,0 +1,10 @@
+{{ define "title"}}Overpower Games List Page{{end}}
+{{ define "css"}}overpower{{end}}
+{{define "body"}}
+OVERPOWER GAMES LIST PAGE GOES HERE<br>
+{{ range . }}
+GAME: [ <a href="/overpower/view/{{ .Gid }}">{{ .Name }}</a> ] (Owner: {{ .Owner }} &bull; Turn: {{ .Turn }}) <br>
+{{ else }}
+NO GAMES FOUND<br>
+{{ end }}
+{{ end }}

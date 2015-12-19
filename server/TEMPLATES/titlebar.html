@@ -1,11 +1,11 @@
 {{ define "titlebar" }}
 <div class="titlebox">
         <div class="title">
-        <a href="/overpower/">Overpower</a>
+        [ <a href="/overpower/">Overpower</a> ]
         </div>
         <div class="loginarea">
         {{ if .LoggedIn }}
-        Logged in as <a href="/overpower/home">{{ .User }}</a> &nbsp;&bull;&nbsp;
+        Logged in as [ <a href="/overpower/home">{{ .User }}</a> ] &nbsp;&bull;&nbsp;
                 <form class="noblock" action="/auth/logout" method="post"><input type="submit" value="Logout"></form>
         {{ else }}
                 Not logged in:

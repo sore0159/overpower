@@ -40,7 +40,7 @@ func (h *Handler) SetCommand(g overpower.Game) {
 }
 
 func (h *Handler) Command(str string) string {
-	return fmt.Sprintf("/command/%d/%d/%s", h.CommandData[0], h.CommandData[1], str)
+	return fmt.Sprintf("/overpower/command/%d/%d/%s", h.CommandData[0], h.CommandData[1], str)
 }
 
 func (h *Handler) SetError(args ...interface{}) {

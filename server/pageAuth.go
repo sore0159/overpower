@@ -5,9 +5,21 @@ import (
 )
 
 var (
+	TPAUTHINDEX  = MixTemp("frame", "titlebar", "authindex")
 	TPLOGIN      = MixTemp("frame", "titlebar", "authlogin")
 	TPAUTHCREATE = MixTemp("frame", "titlebar", "authcreate")
 )
+
+func pageAuthIndex(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/auth/" {
+		http.Redirect(w, r, "/auth/", http.StatusFound)
+		return
+	}
+	h := MakeHandler(w, r)
+	m := h.DefaultApp()
+	m["loggedin"] = h.LoggedIn
+	h.Apply(TPAUTHINDEX, w)
+}
 
 func pageAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/auth/login" {
@@ -44,5 +56,28 @@ func pageAuthCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h := MakeHandler(w, r)
+	m := h.DefaultApp()
+	m["loggedin"] = h.LoggedIn
+	if r.Method == "POST" {
+		nameOk, passOk, dbOk := USERREG.Create(w, r)
+		if nameOk && passOk && dbOk {
+			http.Redirect(w, r, "/overpower/home", http.StatusFound)
+			return
+		}
+		if !dbOk {
+			h.SetError("DATABASE ERROR")
+			m["username"], m["password"] = r.FormValue("username"), r.FormValue("password")
+		} else {
+			if !passOk && !nameOk {
+				h.SetError("BAD USERNAME AND PASSWORD")
+			} else if passOk {
+				h.SetError("BAD USERNAME")
+				m["password"] = r.FormValue("password")
+			} else {
+				h.SetError("BAD PASSWORD")
+				m["username"] = r.FormValue("username")
+			}
+		}
+	}
 	h.Apply(TPAUTHCREATE, w)
 }

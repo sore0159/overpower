@@ -116,11 +116,12 @@ func DropTables(db *sql.DB) (ok bool) {
 
 func TestUpdateTables(t *testing.T) {
 	if UPDATETABLES {
-		db, ok := LoadDB()
+		d, ok := LoadDB()
 		if !ok {
 			fmt.Println("FAILED TO LOAD DB")
 			return
 		}
+		db := d.db
 		if DropTables(db) {
 			fmt.Println("Dropped tables!")
 		} else {

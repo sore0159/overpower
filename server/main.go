@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"mule/overpower/db"
 	"mule/users"
@@ -14,7 +13,7 @@ const (
 
 var (
 	USERREG *users.Registry
-	OPDB    *sql.DB
+	OPDB    db.DB
 )
 
 func main() {

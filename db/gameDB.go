@@ -1,75 +1,51 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"mule/mydb"
-	"strconv"
+	"mule/overpower"
 )
 
-var gametest mydb.Updater = &Game{}
-
-const GAMESQLVAL = `gid, owner, name, turn, password`
-
-func (g *Game) RowScan(row mydb.Scanner) error {
-	return row.Scan(&(g.gid), &(g.owner), &(g.name), &(g.turn), &(g.password))
+func (d DB) MakeGame(owner, name, password string) (ok bool) {
+	g := NewGame()
+	g.owner, g.name, g.password = owner, name, password
+	return g.Insert(d.db)
 }
 
-func (g *Game) Insert() (ok bool) {
-	return mydb.Insert(g.db, g)
-}
-
-func GetGame(db *sql.DB, gid int) (g *Game, ok bool) {
-	g = NewGame()
-	g.db, g.gid = db, gid
+func (d DB) GetGame(gid int) (g overpower.Game, ok bool) {
+	db := d.db
+	game := NewGame()
 	query := fmt.Sprintf("SELECT %s FROM games WHERE gid = %d", GAMESQLVAL, gid)
-	return g, mydb.GetOne(db, query, g)
+	return game, mydb.GetOneIf(db, query, game)
 }
 
-func DropGame(db *sql.DB, gid int) (ok bool) {
+func (d DB) GetGameFor(owner string) (g overpower.Game, ok bool) {
+	db := d.db
+	game := NewGame()
+	query := fmt.Sprintf("SELECT %s FROM games WHERE owner = '%s'", GAMESQLVAL, owner)
+	return game, mydb.GetOneIf(db, query, game)
+}
+
+func (d DB) DropGame(gid int) (ok bool) {
+	db := d.db
 	query := fmt.Sprintf("DELETE FROM games WHERE gid = %d", gid)
 	return mydb.Exec(db, query)
 }
 
-func AllGames(db *sql.DB) (games []*Game, ok bool) {
+func (d DB) AllGames() (games []overpower.Game, ok bool) {
+	db := d.db
 	query := fmt.Sprintf("SELECT %s FROM games", GAMESQLVAL)
-	games = []*Game{}
+	gamesL := []*Game{}
 	maker := func() mydb.Rower {
 		g := NewGame()
-		g.db = db
 		return g
 	}
-	return games, mydb.Get(db, query, &games, maker)
-}
-
-func (g *Game) UpdateQ() (query string) {
-	return mydb.ModderQ(g)
-}
-
-func (g *Game) Commit() {
-	g.turnMod = false
-}
-
-func (g *Game) InsertScan(row *sql.Row) error {
-	return row.Scan(&(g.gid))
-}
-func (g *Game) InsertQ() (query string, scan bool) {
-	if g.gid != 0 {
-		return fmt.Sprintf("INSERT INTO games (%s) VALUES(%d, '%s', '%s', %d, '%s') RETURNING gid", GAMESQLVAL, g.gid, g.owner, g.name, g.turn, g.password), true
-	} else {
-		return fmt.Sprintf("INSERT INTO games (%s) VALUES('%s', '%s', %d, '%s') RETURNING gid", GAMESQLVAL[5:], g.owner, g.name, g.turn, g.password), true
+	if !mydb.Get(db, query, &gamesL, maker) {
+		return nil, false
 	}
-}
-
-func (g *Game) GetMods() map[string]string {
-	if g.turnMod {
-		return map[string]string{"turn": strconv.Itoa(g.turn)}
+	games = make([]overpower.Game, len(gamesL))
+	for i, g := range gamesL {
+		games[i] = g
 	}
-	return nil
-}
-func (g *Game) TableName() string {
-	return "games"
-}
-func (g *Game) SQLID() []string {
-	return []string{"gid", strconv.Itoa(g.gid)}
+	return games, true
 }

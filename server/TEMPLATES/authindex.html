@@ -1,10 +1,17 @@
-{{ define "title"}}Overpower Index Page{{end}}
+{{ define "title"}}Authorization Index Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
 [ <a href="/">Main Index Link</a> ]
-[ <a href="/auth/login">Login Link</a> ]
 [ <a href="/overpower/">Overpower Index Link</a> ]
 <hr>
 AUTH INDEX PAGE GOES HERE<br>
+{{ if index . "loggedin" }}
+You are already logged in: <form action="/auth/logout" method="post"><input type="submit" value="Logout?"></form><br>
+User Creation Page<br>
+Login Page<br>
+{{ else }}
+<a href="/auth/create">User Creation Page</a><br>
+<a href="/auth/login">Login Page</a><br>
+{{ end }}
 
 {{ end }}
