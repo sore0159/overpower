@@ -16,8 +16,14 @@ func (d DB) DropFaction(gid, fid int) (ok bool) {
 	return mydb.Exec(d.db, query)
 }
 
-func (d DB) GetFaction(gid, fid int) (faction overpower.Faction, ok bool) {
+func (d DB) GetFidFaction(gid, fid int) (faction overpower.Faction, ok bool) {
 	query := fmt.Sprintf("SELECT %s FROM factions WHERE gid = %d AND fid = %d", FACSQLVAL, gid, fid)
+	f := NewFaction()
+	return f, mydb.GetOneIf(d.db, query, f)
+}
+
+func (d DB) GetOwnerFaction(gid int, owner string) (faction overpower.Faction, ok bool) {
+	query := fmt.Sprintf("SELECT %s FROM factions WHERE gid = %d AND owner = '%s'", FACSQLVAL, gid, owner)
 	f := NewFaction()
 	return f, mydb.GetOneIf(d.db, query, f)
 }
@@ -26,7 +32,7 @@ func (d DB) GetGidFactions(gid int) (factions []overpower.Faction, ok bool) {
 	query := fmt.Sprintf("SELECT %s FROM factions WHERE gid = %d", FACSQLVAL, gid)
 	return d.GetFactionsQuery(query)
 }
-func (d DB) GetOwnerFactions(owner string) (factions []overpower.Faction, ok bool) {
+func (d DB) GetAllOwnerFactions(owner string) (factions []overpower.Faction, ok bool) {
 	query := fmt.Sprintf("SELECT %s FROM factions WHERE owner = '%s'", FACSQLVAL, owner)
 	return d.GetFactionsQuery(query)
 }

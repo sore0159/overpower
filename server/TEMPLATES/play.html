@@ -1,0 +1,21 @@
+{{ define "title"}}Overpower Play Game Page{{end}}
+{{ define "css"}}overpower{{end}}
+{{define "body"}}
+{{ $g := index . "game" }}
+{{ $f := index . "fac" }}
+{{ $names := index . "names" }}
+OVERPOWER PLAY GAME PAGE GOES HERE<br>
+Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }}<br>
+{{ range index . "pvs"}}
+<div class="box">
+{{ .Name }} || Loc: {{ .Loc }}<br>
+{{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
+Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
+Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
+{{ else }}No planetary information available<br>{{end}}
+</div>
+
+{{ else }}
+NO PV FOUND<br>
+{{ end }}
+{{ end }}

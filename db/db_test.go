@@ -19,7 +19,8 @@ func TestSecond(t *testing.T) {
 	g, ok := db.GetGame(1)
 	if !ok {
 		fmt.Println("FAILED GETGAME")
-		if !g.Insert() {
+		game := &Game{gid: 1}
+		if !game.Insert(db.db) {
 			fmt.Println("FAILED INSERT")
 			return
 		}

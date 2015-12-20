@@ -4,18 +4,32 @@
 {{ $g := index . "game" }}
 {{ $active := index . "active" }}
 {{ $ownedf := index . "ownedf" }}
-GAME VIEW PAGE GOES HERE<br>
 GAME:  {{ $g.Name }} &bull; OWNER: {{ $g.Owner }} &bull; {{ if $active }}TURN: {{ $g.Turn }}{{ else }}NOT STARTED{{ end }}<br>
-{{ range index . "factions" }}{{ if . }}
-FAC: {{ . }}<br>
-{{ end }}{{ else }}
-NO FACTIONS<br>
-{{ end }}
 
 {{ if $ownedf }}
 <div class="box">
-YOUR FAC:  {{ $ownedf }}<br>
-{{ if not $active }}
+{{ if $active }}
+YOUR FAC:  <a href="{{ link "play" }}">{{ $ownedf.Name }}</a> 
+{{ if $ownedf.Done }}
+(Turn Complete)
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="done" value="false">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Cancel Turn Complete" class="noblock">
+</form>
+{{ else }}
+(Turn In Progress)
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="done" value="true">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Set Turn Complete" class="noblock">
+</form>
+{{ end }}
+<br>
+{{ else }}
+YOUR FAC: {{ $ownedf.Name }}<br>
 <form action="" method="post">
 <input type="hidden" name="action" value="dropfac">
 <input type="submit" value="LEAVE GAME" class="noblock">
@@ -39,4 +53,13 @@ If you wish to join this game, first you must <a href="/auth/login">login</a> or
 {{ end }}
 {{ end }}
 {{ end }}
+<br>{{ if index . "otherf" }}
+OTHER FACTIONS:
+<ul>{{ range index . "factions" }}{{ if . }}
+<li>FAC: {{ .Name }} OWNER: {{ .Owner }} {{ if .Done }}(Turn Complete){{ else }}(Turn In Progress){{end}}</li>
+{{ end }}{{ end }}</ul>
+{{ else }}
+NO OTHER FACTIONS
+{{ end }}
+
 {{ end }}

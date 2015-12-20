@@ -25,7 +25,6 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 	if hasG {
 		gFacs, gHasF = OPDB.GetGidFactions(g.Gid())
 	}
-	oFacs, oHasF := OPDB.GetOwnerFactions(h.User.String())
 	if r.Method == "POST" {
 		action := r.FormValue("action")
 		switch action {
@@ -80,16 +79,27 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 	}
 	//
 	m := h.DefaultApp()
-	m["user"] = h.User
+	m["user"] = h.User.String()
 	if hasG {
 		m["game"] = g
 		m["active"] = g.Turn() > 0
 	}
-	if oHasF {
-		m["ofactions"] = oFacs
-	}
 	if gHasF {
 		m["gfactions"] = gFacs
+	}
+	oFacs, oHasF := OPDB.GetAllOwnerFactions(h.User.String())
+	if oHasF {
+		facGames := make([]overpower.Game, len(oFacs))
+		for i, f := range oFacs {
+			g, ok := OPDB.GetGame(f.Gid())
+			if !ok {
+				http.Error(w, "DATABASE ERROR FETCHING GAMES", http.StatusInternalServerError)
+				return
+			}
+			facGames[i] = g
+		}
+		m["ofactions"] = oFacs
+		m["ogames"] = facGames
 	}
 	h.Apply(TPOPHOME, w)
 }

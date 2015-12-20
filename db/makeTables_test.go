@@ -27,7 +27,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
 );`)
-	queries = append(queries, `create table views(
+	queries = append(queries, `create table factionviews(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
 	center point NOT NULL,
@@ -64,11 +64,11 @@ func MakeTables(db *sql.DB) (ok bool) {
 	pid integer NOT NULL,
 	name varchar(20) NOT NULL,
 	loc point NOT NULL,
-	turn int,
+	turn int NOT NULL,
 	controller int,
-	inhabitants int,
-	resources int,
-	parts int,
+	inhabitants int NOT NULL,
+	resources int NOT NULL,
+	parts int NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, pid) REFERENCES planets ON DELETE CASCADE,
@@ -109,7 +109,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 }
 
 func DropTables(db *sql.DB) (ok bool) {
-	tables := "games, planets, factions, views, ships, shipviews, planetviews, orders"
+	tables := "games, planets, factions, factionviews, ships, shipviews, planetviews, orders"
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tables)
 	return mydb.ExecIf(db, query)
 }

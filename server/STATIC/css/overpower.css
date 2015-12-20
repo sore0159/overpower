@@ -1,3 +1,6 @@
+ul {
+        margin-top: 0px;
+}
 div.box {
         margin: 3px; padding: 3px;
         border: 2px solid #000000;
