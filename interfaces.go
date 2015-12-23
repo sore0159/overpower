@@ -5,31 +5,39 @@ import (
 	"mule/mydb"
 )
 
+type Source interface {
+	NewPlanetView(int, int, Planet) (PlanetView, bool)
+	NewPlanet(string, int, int, int, int, int, int, hexagon.Coord) (Planet, bool)
+}
+
 type Game interface {
 	mydb.Updater
 	//
 	Turn() int
+	SetTurn(int)
 	IncTurn()
 	Gid() int
 	Name() string
 	Owner() string
 	HasPW() bool
 	IsPwd(string) bool
-	//
 }
 
 type Faction interface {
+	mydb.Updater
+	//
 	Gid() int
 	Fid() int
 	Owner() string
 	Name() string
 	Done() bool
 	SetDone(bool)
-	//
-	mydb.Updater
 }
 
 type Planet interface {
+	mydb.Updater
+	mydb.Inserter
+	//
 	Gid() int
 	Pid() int
 	Name() string
@@ -42,11 +50,12 @@ type Planet interface {
 	SetResources(int)
 	Parts() int
 	SetParts(int)
-	//
-	mydb.Updater
 }
 
 type PlanetView interface {
+	mydb.Updater
+	mydb.Inserter
+	//
 	Gid() int
 	Pid() int
 	Fid() int
@@ -62,15 +71,22 @@ type PlanetView interface {
 	SetResources(int)
 	Parts() int
 	SetParts(int)
-	//
-	mydb.Updater
 }
 
 type FactionView interface {
+	mydb.Updater
+	//
 	Gid() int
 	Fid() int
 	Center() hexagon.Pixel
 	Zoom() int
-	//
-	mydb.Updater
+}
+
+type Order interface {
+	Gid() int
+	Fid() int
+	Source() int
+	Target() int
+	Size() int
+	SetSize(int)
 }

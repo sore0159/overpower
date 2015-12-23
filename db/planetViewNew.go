@@ -3,6 +3,7 @@ package db
 import (
 	"mule/hexagon"
 	"mule/mydb"
+	"mule/overpower"
 )
 
 type PlanetView struct {
@@ -23,6 +24,25 @@ func NewPlanetView() *PlanetView {
 	return &PlanetView{
 		SQLHandler: mydb.NewSQLHandler(),
 	}
+}
+
+func (pv *PlanetView) Copy(pl overpower.Planet) {
+	pv.gid = pl.Gid()
+	pv.pid = pl.Pid()
+	pv.name = pl.Name()
+	pv.loc = pl.Loc()
+	pv.controller = pl.Controller()
+	pv.inhabitants = pl.Inhabitants()
+	pv.resources = pl.Resources()
+	pv.parts = pl.Parts()
+}
+
+func (pv *PlanetView) UpdatePl(turn int, pl overpower.Planet) {
+	pv.SetTurn(turn)
+	pv.SetController(pl.Controller())
+	pv.SetInhabitants(pl.Inhabitants())
+	pv.SetResources(pl.Resources())
+	pv.SetParts(pl.Parts())
 }
 
 func (p *PlanetView) Gid() int {

@@ -11,17 +11,80 @@ func (d DB) SetTurnDone(f overpower.Faction, done bool) (ok bool) {
 }
 
 func (d DB) RunGameTurn(g overpower.Game) (ok bool) {
-	op := overpower.NewTotallyOP()
-	op.Game = g
-	op.Factions, ok = d.GetGidFactions(g.Gid())
+	gid := g.Gid()
+	facs, ok := d.GetGidFactions(gid)
+	if !ok {
+		return false
+	}
+	planets, ok := d.GetAllGidPlanets(gid)
+	if !ok {
+		return false
+	}
+	orders, ok := d.GetAllGidOrders(gid)
 	if !ok {
 		return false
 	}
 	list := []mydb.Updater{g}
-	for _, f := range op.Factions {
-		f.SetDone(false)
-		list = append(list, f)
+	for _, x := range facs {
+		list = append(list, x)
 	}
-	g.IncTurn()
+	for _, x := range planets {
+		list = append(list, x)
+	}
+	op := overpower.NewTotallyOP()
+	source := d.NewSource()
+	op.Source = source
+	op.Game = g
+	op.Planets = planets
+	op.Factions = facs
+	op.Orders = orders
+	// -------- //
+	if !op.RunGameTurn() {
+		return false
+	}
+	if !d.DropAllGidOrders(gid) {
+		return false
+	}
+	// -------- //
+	for _, x := range op.PlanetViews {
+		list = append(list, x)
+	}
 	return mydb.Update(d.db, list)
+}
+
+func (d DB) StartGame(gid int) (ok bool) {
+	g, ok := d.GetGame(gid)
+	if !ok {
+		return
+	}
+	facs, ok := d.GetGidFactions(gid)
+	if !ok {
+		return
+	}
+	op := overpower.NewTotallyOP()
+	source := d.NewSource()
+	op.Source = source
+	op.Game = g
+	op.Factions = facs
+	if !op.MakeGalaxy() {
+		return false
+	}
+	list := []mydb.Updater{g}
+	for _, x := range facs {
+		list = append(list, x)
+	}
+	if !mydb.Update(d.db, list) {
+		return false
+	}
+	for _, x := range source.MadePlanets {
+		if !mydb.Insert(d.db, x) {
+			return false
+		}
+	}
+	for _, x := range source.MadePlanetViews {
+		if !mydb.Insert(d.db, x) {
+			return false
+		}
+	}
+	return true
 }

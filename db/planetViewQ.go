@@ -18,16 +18,24 @@ func (p *PlanetView) RowScan(row mydb.Scanner) error {
 	return err
 }
 
-func (p *PlanetView) Insert(db *sql.DB) (ok bool) {
+func (p *PlanetView) Insert(db mydb.SQLer) (ok bool) {
 	return mydb.Insert(db, p)
 }
 
 func (p *PlanetView) UpdateQ() (query string) {
-	return mydb.ModderQ(p)
+	// return mydb.ModderQ(p)
+	return fmt.Sprintf(`UPDATE planetviews SET
+		turn = %d, controller = %d, 
+		inhabitants = %d, resources = %d, parts = %d
+	WHERE gid = %d AND fid = %d AND pid = %d`,
+		p.turn, p.controller,
+		p.inhabitants, p.resources, p.parts,
+		p.gid, p.fid, p.pid,
+	)
 }
 
 func (p *PlanetView) InsertScan(row *sql.Row) error {
-	return row.Scan(&(p.pid))
+	return nil
 }
 func (p *PlanetView) InsertQ() (query string, scan bool) {
 	locVal, _ := p.loc.Value()
@@ -41,12 +49,12 @@ func (p *PlanetView) InsertQ() (query string, scan bool) {
 		%d, %d, %d,
 		%d, '%s', %s,
 		%s, %d, %d, %d
-	) RETURNING pid`,
+	)`,
 		PVSQLVAL,
 		p.pid, p.gid, p.fid,
 		p.turn, p.name, locVal,
 		contVal, p.inhabitants, p.resources, p.parts,
-	), true
+	), false
 }
 
 func (p *PlanetView) TableName() string {

@@ -18,7 +18,7 @@ func (p *Planet) RowScan(row mydb.Scanner) error {
 	return err
 }
 
-func (p *Planet) Insert(db *sql.DB) (ok bool) {
+func (p *Planet) Insert(db mydb.SQLer) (ok bool) {
 	return mydb.Insert(db, p)
 }
 
@@ -27,7 +27,7 @@ func (p *Planet) UpdateQ() (query string) {
 }
 
 func (p *Planet) InsertScan(row *sql.Row) error {
-	return row.Scan(&(p.pid))
+	return nil
 }
 func (p *Planet) InsertQ() (query string, scan bool) {
 	locVal, _ := p.loc.Value()
@@ -40,10 +40,10 @@ func (p *Planet) InsertQ() (query string, scan bool) {
 	return fmt.Sprintf(`INSERT INTO planets (%s) VALUES(
 		%d, %d, '%s', %s,
 		%s, %d, %d, %d
-	) RETURNING pid`,
+	)`,
 		PLSQLVAL, p.pid, p.gid, p.name, locVal,
 		contVal, p.inhabitants, p.resources, p.parts,
-	), true
+	), false
 }
 
 func (p *Planet) TableName() string {

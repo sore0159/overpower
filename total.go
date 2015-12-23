@@ -1,14 +1,21 @@
 package overpower
 
 type TotallyOP struct {
+	Source      Source
 	Game        Game
 	Factions    []Faction
 	Planets     []Planet
-	PlanetViews []PlanetView
+	Orders      []Order
+	PlanetViews map[[2]int]PlanetView
 }
 
 func NewTotallyOP() *TotallyOP {
 	return &TotallyOP{
-	//
+		PlanetViews: map[[2]int]PlanetView{},
+		//
 	}
+}
+
+func (op *TotallyOP) SetPV(pv PlanetView) {
+	op.PlanetViews[[2]int{pv.Pid(), pv.Fid()}] = pv
 }

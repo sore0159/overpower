@@ -3,16 +3,52 @@
 {{define "body"}}
 {{ $g := index . "game" }}
 {{ $f := index . "fac" }}
+{{ $orders := index . "orders" }}
+{{ $availparts := index . "availparts" }}
 {{ $names := index . "names" }}
-OVERPOWER PLAY GAME PAGE GOES HERE<br>
+{{ $plNames := index . "plnames" }}
 Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }}<br>
 {{ range index . "pvs"}}
 <div class="box">
-{{ .Name }} || Loc: {{ .Loc }}<br>
-{{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
-Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
-Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
-{{ else }}No planetary information available<br>{{end}}
+        {{ .Name }} || Pid: {{ .Pid }} || Loc: {{ .Loc }}<br>
+{{ if eq .Controller $f.Fid }}
+        YOUR PLANET || Inhabitants: {{ .Inhabitants }}<br>
+        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} (Available: {{ index $availparts .Pid }})<br>
+        <hr>
+        ORDERS:<br>
+        <ul> {{ range index $orders .Pid }}
+                <li>
+                TARGET: {{ index $plNames .Target }} ({{ .Target }}) || 
+                SIZE: {{ .Size }}
+                <form action="" method="post" class="noblock">
+                <input type="hidden" name="action" value="setorder">
+                <input type="hidden" name="turn" value="{{ $g.Turn }}">
+                <input type="hidden" name="source" value="{{ .Source }}">
+                <input type="hidden" name="target" value="{{ .Target }}">
+                <br> CHANGE SIZE (0 to cancel):<input type="text" name="size">
+                <input type="submit" value="ALTER CONSTRUCTION" class="noblock">
+                </form>
+
+                </li>
+                {{ else }}
+                <li>NONE</li>
+                {{ end }}
+        </ul>
+        NEW ORDER:<br>
+        <form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setorder">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="source" value="{{ .Pid }}">
+        TARGET:<input type="text" name="target">
+        SIZE:<input type="text" name="size">
+        <input type="submit" value="ORDER SHIP CONSTRUCTION" class="noblock">
+        </form>
+{{ else }}
+        {{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
+        Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
+        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
+        {{ else }}No planetary information available<br>{{end}}
+{{ end }}
 </div>
 
 {{ else }}

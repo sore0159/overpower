@@ -3,10 +3,7 @@ package db
 import (
 	"mule/hexagon"
 	"mule/mydb"
-	"mule/overpower"
 )
-
-var plIntfTest overpower.Planet = NewPlanet()
 
 type Planet struct {
 	*mydb.SQLHandler

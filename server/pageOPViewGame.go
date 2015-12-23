@@ -41,47 +41,7 @@ func (h *Handler) pageOPViewGame(w http.ResponseWriter, r *http.Request, g overp
 		action := r.FormValue("action")
 		switch action {
 		case "setdone":
-			if ownedF == nil {
-				http.Error(w, "USER HAS NO FACTION FOR THIS GAME", http.StatusBadRequest)
-				return
-			}
-			if g.Turn() < 1 {
-				http.Error(w, "GAME NOT IN PROGRESS", http.StatusBadRequest)
-				return
-			}
-			mp, ok := GetInts(r, "turn")
-			if !ok {
-				http.Error(w, "MALFORMED TURN DATA", http.StatusBadRequest)
-				return
-			}
-			turn, ok := mp["turn"]
-			if !ok || turn != g.Turn() {
-				http.Error(w, "BAD TURN DATA", http.StatusBadRequest)
-				return
-			}
-			done := r.FormValue("done") == "true"
-			if done {
-				var redLight bool
-				for _, f := range facs {
-					if f == nil {
-						continue
-					}
-					if f.Done() {
-						continue
-					}
-					redLight = true
-					break
-				}
-				if !redLight {
-					if !OPDB.RunGameTurn(g) {
-						http.Error(w, "DATABASE ERROR RUNNING GAME TURN", http.StatusInternalServerError)
-						return
-					}
-					break
-				}
-			}
-			if !OPDB.SetTurnDone(ownedF, done) {
-				http.Error(w, "DATABASE ERROR SETTING FACTION TURN DONE", http.StatusInternalServerError)
+			if ok := h.SetTurnDone(w, r, g, ownedF); !ok {
 				return
 			}
 		case "dropfac":
