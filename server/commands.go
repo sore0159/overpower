@@ -26,8 +26,11 @@ func (h *Handler) SetMapView(w http.ResponseWriter, r *http.Request, g overpower
 	}
 	if zOk {
 		if zoom < 1 {
-			http.Error(w, "BAD VALUE FOR MAPVIEW ZOOM", http.StatusBadRequest)
-			return false
+			zoom = 1
+			//	http.Error(w, "BAD VALUE FOR MAPVIEW ZOOM", http.StatusBadRequest)
+			//	return false
+		} else if zoom > 100 {
+			zoom = 100
 		}
 		return OPDB.UpdateMapViewZoom(f.Gid(), f.Fid(), zoom)
 	}

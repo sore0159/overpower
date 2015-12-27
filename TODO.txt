@@ -1,0 +1,20 @@
+Reports: 
+    * Generation/Display
+    * Ship launches
+    * Ship landings
+
+Interactive Map:
+    * Javascript left/right click, wheelup/down
+    * create orders
+    * change zoom/center
+    * focus coord
+
+UI:
+    * 'Focused' coordinate
+    * Sorted planet/shipviews, filterable
+    * Planet parts avail shown on map
+    * Directional order/ship visualizations
+
+Game:
+    * Endstate: score?
+    * Galaxy creation: robustness

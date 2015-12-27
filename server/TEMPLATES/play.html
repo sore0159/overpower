@@ -8,7 +8,7 @@
 {{ $names := index . "names" }}
 {{ $plNames := index . "plnames" }}
 <div class="mapbox">
-<img class="map" src="/overpower/img/{{ $g.Gid }}" width=600 height=600 />
+<img class="map" src="/overpower/img/{{ $g.Gid }}" width=800 height=600 />
 Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }} 
 {{ if not $f.Done }}
 (In Progress)
