@@ -8,6 +8,10 @@ import (
 type Source interface {
 	NewPlanetView(int, int, Planet) (PlanetView, bool)
 	NewPlanet(string, int, int, int, int, int, int, hexagon.Coord) (Planet, bool)
+	NewShip(int, int, int, int, []hexagon.Coord) (Ship, bool)
+	DropShip(Ship) bool
+	NewShipView(int, int, int, int, int, int, hexagon.Coord, bool, []hexagon.Coord) (ShipView, bool)
+	NewMapView(int, int, hexagon.Coord) (MapView, bool)
 }
 
 type Game interface {
@@ -89,4 +93,35 @@ type Order interface {
 	Target() int
 	Size() int
 	SetSize(int)
+}
+
+type Ship interface {
+	Gid() int
+	Fid() int
+	Sid() int
+	Size() int
+	Launched() int
+	Path() []hexagon.Coord
+}
+
+type ShipView interface {
+	Gid() int
+	Fid() int
+	Sid() int
+	Turn() int
+	Size() int
+	Controller() int
+	Loc() (hexagon.Coord, bool)
+	Trail() []hexagon.Coord
+}
+
+type MapView interface {
+	mydb.Updater
+	//
+	Gid() int
+	Fid() int
+	Zoom() int
+	Center() hexagon.Coord
+	SetZoom(int)
+	SetCenter(hexagon.Coord)
 }

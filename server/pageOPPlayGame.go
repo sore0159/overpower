@@ -10,6 +10,11 @@ var (
 )
 
 func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction, facs []overpower.Faction) {
+	turn := g.Turn()
+	if turn < 1 {
+		http.Redirect(w, r, h.NewPath(4), http.StatusFound)
+		return
+	}
 	if r.Method == "POST" {
 		if !h.LoggedIn {
 			http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
@@ -25,6 +30,10 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			if !h.SetTurnDone(w, r, g, f) {
 				return
 			}
+		case "setmap":
+			if !h.SetMapView(w, r, g, f) {
+				return
+			}
 		default:
 			http.Error(w, "UNKNOWN ACTION TYPE", http.StatusBadRequest)
 			return
@@ -32,16 +41,28 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return
 	}
-	pvList, ok := OPDB.GetAllFactionPlanetViews(g.Gid(), f.Fid())
+	gid, fid := g.Gid(), f.Fid()
+	pvList, ok := OPDB.GetAllFactionPlanetViews(gid, fid)
 	if !ok {
 		http.Error(w, "DATABASE ERROR FETCHING PLANETVIEWS", http.StatusInternalServerError)
 		return
 	}
-	orders, ok := OPDB.GetAllGidOrders(g.Gid())
+	orders, ok := OPDB.GetAllGidOrders(gid)
 	if !ok {
 		http.Error(w, "DATABASE ERROR FETCHING ORDERS", http.StatusInternalServerError)
 		return
 	}
+	shipViews, ok := OPDB.GetFidTurnShipViews(gid, fid, turn-1)
+	if !ok {
+		http.Error(w, "DATABASE ERROR FETCHING SHIPVIEWS", http.StatusInternalServerError)
+		return
+	}
+	mapView, ok := OPDB.GetFidMapView(gid, fid)
+	if !ok {
+		http.Error(w, "DATABASE ERROR FETCHING MAPVIEW", http.StatusInternalServerError)
+		return
+	}
+
 	oMap := map[int][]overpower.Order{}
 	for _, o := range orders {
 		pid := o.Source()
@@ -81,5 +102,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	m["game"] = g
 	m["fac"] = f
 	m["pvs"] = pvList
+	m["svs"] = shipViews
+	m["mapview"] = mapView
 	h.Apply(TPOPPLAY, w)
 }

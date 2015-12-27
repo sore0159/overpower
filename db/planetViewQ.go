@@ -24,11 +24,17 @@ func (p *PlanetView) Insert(db mydb.SQLer) (ok bool) {
 
 func (p *PlanetView) UpdateQ() (query string) {
 	// return mydb.ModderQ(p)
+	var conStr string
+	if p.controller != 0 {
+		conStr = strconv.Itoa(p.controller)
+	} else {
+		conStr = "NULL"
+	}
 	return fmt.Sprintf(`UPDATE planetviews SET
-		turn = %d, controller = %d, 
+		turn = %d, controller = %s, 
 		inhabitants = %d, resources = %d, parts = %d
 	WHERE gid = %d AND fid = %d AND pid = %d`,
-		p.turn, p.controller,
+		p.turn, conStr,
 		p.inhabitants, p.resources, p.parts,
 		p.gid, p.fid, p.pid,
 	)

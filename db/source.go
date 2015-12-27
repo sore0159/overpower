@@ -8,15 +8,54 @@ import (
 type Source struct {
 	db              DB
 	MadePlanets     []*Planet
-	MadePlanetViews []*PlanetView
+	MadePlanetViews map[[2]int]*PlanetView
+	MadeShipViews   []*ShipView
+	MadeMapViews    []*MapView
+	DroppedShips    []overpower.Ship
 }
 
 func (d DB) NewSource() *Source {
 	return &Source{
 		db:              d,
 		MadePlanets:     []*Planet{},
-		MadePlanetViews: []*PlanetView{},
+		MadePlanetViews: map[[2]int]*PlanetView{},
+		MadeShipViews:   []*ShipView{},
+		MadeMapViews:    []*MapView{},
+		DroppedShips:    []overpower.Ship{},
 	}
+}
+func (s *Source) NewMapView(gid, fid int, center hexagon.Coord) (mapview overpower.MapView, isOk bool) {
+	mv := NewMapView()
+	mv.gid, mv.fid, mv.center = gid, fid, center
+	mv.zoom = overpower.DEFAULTZOOM
+	s.MadeMapViews = append(s.MadeMapViews, mv)
+	return mv, true
+}
+
+func (s *Source) NewShipView(gid, fid, turn, sid, controller, size int, loc hexagon.Coord, locValid bool, trail []hexagon.Coord) (shipview overpower.ShipView, isOk bool) {
+	sv := NewShipView()
+	sv.gid, sv.fid, sv.turn, sv.sid, sv.controller, sv.size = gid, fid, turn, sid, controller, size
+	if locValid {
+		sv.locValid = true
+		sv.loc = loc
+	}
+	sv.trail = trail
+	s.MadeShipViews = append(s.MadeShipViews, sv)
+	return sv, true
+}
+
+func (s *Source) NewShip(gid, fid, size, turn int, path []hexagon.Coord) (ship overpower.Ship, ok bool) {
+	sh := NewShip()
+	sh.gid, sh.fid, sh.size, sh.launched, sh.path = gid, fid, size, turn, path
+	if !sh.Insert(s.db.db) {
+		return nil, false
+	}
+	return sh, true
+}
+
+func (s *Source) DropShip(ship overpower.Ship) (ok bool) {
+	s.DroppedShips = append(s.DroppedShips, ship)
+	return true
 }
 
 func (s *Source) NewPlanet(name string, gid, pid, controller, inhab, res, parts int, loc hexagon.Coord) (planet overpower.Planet, ok bool) {
@@ -45,6 +84,6 @@ func (s *Source) NewPlanetView(fid, turn int, pl overpower.Planet) (planetview o
 	} else {
 		pv.Copy(pl)
 	}
-	s.MadePlanetViews = append(s.MadePlanetViews, pv)
+	s.MadePlanetViews[[2]int{pv.pid, pv.fid}] = pv
 	return pv, true
 }

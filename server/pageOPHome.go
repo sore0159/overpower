@@ -28,6 +28,29 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		action := r.FormValue("action")
 		switch action {
+		case "nextturn":
+			if !hasG {
+				http.Error(w, "USER HAS NO GAME TO PROGRESS", http.StatusBadRequest)
+				return
+			}
+			if g.Turn() < 1 {
+				http.Error(w, "GAME NOT YET BEGUN", http.StatusBadRequest)
+				return
+			}
+			mp, ok := GetInts(r, "turn")
+			if !ok {
+				http.Error(w, "MALFORMED TURN DATA", http.StatusBadRequest)
+				return
+			}
+			turn, ok := mp["turn"]
+			if !ok || turn != g.Turn() {
+				http.Error(w, "BAD TURN DATA", http.StatusBadRequest)
+				return
+			}
+			if !OPDB.RunGameTurn(g) {
+				http.Error(w, "DATABASE ERROR RUNNING GAME TURN", http.StatusInternalServerError)
+				return
+			}
 		case "startgame":
 			if !hasG {
 				h.SetError("USER HAS NO GAME TO START")

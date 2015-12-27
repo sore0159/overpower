@@ -27,13 +27,13 @@ func MakeTables(db *sql.DB) (ok bool) {
 	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
 );`)
-	queries = append(queries, `create table factionviews(
+	queries = append(queries, `create table mapviews(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
 	center point NOT NULL,
 	zoom int NOT NULL,
-	UNIQUE (gid, fid),
-	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	PRIMARY KEY (gid, fid)
 );`)
 	queries = append(queries, `create table planets(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
@@ -47,16 +47,6 @@ func MakeTables(db *sql.DB) (ok bool) {
 	UNIQUE(gid, name),
 	PRIMARY KEY(gid, pid),
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE
-);`)
-	queries = append(queries, `create table ships(
-	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
-	fid int NOT NULL,
-	sid SERIAL NOT NULL,
-	size int NOT NULL,
-	loc int,
-	path point[] NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, sid)
 );`)
 	queries = append(queries, `create table planetviews(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
@@ -74,19 +64,6 @@ func MakeTables(db *sql.DB) (ok bool) {
 	FOREIGN KEY(gid, pid) REFERENCES planets ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, pid)
 );`)
-	queries = append(queries, `create table shipviews(
-	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
-	controller integer NOT NULL,
-	viewer integer NOT NULL,
-	sid integer NOT NULL,
-	loc point,
-	trail point[],
-	size int NOT NULL,
-	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, viewer) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, controller, sid) REFERENCES ships ON DELETE CASCADE,
-	PRIMARY KEY(gid, viewer, sid)
-);`)
 	queries = append(queries, `create table orders(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
@@ -97,6 +74,29 @@ func MakeTables(db *sql.DB) (ok bool) {
 	FOREIGN KEY(gid, source) REFERENCES planets ON DELETE CASCADE,
 	FOREIGN KEY(gid, target) REFERENCES planets ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, source, target)
+);`)
+	queries = append(queries, `create table ships(
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid int NOT NULL,
+	sid SERIAL NOT NULL,
+	size int NOT NULL,
+	launched int NOT NULL,
+	path point[] NOT NULL,
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, sid)
+);`)
+	queries = append(queries, `create table shipviews(
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid integer NOT NULL,
+	controller integer NOT NULL,
+	sid integer NOT NULL,
+	turn integer NOT NULL,
+	loc point,
+	trail point[],
+	size int NOT NULL,
+	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, turn, sid)
 );`)
 	for i, query := range queries {
 		if !mydb.ExecIf(db, query) {
@@ -109,7 +109,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 }
 
 func DropTables(db *sql.DB) (ok bool) {
-	tables := "games, planets, factions, factionviews, ships, shipviews, planetviews, orders"
+	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders"
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tables)
 	return mydb.ExecIf(db, query)
 }

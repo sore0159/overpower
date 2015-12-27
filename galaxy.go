@@ -94,6 +94,7 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 			return false
 		}
 		planets = append(planets, p)
+		s.NewMapView(gid, fid, test)
 	}
 	op.Planets = planets
 	// -------- VIEWS --------- //
@@ -102,9 +103,9 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 			var pv PlanetView
 			var ok bool
 			if fid == p.Controller() {
-				pv, ok = s.NewPlanetView(gid, 1, p)
+				pv, ok = s.NewPlanetView(fid, 1, p)
 			} else {
-				pv, ok = s.NewPlanetView(gid, 0, p)
+				pv, ok = s.NewPlanetView(fid, 0, p)
 			}
 			if !ok {
 				return false

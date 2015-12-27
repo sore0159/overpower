@@ -16,6 +16,8 @@ func SetupMux() {
 	http.HandleFunc("/overpower/home", pageOPHome)
 	http.HandleFunc("/overpower/view/", muxView)
 	http.HandleFunc("/overpower/command/", muxCommand)
+	http.HandleFunc("/overpower/img/", pageMap)
+
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
 }
 
@@ -35,7 +37,7 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		}
 		g, ok := OPDB.GetGame(gid)
 		if !ok {
-			http.Error(w, fmt.Sprintf("GAME %d NOT FOUND", gid), http.StatusNotFound)
+			http.Error(w, "GAME %d NOT FOUND", http.StatusNotFound)
 			return
 		}
 		if lastFull == 3 {

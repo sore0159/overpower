@@ -16,14 +16,18 @@
 &bull; {{ if $active }}Turn {{ $g.Turn }}{{ else }}Not yet begun{{ end }}<br>
 {{ if index . "gfactions" }}
 <ul> {{ range index . "gfactions" }}
-        <li>Faction {{ if eq $user .Owner }} [ <a href="/overpower/view/{{ $g.Gid }}/play">{{ .Name }}</a> ] (Your Faction){{ else }}{{ .Name }} (Owner: {{ .Owner }}){{ end }} {{ if $active }}{{ if .Done }}(Turn Completed){{ else }}(Turn In Progress){{ end }}{{ end }}</li>
+        <li>Faction {{ if eq $user .Owner }} [ {{ if $g.Turn }}<a href="/overpower/view/{{ $g.Gid }}/play">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }} ] (Your Faction){{ else }}{{ .Name }} (Owner: {{ .Owner }}){{ end }} {{ if $active }}{{ if .Done }}(Turn Completed){{ else }}(Turn In Progress){{ end }}{{ end }}</li>
 {{ end }}
 </ul>
 {{ else }}
 GAME HAS NO USERS SIGNED UP TO PLAY<br>
 {{ end }}
 {{ if $active }}
-    COMPLETE TURN<br>
+ <form action="" method="post">
+<input type="hidden" name="action" value="nextturn">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Set all players done with turn {{ $g.Turn }}">
+ </form>
 {{ else }}
 {{ if index . "gfactions" }}
  <form action="" method="post">

@@ -7,10 +7,51 @@
 {{ $availparts := index . "availparts" }}
 {{ $names := index . "names" }}
 {{ $plNames := index . "plnames" }}
-Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }}<br>
+<div class="mapbox">
+<img class="map" src="/overpower/img/{{ $g.Gid }}" width=600 height=600 />
+Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }} 
+{{ if not $f.Done }}
+(In Progress)
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setdone">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="done" value="true">
+        <input type="submit" value="Set Turn Complete" class="noblock">
+</form>
+{{ else }}
+(Complete)
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setdone">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="done" value="true">
+        <input type="hidden" name="done" value="false">
+        <input type="submit" value="Cancel Turn Complete" class="noblock">
+</form>
+{{ end }}
+<br><br>
+MAP CONTROLS:<br>
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        X:<input type="text" name="centerx" width=5 value="{{ index .mapview.Center 0 }}">
+        Y:<input type="text" name="centery" width=5 value="{{ index .mapview.Center 1 }}">
+        <input type="submit" value="Set Center" class="noblock">
+</form>
+<br>
+
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="text" name="zoom" width=5 value="{{ .mapview.Zoom }}">
+        <input type="submit" value="Set Zoom" class="noblock">
+</form>
+</div>
+
+<hr>
 {{ range index . "pvs"}}
 <div class="box">
-        {{ .Name }} || Pid: {{ .Pid }} || Loc: {{ .Loc }}<br>
+        {{ $polar := .Loc.Polar }}
+        {{ .Name }} || Pid: {{ .Pid }} || Grid: {{ .Loc }} ({{ if index $polar 0 }}Sector: {{ .Loc.Sector }} Radius: {{ index $polar 0 }}{{ else }}GALACTIC CENTER{{ end }})<br>
 {{ if eq .Controller $f.Fid }}
         YOUR PLANET || Inhabitants: {{ .Inhabitants }}<br>
         Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} (Available: {{ index $availparts .Pid }})<br>
@@ -50,8 +91,13 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         {{ else }}No planetary information available<br>{{end}}
 {{ end }}
 </div>
-
 {{ else }}
 NO PV FOUND<br>
+{{ end }}
+<hr>
+{{ range .svs }}
+SHIPVIEW: {{ . }}<br>
+{{ else }}
+NO SHIPVIEWS FOUND<br>
 {{ end }}
 {{ end }}

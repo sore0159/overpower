@@ -1,9 +1,42 @@
 package main
 
 import (
+	"mule/hexagon"
+	"mule/myweb"
 	"mule/overpower"
 	"net/http"
 )
+
+func (h *Handler) SetMapView(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction) (isOk bool) {
+	mp := myweb.GetIntsIf(r, "turn", "zoom", "centerx", "centery")
+	if t, ok := mp["turn"]; !ok || t != g.Turn() {
+		http.Error(w, "FORM TURN DOES NOT MATCH GAME TURN", http.StatusBadRequest)
+		return
+	}
+	zoom, zOk := mp["zoom"]
+	centerX, xOk := mp["centerx"]
+	centerY, yOk := mp["centery"]
+	if !zOk && !xOk && !yOk {
+		http.Error(w, "NO DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
+		return false
+	}
+	if zOk && (xOk || yOk) {
+		http.Error(w, "CANNOT CHANGE MAPVIEW ZOOM AND CENTER SIMULTANIOUSLY", http.StatusBadRequest)
+		return false
+	}
+	if zOk {
+		if zoom < 1 {
+			http.Error(w, "BAD VALUE FOR MAPVIEW ZOOM", http.StatusBadRequest)
+			return false
+		}
+		return OPDB.UpdateMapViewZoom(f.Gid(), f.Fid(), zoom)
+	}
+	if !(xOk && yOk) {
+		http.Error(w, "INCOMPLETE DATA FOR MAPVIEW CENTER", http.StatusBadRequest)
+		return false
+	}
+	return OPDB.UpdateMapViewCenter(f.Gid(), f.Fid(), hexagon.Coord{centerX, centerY})
+}
 
 func (h *Handler) SetOrder(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction) (isOk bool) {
 	if f == nil {

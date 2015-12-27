@@ -6,12 +6,15 @@ type TotallyOP struct {
 	Factions    []Faction
 	Planets     []Planet
 	Orders      []Order
+	Ships       []Ship
+	ShipViews   []ShipView
 	PlanetViews map[[2]int]PlanetView
 }
 
 func NewTotallyOP() *TotallyOP {
 	return &TotallyOP{
 		PlanetViews: map[[2]int]PlanetView{},
+		ShipViews:   []ShipView{},
 		//
 	}
 }
