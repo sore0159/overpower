@@ -87,8 +87,13 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	plToDraw := []overpower.PlanetView{}
 	shToDraw := map[hexagon.Coord][]overpower.ShipView{}
 	trToDraw := map[hexagon.Coord][]overpower.ShipView{}
+	focus, focValid := mv.Focus()
+	var focusVis bool
 	if zoom > 14 {
 		for _, h := range vp.VisList() {
+			if focValid && !focusVis && h == focus {
+				focusVis = true
+			}
 			corners := vp.CornersOf(h)
 			gc.MoveTo(corners[0][0], corners[0][1])
 			for i, _ := range corners {
@@ -110,6 +115,28 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 			}
 			if list, ok := trailGrid[h]; ok {
 				trToDraw[h] = list
+			}
+		}
+		if focusVis {
+			gc.SetLineWidth(1)
+			gc.SetStrokeColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
+			corners := vp.CornersOf(focus)
+			gc.MoveTo(corners[0][0], corners[0][1])
+			for i, _ := range corners {
+				var px, py float64
+				if i == 5 {
+					px, py = corners[0][0], corners[0][1]
+				} else {
+					px, py = corners[i+1][0], corners[i+1][1]
+				}
+				gc.LineTo(px, py)
+			}
+			gc.Close()
+			gc.Stroke()
+			if zoom > 40 {
+				gc.SetLineWidth(.5)
+			} else {
+				gc.SetLineWidth(.25)
 			}
 		}
 	} else {
@@ -165,7 +192,9 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	}
 	gc.SetStrokeColor(color.Black)
 	for _, pv := range plToDraw {
-		if pv.Turn() > 0 && pv.Controller() != 0 {
+		if zoom < 15 && focValid && pv.Loc() == focus {
+			gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
+		} else if pv.Turn() > 0 && pv.Controller() != 0 {
 			if pv.Controller() == fid {
 				gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
 			} else {

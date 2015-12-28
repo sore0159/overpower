@@ -8,6 +8,8 @@
 {{ $names := index . "names" }}
 {{ $plNames := index . "plnames" }}
 {{ $center := .mapview.Center }}
+{{ $centerpv := .centerpv }}
+{{ $focuspv := .focuspv }}
 <div class="mapbox">
 <form id="mapform" action="" method="post" class="noblock">
 <input type="hidden" name="turn" value="{{ $g.Turn }}">
@@ -33,7 +35,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         <input type="submit" value="Cancel Turn Complete" class="noblock">
 </form>
 {{ end }}
-<br>Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
+<hr>Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
@@ -67,57 +69,117 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 </form>
 {{ end }}
 
-<hr>CENTER: {{ $center }}
-{{  if .centerpv }}
-<br>CENTERPV: {{ .centerpv }}
-{{ end }}
-{{ if .centersv }}
-<br>CENTER SHIPS:
-{{ range .centersv }}
-<br>SV: {{ . }}
-{{ end }}
-{{ end }}
-{{ if .focus }}
-<hr>FOCUS: {{ .focus }}
-{{ if .focuspv }}
-{{ with .focuspv }}
-        <br>
-        {{ $polar := .Loc.Polar }}
-        {{ .Name }} || Pid: {{ .Pid }} || Grid: {{ .Loc }} ({{ if index $polar 0 }}Sector: {{ .Loc.Sector }} Radius: {{ index $polar 0 }}{{ else }}GALACTIC CENTER{{ end }})<br>
-{{ if eq .Controller $f.Fid }}
-        YOUR PLANET || Inhabitants: {{ .Inhabitants }}<br>
-        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} (Available: {{ index $availparts .Pid }})<br>
-        ORDERS:<br>
-        <ul> {{ range index $orders .Pid }}
-                <li>
-                TARGET: {{ index $plNames .Target }} ({{ .Target }}) || 
-                SIZE: {{ .Size }}
+<hr>
+Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
+{{ if .cyou }}
+        {{ $o := .octof }}
+        {{ $centerpv.Name }} (Your Planet) <br>
+        Inhabitants: {{ $centerpv.Inhabitants }} &bull; 
+        Resources: {{ $centerpv.Resources }} &bull;
+        Ship Parts: {{ $centerpv.Parts }} (Available: {{ index $availparts $centerpv.Pid }})<br>
+        {{ if $o }}
+        <div class="box" style="margin-left:810px;">
+        You have {{ $focuspv.Name }} focused (distance {{ .fcdist }}) and are launching a size {{ $o.Size }} ship at it:<br>
+        <form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setorder">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="source" value="{{ $o.Source }}">
+        <input type="hidden" name="target" value="{{ $o.Target }}">
+        Change ship size (0 to cancel): <input type="text" size=2 name="size">
+        <input type="submit" value="CHANGE" class="noblock">
+        </form>
+        </div>
+        {{ else if (and (index $availparts .centerpv.Pid) (and $focuspv (not .cenfocused))) }}
+        <div class="box" style="margin-left:810px;">
+        You have {{ $focuspv.Name }} focused (distance {{ .fcdist }}) and up to {{ index $availparts .centerpv.Pid }} parts available for ship construction:<br>
+        <form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setorder">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="source" value="{{ $centerpv.Pid }}">
+        <input type="hidden" name="target" value="{{ $focuspv.Pid }}">
+        Ship size: <input type="text" size=2 name="size"> &bull;
+        <input type="submit" value="Order launch toward {{ $focuspv.Name }}" class="noblock">
+        </form>
+        </div>
+        {{ end }}
+        {{ if .cords }}
+        <div class="box" style="margin-left:810px;">
+        {{ if $o }}Other {{ end }}Planetary Launch Orders:<br>
+        <ul> {{ range .cords }}
+                <li>Size {{ .Size }} ship at {{ index $plNames .Target }}
                 <form action="" method="post" class="noblock">
                 <input type="hidden" name="action" value="setorder">
                 <input type="hidden" name="turn" value="{{ $g.Turn }}">
                 <input type="hidden" name="source" value="{{ .Source }}">
                 <input type="hidden" name="target" value="{{ .Target }}">
-                <br> CHANGE SIZE (0 to cancel):<input type="text" name="size">
-                <input type="submit" value="ALTER CONSTRUCTION" class="noblock">
+                <br> Change size (0 to cancel): <input type="text" size=2 name="size">
+                <input type="submit" value="CHANGE" class="noblock">
                 </form>
-
                 </li>
-                {{ else }}
-                <li>NONE</li>
                 {{ end }}
         </ul>
+        </div>
+        {{ end }}
 {{ else }}
-        {{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
-        Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
-        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
-        {{ else }}No planetary information available<br>{{end}}
+        {{ if $centerpv.Turn }}
+        {{ $centerpv.Name }} ({{ index $names $centerpv.Controller }}) <br>
+        Last Seen Turn {{ $centerpv.Turn }}<br>
+        Inhabitants: {{ $centerpv.Inhabitants }} &bull; 
+        Resources: {{ $centerpv.Resources }} &bull;
+        Ship Parts: {{ $centerpv.Parts }} (Available: {{ index $availparts $centerpv.Pid }})<br>
+        {{ else }}
+        {{ $centerpv.Name }}<br>
+        No planetary information available<br>
+        <br>
+        {{ end }}
+{{ end }}
+{{ if not .cenfocused }}
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="subtype" value="focus">
+        <input type="hidden" name="hexx" value="{{ index $centerpv.Loc 0 }}">
+        <input type="hidden" name="hexy" value="{{ index $centerpv.Loc 1 }}">
+        <input type="submit" value="Focus {{ $centerpv.Name}}" class="noblock">
+</form>
+{{ if $focuspv }}
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="subtype" value="swap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="submit" value="Swap Focus/Center" class="noblock">
+</form>
+{{ end }}<br>
 {{ end }}
 
 {{ end }}
-</div>
+{{ if .centersv }}
+        <div class="box" style="margin-left:810px;">
+        Ship passage detected at {{ index $center 0}}, {{ index $center 1 }}:<br>
+        {{ range .centersv }}
+        SV: {{ . }}<br>
+        {{ end }}
+        </div>
+{{ end }}
 
-{{ end }}
-{{ end }}
+{{ if .focus }} <hr> {{ if .cenfocused }}
+        Focused: {{ $focuspv.Name }}<br>
+{{ else }} {{ if $focuspv }}
+        Focused: {{ $focuspv.Name }}<br>
+        {{ if .fyou }}
+                YOUR PLANET<br>
+        {{ else }}
+                NOT YOURS<br>
+        {{ end }}
+        <form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="hexx" value="{{ index $focuspv.Loc 0 }}">
+        <input type="hidden" name="hexy" value="{{ index $focuspv.Loc 1 }}">
+        <input type="submit" value="Center Map On {{ $focuspv.Name }}" class="noblock">
+        </form>
+{{ end }} {{ end }} {{ end }}
+
 </div>
 
 <hr>
@@ -140,7 +202,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
                 <input type="hidden" name="source" value="{{ .Source }}">
                 <input type="hidden" name="target" value="{{ .Target }}">
                 <br> CHANGE SIZE (0 to cancel):<input type="text" name="size">
-                <input type="submit" value="ALTER CONSTRUCTION" class="noblock">
+                <input type="submit" value="CHANGE" class="noblock">
                 </form>
 
                 </li>

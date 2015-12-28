@@ -83,10 +83,16 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	m := h.DefaultApp()
 	if hasFocus {
 		m["focus"] = focus
+		if focus == center {
+			m["cenfocused"] = true
+		}
 	}
+	var fYou, cYou bool
+	var fPid, cPid int
+	var fPV, cPV overpower.PlanetView
 	for _, pv := range pvList {
 		plNames[pv.Pid()] = pv.Name()
-		if pv.Controller() != f.Fid() {
+		if pv.Controller() != fid {
 			delete(oMap, pv.Pid())
 		} else {
 			sum := pv.Parts()
@@ -98,11 +104,58 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		loc := pv.Loc()
 		if hasFocus && focus == loc {
 			m["focuspv"] = pv
+			fPid = pv.Pid()
+			fPV = pv
+			if pv.Controller() == fid {
+				fYou = true
+			}
 		}
 		if loc == center {
 			m["centerpv"] = pv
+			cPid = pv.Pid()
+			cPV = pv
+			if pv.Controller() == fid {
+				cYou = true
+			}
 		}
 	}
+	if fPid != 0 && cPid != 0 && (cYou || fYou) {
+		for _, o := range orders {
+			if fYou && o.Source() == fPid && o.Target() == cPid {
+				m["oftoc"] = o
+				fOrds := make([]overpower.Order, 0, len(oMap[cPid]))
+				for _, test := range oMap[fPid] {
+					if test != o {
+						fOrds = append(fOrds, test)
+					}
+				}
+				m["fords"] = fOrds
+				continue
+			}
+			if cYou && o.Source() == cPid && o.Target() == fPid {
+				m["octof"] = o
+				cOrds := make([]overpower.Order, 0, len(oMap[cPid]))
+				for _, test := range oMap[cPid] {
+					if test != o {
+						cOrds = append(cOrds, test)
+					}
+				}
+				m["cords"] = cOrds
+				continue
+			}
+		}
+	}
+	if cPid != 0 && fPid != 0 {
+		m["fcdist"] = cPV.Loc().StepsTo(fPV.Loc())
+	}
+	if _, ok := m["cords"]; cYou && !ok {
+		m["cords"] = oMap[cPid]
+	}
+	if _, ok := m["fords"]; fYou && !ok {
+		m["fords"] = oMap[fPid]
+	}
+
+	m["fyou"], m["cyou"] = fYou, cYou
 	names := map[int]string{0: "No Faction"}
 	for _, fac := range facs {
 		if fac.Fid() == f.Fid() {
