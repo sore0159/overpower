@@ -124,4 +124,7 @@ type MapView interface {
 	Center() hexagon.Coord
 	SetZoom(int)
 	SetCenter(hexagon.Coord)
+	Focus() (hexagon.Coord, bool)
+	SetFocus(hexagon.Coord)
+	DropFocus()
 }

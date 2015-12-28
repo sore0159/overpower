@@ -3,14 +3,26 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"mule/hexagon"
 	"mule/mydb"
 	"strconv"
 )
 
-const MVSQLVAL = `gid, fid, center, zoom`
+const MVSQLVAL = `gid, fid, center, zoom, focus`
 
 func (mv *MapView) RowScan(row mydb.Scanner) error {
-	return row.Scan(&(mv.gid), &(mv.fid), &(mv.center), &(mv.zoom))
+	var focusBytes []byte
+	err := row.Scan(&(mv.gid), &(mv.fid), &(mv.center), &(mv.zoom), &focusBytes)
+	if err != nil {
+		return err
+	}
+	if !mydb.CheckNull(focusBytes) {
+		mv.focusValid = true
+		c := hexagon.Coord{}
+		(&c).Scan(focusBytes)
+		mv.focus = c
+	}
+	return nil
 }
 
 func (mv *MapView) Insert(db mydb.SQLer) (ok bool) {
@@ -27,7 +39,8 @@ func (mv *MapView) InsertScan(row *sql.Row) error {
 func (mv *MapView) InsertQ() (query string, scan bool) {
 	return fmt.Sprintf(`INSERT INTO mapviews (%s) VALUES(
 		%d, %d,
-		%s, %d
+		%s, %d,
+		NULL
 	)`,
 		MVSQLVAL,
 		mv.gid, mv.fid,

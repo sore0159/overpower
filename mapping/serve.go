@@ -83,10 +83,7 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	gc.SetFontData(draw2d.FontData{Name: "DroidSansMono", Family: draw2d.FontFamilyMono})
 	//
 	rad := float64(zoom)
-	vp := hexagon.MakeViewport(rad, false, true)
-	center := mv.Center()
-	vp.SetAnchor(center[0], center[1], 400.0, 300.0)
-	vp.SetFrame(0, 0, float64(width), float64(height))
+	vp := GetVP(mv)
 	plToDraw := []overpower.PlanetView{}
 	shToDraw := map[hexagon.Coord][]overpower.ShipView{}
 	trToDraw := map[hexagon.Coord][]overpower.ShipView{}
@@ -153,8 +150,12 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		}
 		srcP := vp.CenterOf(src.Loc())
 		tarP := vp.CenterOf(tar.Loc())
-		gc.MoveTo(srcP[0], srcP[1])
-		gc.LineTo(tarP[0], tarP[1])
+		var yadj float64
+		if zoom > 10 {
+			yadj = rad * .25
+		}
+		gc.MoveTo(srcP[0], srcP[1]-yadj)
+		gc.LineTo(tarP[0], tarP[1]-yadj)
 		gc.Stroke()
 	}
 	if zoom > 40 {
@@ -246,4 +247,12 @@ func DrawShips(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, rad floa
 	if rad >= 5 {
 		gc.FillStringAt(name, p[0]+(rad*.55), p[1]+3)
 	}
+}
+
+func GetVP(mv overpower.MapView) *hexagon.Viewport {
+	vp := hexagon.MakeViewport(float64(mv.Zoom()), false, true)
+	center := mv.Center()
+	vp.SetAnchor(center[0], center[1], 400.0, 300.0)
+	vp.SetFrame(0, 0, 800, 600)
+	return vp
 }

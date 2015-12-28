@@ -22,6 +22,10 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		}
 		action := r.FormValue("action")
 		switch action {
+		case "mapclick":
+			if !h.MapClick(w, r, g, f) {
+				return
+			}
 		case "setorder":
 			if !h.SetOrder(w, r, g, f) {
 				return
@@ -74,6 +78,12 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	}
 	availMap := map[int]int{}
 	plNames := make(map[int]string, len(pvList))
+	focus, hasFocus := mapView.Focus()
+	center := mapView.Center()
+	m := h.DefaultApp()
+	if hasFocus {
+		m["focus"] = focus
+	}
 	for _, pv := range pvList {
 		plNames[pv.Pid()] = pv.Name()
 		if pv.Controller() != f.Fid() {
@@ -85,8 +95,14 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			}
 			availMap[pv.Pid()] = sum
 		}
+		loc := pv.Loc()
+		if hasFocus && focus == loc {
+			m["focuspv"] = pv
+		}
+		if loc == center {
+			m["centerpv"] = pv
+		}
 	}
-	m := h.DefaultApp()
 	names := map[int]string{0: "No Faction"}
 	for _, fac := range facs {
 		if fac.Fid() == f.Fid() {
@@ -95,6 +111,20 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			names[fac.Fid()] = "Faction " + fac.Name()
 		}
 	}
+	centerShips := []overpower.ShipView{}
+	for _, sv := range shipViews {
+		if test, ok := sv.Loc(); ok && test == center {
+			centerShips = append(centerShips, sv)
+			continue
+		}
+		for _, test := range sv.Trail() {
+			if test == center {
+				centerShips = append(centerShips, sv)
+				break
+			}
+		}
+	}
+	m["centersv"] = centerShips
 	m["availparts"] = availMap
 	m["plnames"] = plNames
 	m["names"] = names
@@ -104,5 +134,18 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	m["pvs"] = pvList
 	m["svs"] = shipViews
 	m["mapview"] = mapView
+	zoom := mapView.Zoom()
+	if zoom > 1 {
+		m["zoomout"] = zoom - 1
+	}
+	if zoom > 10 {
+		m["bigzoomout"] = zoom - 10
+	}
+	if zoom < 100 {
+		m["zoomin"] = zoom + 1
+	}
+	if zoom < 91 {
+		m["bigzoomin"] = zoom + 10
+	}
 	h.Apply(TPOPPLAY, w)
 }

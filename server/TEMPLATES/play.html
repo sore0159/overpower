@@ -7,8 +7,13 @@
 {{ $availparts := index . "availparts" }}
 {{ $names := index . "names" }}
 {{ $plNames := index . "plnames" }}
+{{ $center := .mapview.Center }}
 <div class="mapbox">
-<img class="map" src="/overpower/img/{{ $g.Gid }}" width=800 height=600 />
+<form id="mapform" action="" method="post" class="noblock">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="hidden" name="action" value="mapclick">
+</form>
+<img id="map" class="map" src="/overpower/img/{{ $g.Gid }}" width=800 height=600 />
 Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }} 
 {{ if not $f.Done }}
 (In Progress)
@@ -28,23 +33,91 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         <input type="submit" value="Cancel Turn Complete" class="noblock">
 </form>
 {{ end }}
-<br><br>
-MAP CONTROLS:<br>
+<br>Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        X:<input type="text" name="centerx" width=5 value="{{ index .mapview.Center 0 }}">
-        Y:<input type="text" name="centery" width=5 value="{{ index .mapview.Center 1 }}">
-        <input type="submit" value="Set Center" class="noblock">
+        <input type="hidden" name="zoom" value="{{ .zoomin }}">
+        <input type="submit" value="Zoom In" class="noblock">
 </form>
-<br>
+{{ end }}
 
+{{ if .zoomout }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="text" name="zoom" width=5 value="{{ .mapview.Zoom }}">
-        <input type="submit" value="Set Zoom" class="noblock">
+        <input type="hidden" name="zoom" value="{{ .zoomout }}">
+        <input type="submit" value="Zoom Out" class="noblock">
 </form>
+{{ end }}
+ {{ if .bigzoomin }}
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="zoom" value="{{ .bigzoomin }}">
+        <input type="submit" value="Big Zoom In" class="noblock">
+</form>
+{{ end }}
+{{ if .bigzoomout }}
+<form action="" method="post" class="noblock">
+        <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="turn" value="{{ $g.Turn }}">
+        <input type="hidden" name="zoom" value="{{ .bigzoomout }}">
+        <input type="submit" value="Big Zoom Out" class="noblock">
+</form>
+{{ end }}
+
+<hr>CENTER: {{ $center }}
+{{  if .centerpv }}
+<br>CENTERPV: {{ .centerpv }}
+{{ end }}
+{{ if .centersv }}
+<br>CENTER SHIPS:
+{{ range .centersv }}
+<br>SV: {{ . }}
+{{ end }}
+{{ end }}
+{{ if .focus }}
+<hr>FOCUS: {{ .focus }}
+{{ if .focuspv }}
+{{ with .focuspv }}
+        <br>
+        {{ $polar := .Loc.Polar }}
+        {{ .Name }} || Pid: {{ .Pid }} || Grid: {{ .Loc }} ({{ if index $polar 0 }}Sector: {{ .Loc.Sector }} Radius: {{ index $polar 0 }}{{ else }}GALACTIC CENTER{{ end }})<br>
+{{ if eq .Controller $f.Fid }}
+        YOUR PLANET || Inhabitants: {{ .Inhabitants }}<br>
+        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} (Available: {{ index $availparts .Pid }})<br>
+        ORDERS:<br>
+        <ul> {{ range index $orders .Pid }}
+                <li>
+                TARGET: {{ index $plNames .Target }} ({{ .Target }}) || 
+                SIZE: {{ .Size }}
+                <form action="" method="post" class="noblock">
+                <input type="hidden" name="action" value="setorder">
+                <input type="hidden" name="turn" value="{{ $g.Turn }}">
+                <input type="hidden" name="source" value="{{ .Source }}">
+                <input type="hidden" name="target" value="{{ .Target }}">
+                <br> CHANGE SIZE (0 to cancel):<input type="text" name="size">
+                <input type="submit" value="ALTER CONSTRUCTION" class="noblock">
+                </form>
+
+                </li>
+                {{ else }}
+                <li>NONE</li>
+                {{ end }}
+        </ul>
+{{ else }}
+        {{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
+        Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
+        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
+        {{ else }}No planetary information available<br>{{end}}
+{{ end }}
+
+{{ end }}
+</div>
+
+{{ end }}
+{{ end }}
 </div>
 
 <hr>
@@ -100,4 +173,5 @@ SHIPVIEW: {{ . }}<br>
 {{ else }}
 NO SHIPVIEWS FOUND<br>
 {{ end }}
+<script src="/static/js/overpower.js"></script>
 {{ end }}

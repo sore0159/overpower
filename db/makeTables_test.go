@@ -32,6 +32,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 	fid integer NOT NULL,
 	center point NOT NULL,
 	zoom int NOT NULL,
+	focus point,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY (gid, fid)
 );`)

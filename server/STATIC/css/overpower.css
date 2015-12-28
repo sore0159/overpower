@@ -9,8 +9,8 @@ img.map {
 }
 div.mapbox {
         margin: 3px; padding: 3px;
-        border: 2px solid #000000;
-        border-radius: 5px;
+        xborder: 2px solid #000000;
+        xborder-radius: 5px;
         height: 600px;
 }
 div.box {
@@ -41,7 +41,7 @@ div.titlebox {
         height:30px;
         padding-top: 10px;
         vertical-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
 }
 
 div.errorbox {

@@ -37,7 +37,7 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		}
 		g, ok := OPDB.GetGame(gid)
 		if !ok {
-			http.Error(w, "GAME %d NOT FOUND", http.StatusNotFound)
+			http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
 			return
 		}
 		if lastFull == 3 {
