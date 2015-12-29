@@ -2,6 +2,20 @@
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
 OVERPOWER INDEX PAGE GOES HERE<br>
+<ul><b>Managing Games:</b>
+        <li>You must be logged in to play, view, or manage games.</li>
+        <li>Create a new game from your home base page.  Set a password if you want to limit who can play.  You can delete this game at any time from your home page.  You can have at most one game to your name at a time.</li>
+        <li>Users can join your game by creating a faction on the game view page.  You can play in a game you create, but it is not required.</li>
+        <li>When you have at least one faction in your game and you are ready to start, you can have your game begin by pressing "Start Game" from your home base page.  This will begin turn 1 of your game and the factions playing it can then access the game play page to play the game.</li>
+        <li>Factions begin each turn set to "In Progress", and when the faction is done giving orders they can set "Turn Complete" from their game play page or from the game view page.  Factions that are set to "Turn Complete" can change back to "In Progress" as long as another faction is still "In Progress".</li>
+        <li>When all factions have set "Turn Complete" at the same time, the turn is complete, all orders are executed, and the next turn begin.  The owner of the game can also force all factions to be set to "Turn Complete" from their home base page.</li>
+</ul>
+<br>
+<ul><b>Using the play game webpage:</b>
+        <li>Right-click anywhere on the map to recenter it to where ever you click.  Click on planets to see information about them.</li>
+        <li>Left-click on a planet to set it as "focus", which will stay until you left-click another planet or shift-left-click on empty space.  By focusing a planet you can easily order ship launches between planets.</li>
+        <li>Middle-click zooms out, shift-middle-click zooms in.  There are buttons to zoom by larger amounts at one time if you desire them.</li>
+</ul>
 {{ if index . "loggedin" }}
 Go to <a href="/overpower/home">Your home base</a>.
 {{ else }}

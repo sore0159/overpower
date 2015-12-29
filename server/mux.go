@@ -80,6 +80,44 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 // /overpower/command/GAMEID/TURN/ACTIONNAME/ARGS
 func muxCommand(w http.ResponseWriter, r *http.Request) {
 	h := MakeHandler(w, r)
-	_ = h
-	fmt.Fprint(w, "MUX COMMAND")
+	if !h.LoggedIn {
+		http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
+		return
+	}
+	lastFull := h.LastFull()
+	gid, ok := h.IntAt(3)
+	if !ok {
+		http.Error(w, "BAD GID IN COMMAND PATH", http.StatusBadRequest)
+		return
+	}
+	g, ok := OPDB.GetGame(gid)
+	if !ok {
+		http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
+		return
+	}
+	f, ok := OPDB.GetOwnerFaction(gid, h.User.String())
+	if !ok {
+		http.Error(w, "NO FACTION FOUND FOR THIS USER FOR THIS GAME", http.StatusBadRequest)
+		return
+	}
+	turn, ok := h.IntAt(4)
+	if !ok || turn != g.Turn() {
+		http.Error(w, "BAD TURN IN COMMAND PATH", http.StatusBadRequest)
+		return
+	}
+	if lastFull < 5 {
+		http.Error(w, "ACTION IN COMMAND PATH", http.StatusBadRequest)
+		return
+	}
+	switch h.Path[5] {
+	case "recenter":
+		ok = h.Recenter(w, r, g, f)
+	default:
+		http.Error(w, "ACTION IN COMMAND PATH", http.StatusBadRequest)
+		return
+	}
+	if !ok {
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/overpower/view/%d/play", gid), http.StatusFound)
 }

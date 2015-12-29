@@ -70,13 +70,13 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 {{ end }}
 
 <hr>
-Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
+<b>Map Centered on ({{ index $center 0}}, {{ index $center 1 }}):</b>{{  if $centerpv }}
 {{ if .cyou }}
         {{ $o := .octof }}
         {{ $centerpv.Name }} (Your Planet) <br>
         Inhabitants: {{ $centerpv.Inhabitants }} &bull; 
         Resources: {{ $centerpv.Resources }} &bull;
-        Ship Parts: {{ $centerpv.Parts }} (Available: {{ index $availparts $centerpv.Pid }})<br>
+        Ship Parts: {{ $centerpv.Parts }} {{ if $centerpv.Parts }}(Available: {{ index $availparts $centerpv.Pid }}){{ end }}<br>
         {{ if $o }}
         <div class="box" style="margin-left:810px;">
         You have {{ $focuspv.Name }} focused (distance {{ .fcdist }}) and are launching a size {{ $o.Size }} ship at it:<br>
@@ -119,6 +119,8 @@ Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
                 {{ end }}
         </ul>
         </div>
+        {{ else }}
+        You have no launch orders from this planet.<br>
         {{ end }}
 {{ else }}
         {{ if $centerpv.Turn }}
@@ -126,7 +128,7 @@ Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
         Last Seen Turn {{ $centerpv.Turn }}<br>
         Inhabitants: {{ $centerpv.Inhabitants }} &bull; 
         Resources: {{ $centerpv.Resources }} &bull;
-        Ship Parts: {{ $centerpv.Parts }} (Available: {{ index $availparts $centerpv.Pid }})<br>
+        Ship Parts: {{ $centerpv.Parts }}<br>
         {{ else }}
         {{ $centerpv.Name }}<br>
         No planetary information available<br>
@@ -152,10 +154,12 @@ Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
 {{ end }}<br>
 {{ end }}
 
+{{ else if not .centersv }}
+    Empty Space
 {{ end }}
 {{ if .centersv }}
         <div class="box" style="margin-left:810px;">
-        Ship passage detected at {{ index $center 0}}, {{ index $center 1 }}:<br>
+        Ship passage detected through {{ index $center 0}}, {{ index $center 1 }}:<br>
         {{ range .centersv }}
         SV: {{ . }}<br>
         {{ end }}
@@ -163,23 +167,75 @@ Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
 {{ end }}
 
 {{ if .focus }} <hr> {{ if .cenfocused }}
-        Focused: {{ $focuspv.Name }}<br>
+        <b>Focused:</b> {{ $focuspv.Name }}<br>
 {{ else }} {{ if $focuspv }}
-        Focused: {{ $focuspv.Name }}<br>
-        {{ if .fyou }}
-                YOUR PLANET<br>
-        {{ else }}
-                NOT YOURS<br>
+        <b>Focused:</b> {{ $focuspv.Name }} (Distance {{ .fcdist }} from map center)<br>
+        {{ if .fyou }}{{ $o := .oftoc }}
+        Controlled by: You<br>
+        Inhabitants: {{ $focuspv.Inhabitants }} &bull; 
+        Resources: {{ $focuspv.Resources }} &bull;
+        Ship Parts: {{ $focuspv.Parts }} {{ if $focuspv.Parts }}(Available: {{ index $availparts $focuspv.Pid }}){{ end }}<br>
+        {{ if $o }}
+                <div class="box" style="margin-left:810px;">
+                You have {{ $centerpv.Name }} centered in your map (distance {{ .fcdist }}) and are launching a size {{ $o.Size }} ship at it:<br>
+                <form action="" method="post" class="noblock">
+                <input type="hidden" name="action" value="setorder">
+                <input type="hidden" name="turn" value="{{ $g.Turn }}">
+                <input type="hidden" name="source" value="{{ $o.Source }}">
+                <input type="hidden" name="target" value="{{ $o.Target }}">
+                Change ship size (0 to cancel): <input type="text" size=2 name="size">
+                <input type="submit" value="CHANGE" class="noblock">
+                </form>
+                </div>
+        {{ else if (and (index $availparts $focuspv.Pid) $centerpv) }}
+                <div class="box" style="margin-left:810px;">
+                You have {{ $centerpv.Name }} centered in your map (distance {{ .fcdist }}) and up to {{ index $availparts $focuspv.Pid }} parts available for ship construction:<br>
+                <form action="" method="post" class="noblock">
+                <input type="hidden" name="action" value="setorder">
+                <input type="hidden" name="turn" value="{{ $g.Turn }}">
+                <input type="hidden" name="source" value="{{ $focuspv.Pid }}">
+                <input type="hidden" name="target" value="{{ $centerpv.Pid }}">
+                Ship size: <input type="text" size=2 name="size"> &bull;
+                <input type="submit" value="Order launch toward {{ $centerpv.Name }}" class="noblock">
+                </form>
+                </div>
         {{ end }}
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="hexx" value="{{ index $focuspv.Loc 0 }}">
-        <input type="hidden" name="hexy" value="{{ index $focuspv.Loc 1 }}">
-        <input type="submit" value="Center Map On {{ $focuspv.Name }}" class="noblock">
-        </form>
-{{ end }} {{ end }} {{ end }}
+        {{ if .fords }}
+        <div class="box" style="margin-left:810px;">
+        {{ if $o }}Other {{ end }}Planetary Launch Orders:<br>
+        <ul> {{ range .fords }}
+                <li>Size {{ .Size }} ship at {{ index $plNames .Target }}
+                <form action="" method="post" class="noblock">
+                <input type="hidden" name="action" value="setorder">
+                <input type="hidden" name="turn" value="{{ $g.Turn }}">
+                <input type="hidden" name="source" value="{{ .Source }}">
+                <input type="hidden" name="target" value="{{ .Target }}">
+                <br> Change size (0 to cancel): <input type="text" size=2 name="size">
+                <input type="submit" value="CHANGE" class="noblock">
+                </form>
+                </li>
+                {{ end }}
+        </ul>
+        </div>
+        {{ else }}
+        You have no launch orders from this planet.<br>
+        {{ end }}
 
+
+
+        {{ else }}
+            {{ if $focuspv.Turn }}
+            Controlled by: {{ index $names $focuspv.Controller }} &bull;
+            Last seen on turn {{ $focuspv.Turn }}<br>
+            Inhabitants: {{ $focuspv.Inhabitants }} &bull; 
+            Resources: {{ $focuspv.Resources }} &bull;
+            Ship Parts: {{ $focuspv.Parts }}<br>
+            {{ else }}
+            No planetary information available.<br>
+            {{ end }}
+        {{ end }}
+        [ <a href="{{ command "recenter"}}/{{ index $focuspv.Loc 0 }}/{{ index $focuspv.Loc 1 }}">Center Map on {{ $focuspv.Name }}</a> ]
+{{ end }} {{ end }} <hr> {{ end }}
 </div>
 
 <hr>
@@ -189,7 +245,7 @@ Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
         {{ .Name }} || Pid: {{ .Pid }} || Grid: {{ .Loc }} ({{ if index $polar 0 }}Sector: {{ .Loc.Sector }} Radius: {{ index $polar 0 }}{{ else }}GALACTIC CENTER{{ end }})<br>
 {{ if eq .Controller $f.Fid }}
         YOUR PLANET || Inhabitants: {{ .Inhabitants }}<br>
-        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} (Available: {{ index $availparts .Pid }})<br>
+        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} {{ if .Parts }}(Available: {{ index $availparts .Pid }}){{ end }}<br>
         <hr>
         ORDERS:<br>
         <ul> {{ range index $orders .Pid }}
@@ -219,12 +275,14 @@ Map Centered on {{ index $center 0}}, {{ index $center 1 }}{{  if $centerpv }}:
         SIZE:<input type="text" name="size">
         <input type="submit" value="ORDER SHIP CONSTRUCTION" class="noblock">
         </form>
+        <br>
 {{ else }}
         {{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
         Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
         Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
         {{ else }}No planetary information available<br>{{end}}
 {{ end }}
+        [ <a href="{{ command "recenter"}}/{{ index .Loc 0 }}/{{ index .Loc 1 }}">Center Map on {{ .Name }}</a> ]
 </div>
 {{ else }}
 NO PV FOUND<br>

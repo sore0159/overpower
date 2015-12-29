@@ -82,9 +82,25 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 				h.SetError("INVALID GAME PASSWORD")
 				break
 			}
+			facName := r.FormValue("facname")
+			if facName != "" && !ValidText(facName) {
+				h.SetError("INVALID FACTION NAME")
+				break
+			}
 			if !OPDB.MakeGame(h.User.String(), name, password) {
 				h.SetError("DATABASE ERROR IN GAME CREATION")
 				break
+			}
+			if facName != "" {
+				g, ok := OPDB.GetGameFor(h.User.String())
+				if !ok {
+					h.SetError("DATABASE ERROR IN FACTION CREATION")
+					break
+				}
+				if !OPDB.MakeFaction(g.Gid(), h.User.String(), facName) {
+					h.SetError("DATABASE ERROR IN GAME CREATION")
+					break
+				}
 			}
 		case "dropgame":
 			if !hasG {

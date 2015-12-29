@@ -89,7 +89,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	}
 	var fYou, cYou bool
 	var fPid, cPid int
-	var fPV, cPV overpower.PlanetView
+	var fPV overpower.PlanetView
 	for _, pv := range pvList {
 		plNames[pv.Pid()] = pv.Name()
 		if pv.Controller() != fid {
@@ -113,7 +113,6 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		if loc == center {
 			m["centerpv"] = pv
 			cPid = pv.Pid()
-			cPV = pv
 			if pv.Controller() == fid {
 				cYou = true
 			}
@@ -145,8 +144,8 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			}
 		}
 	}
-	if cPid != 0 && fPid != 0 {
-		m["fcdist"] = cPV.Loc().StepsTo(fPV.Loc())
+	if fPid != 0 {
+		m["fcdist"] = fPV.Loc().StepsTo(center)
 	}
 	if _, ok := m["cords"]; cYou && !ok {
 		m["cords"] = oMap[cPid]
@@ -156,7 +155,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	}
 
 	m["fyou"], m["cyou"] = fYou, cYou
-	names := map[int]string{0: "No Faction"}
+	names := map[int]string{0: "Hostile Natives"}
 	for _, fac := range facs {
 		if fac.Fid() == f.Fid() {
 			names[fac.Fid()] = "Your Faction"
@@ -200,5 +199,6 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	if zoom < 91 {
 		m["bigzoomin"] = zoom + 10
 	}
+	h.SetCommand(g)
 	h.Apply(TPOPPLAY, w)
 }

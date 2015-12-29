@@ -8,6 +8,21 @@ import (
 	"net/http"
 )
 
+// /overpower/command/GAMEID/TURN/ACTIONNAME/ARGS
+func (h *Handler) Recenter(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction) (isOk bool) {
+	x, okX := h.IntAt(6)
+	y, okY := h.IntAt(7)
+	if !okY || !okX {
+		http.Error(w, "BAD COORD ARGS IN RECENTER PATH", http.StatusBadRequest)
+		return
+	}
+	if !OPDB.UpdateMapViewCenter(g.Gid(), f.Fid(), hexagon.Coord{x, y}) {
+		http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+		return
+	}
+	return true
+}
+
 func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction) (isOk bool) {
 	if f == nil {
 		http.Error(w, "USER HAS NO FACTION IN THIS GAME", http.StatusBadRequest)
@@ -39,13 +54,21 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 	if button == 1 {
 		if shift {
 			if zoom := mv.Zoom(); zoom < 100 {
-				return OPDB.UpdateMapViewZoom(gid, fid, zoom+1)
+				if !OPDB.UpdateMapViewZoom(gid, fid, zoom+1) {
+					http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+					return false
+				}
+				return true
 			} else {
 				return true
 			}
 		} else {
 			if zoom := mv.Zoom(); zoom > 1 {
-				return OPDB.UpdateMapViewZoom(gid, fid, zoom-1)
+				if !OPDB.UpdateMapViewZoom(gid, fid, zoom-1) {
+					http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+					return false
+				}
+				return true
 			} else {
 				return true
 			}
@@ -74,7 +97,11 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 		}
 	}
 	if button == 0 {
-		return OPDB.UpdateMapViewCenter(gid, fid, c)
+		if !OPDB.UpdateMapViewCenter(gid, fid, c) {
+			http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+			return false
+		}
+		return true
 	}
 	if button == 2 {
 		var found bool
@@ -85,9 +112,17 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 			}
 		}
 		if found {
-			return OPDB.UpdateMapViewFocus(gid, fid, true, c)
+			if !OPDB.UpdateMapViewFocus(gid, fid, true, c) {
+				http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+				return false
+			}
+			return true
 		} else if shift {
-			return OPDB.UpdateMapViewFocus(gid, fid, false, hexagon.Coord{})
+			if !OPDB.UpdateMapViewFocus(gid, fid, false, hexagon.Coord{}) {
+				http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+				return false
+			}
+			return true
 		} else {
 			return true
 		}
@@ -197,20 +232,20 @@ func (h *Handler) SetOrder(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "INVALID TARGET: SOURCE", http.StatusBadRequest)
 		return
 	}
+	var sPl overpower.Planet
+	if planets[0].Pid() == source {
+		sPl = planets[0]
+	} else if planets[1].Pid() == source {
+		sPl = planets[1]
+	} else {
+		http.Error(w, "SOURCE PLANET NOT FOUND", http.StatusBadRequest)
+		return
+	}
+	if sPl.Controller() != f.Fid() {
+		http.Error(w, "SOURCE PLANET NOT OWNED BY FACTION", http.StatusBadRequest)
+		return
+	}
 	if size > 0 {
-		var sPl overpower.Planet
-		if planets[0].Pid() == source {
-			sPl = planets[0]
-		} else if planets[1].Pid() == source {
-			sPl = planets[1]
-		} else {
-			http.Error(w, "SOURCE PLANET NOT FOUND", http.StatusBadRequest)
-			return
-		}
-		if sPl.Controller() != f.Fid() {
-			http.Error(w, "SOURCE PLANET NOT OWNED BY FACTION", http.StatusBadRequest)
-			return
-		}
 		have := sPl.Parts()
 		if size > have {
 			http.Error(w, "PLANET HAS INSUFFICIENT PARTS FOR ORDER", http.StatusBadRequest)
@@ -232,7 +267,11 @@ func (h *Handler) SetOrder(w http.ResponseWriter, r *http.Request, g overpower.G
 			return
 		}
 	}
-	return OPDB.SetOrder(g.Gid(), f.Fid(), source, target, size)
+	if !OPDB.SetOrder(g.Gid(), f.Fid(), source, target, size) {
+		http.Error(w, "DATABASE ERROR SETTING ORDER", http.StatusInternalServerError)
+		return
+	}
+	return true
 }
 
 func (h *Handler) SetTurnDone(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction) (isOk bool) {

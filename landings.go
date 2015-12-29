@@ -6,12 +6,17 @@ import (
 
 func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map[int]int, names map[int]string) (ok bool) {
 	fmt.Println("LANDING ON", pl, "BY", sh)
-	defer op.BothSee(pl, pl.Controller(), sh.Fid(), turn, arrivals)
 	plid := pl.Pid()
-	def := arrivals[plid]
 	atk := sh.Size()
+	def := arrivals[plid]
 	aSum := atk
 	dSum := def + pl.Inhabitants()
+	if sh.Fid() == pl.Controller() {
+		fmt.Println("SHIP REINFORCES PLANET", aSum, dSum)
+		arrivals[plid] += atk
+		return true
+	}
+	defer op.BothSee(pl, pl.Controller(), sh.Fid(), turn, arrivals)
 	_, _ = aSum, dSum
 	if def >= atk {
 		if def == atk {
