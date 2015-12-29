@@ -9,6 +9,8 @@
 {{ $plNames := index . "plnames" }}
 {{ $center := .mapview.Center }}
 {{ $centerpv := .centerpv }}
+{{ $centersvL := .centersvL }}
+{{ $centersvLV := .centersvLV }}
 {{ $focuspv := .focuspv }}
 <div class="mapbox">
 <form id="mapform" action="" method="post" class="noblock">
@@ -120,7 +122,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         </ul>
         </div>
         {{ else }}
-        You have no launch orders from this planet.<br>
+        You have no {{ if $o }}other {{ end }}launch orders from this planet.<br>
         {{ end }}
 {{ else }}
         {{ if $centerpv.Turn }}
@@ -160,8 +162,12 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 {{ if .centersv }}
         <div class="box" style="margin-left:810px;">
         Ship passage detected through {{ index $center 0}}, {{ index $center 1 }}:<br>
-        {{ range .centersv }}
-        SV: {{ . }}<br>
+        {{ range $key, $val := .centersv }}
+        <hr>
+        Owner: {{ index $names .Controller }} &bull; Size: {{ .Size }}<br>  {{ if (index $centersvLV $key)  }}{{ $p := index $centersvL $key }}Ship currently at: [ <a href="{{ command "recenter"}}/{{ index $p 0 }}/{{ index $p 1 }}">{{ $p }}</a> ]{{ else }}Current ship location unknown{{ end }} <br>
+        {{ if .Trail }}Ship course: {{ range .Trail }}
+        [ <a href="{{ command "recenter"}}/{{ index . 0 }}/{{ index . 1 }}">{{ . }}</a> ]
+        {{ end }}<hr>{{ end }}
         {{ end }}
         </div>
 {{ end }}
@@ -218,7 +224,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         </ul>
         </div>
         {{ else }}
-        You have no launch orders from this planet.<br>
+        You have no {{ if $o }}other {{ end }}launch orders from this planet.<br>
         {{ end }}
 
 

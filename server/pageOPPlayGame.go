@@ -1,6 +1,7 @@
 package main
 
 import (
+	"mule/hexagon"
 	"mule/overpower"
 	"net/http"
 )
@@ -176,7 +177,14 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			}
 		}
 	}
+	cShipLoc := make([]hexagon.Coord, len(centerShips))
+	cShipLV := make([]bool, len(centerShips))
+	for i, sv := range centerShips {
+		cShipLoc[i], cShipLV[i] = sv.Loc()
+	}
 	m["centersv"] = centerShips
+	m["centersvL"] = cShipLoc
+	m["centersvLV"] = cShipLV
 	m["availparts"] = availMap
 	m["plnames"] = plNames
 	m["names"] = names
