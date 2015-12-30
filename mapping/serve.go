@@ -175,6 +175,9 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 			// Log(BAD ORDER: PLANETS NOT FOUND", o)
 			continue
 		}
+		if src.Controller() != fid {
+			continue
+		}
 		srcP := vp.CenterOf(src.Loc())
 		tarP := vp.CenterOf(tar.Loc())
 		var yadj float64
