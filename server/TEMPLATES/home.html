@@ -23,6 +23,7 @@
 GAME HAS NO USERS SIGNED UP TO PLAY<br>
 {{ end }}
 {{ if $active }}
+<br><br>
  <form action="" method="post">
 <input type="hidden" name="action" value="nextturn">
 <input type="hidden" name="turn" value="{{ $g.Turn }}">
