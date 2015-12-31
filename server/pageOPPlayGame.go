@@ -165,10 +165,16 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		}
 	}
 	centerShips := []overpower.ShipView{}
-	for _, sv := range shipViews {
-		if test, ok := sv.Loc(); ok && test == center {
-			centerShips = append(centerShips, sv)
-			continue
+	shipVLoc := make([]hexagon.Coord, len(shipViews))
+	shipVLocV := make([]bool, len(shipViews))
+	for i, sv := range shipViews {
+		if test, ok := sv.Loc(); ok {
+			shipVLoc[i] = test
+			shipVLocV[i] = true
+			if test == center {
+				centerShips = append(centerShips, sv)
+				continue
+			}
 		}
 		for _, test := range sv.Trail() {
 			if test == center {
@@ -193,6 +199,8 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	m["fac"] = f
 	m["pvs"] = pvList
 	m["svs"] = shipViews
+	m["svsL"] = shipVLoc
+	m["svsLV"] = shipVLocV
 	m["mapview"] = mapView
 	zoom := mapView.Zoom()
 	if zoom > 1 {

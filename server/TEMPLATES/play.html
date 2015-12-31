@@ -164,9 +164,9 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         Ship passage detected through {{ index $center 0}}, {{ index $center 1 }}:<br>
         {{ range $key, $val := .centersv }}
         <hr>
-        Owner: {{ index $names .Controller }} &bull; Size: {{ .Size }}<br>  {{ if (index $centersvLV $key)  }}{{ $p := index $centersvL $key }}Ship currently at: [ <a href="{{ command "recenter"}}/{{ index $p 0 }}/{{ index $p 1 }}">{{ $p }}</a> ]{{ else }}Current ship location unknown{{ end }} <br>
+        Owner: {{ index $names .Controller }} &bull; Size: {{ .Size }}<br>  {{ if (index $centersvLV $key)  }}{{ $p := index $centersvL $key }}Ship currently at: [ <a href="{{ command "recenter"}}/{{ index $p 0 }}/{{ index $p 1 }}">({{ index $p 0 }}, {{ index $p 1 }})</a> ]{{ else }}Current ship location unknown{{ end }} <br>
         {{ if .Trail }}Ship course: {{ range .Trail }}
-        [ <a href="{{ command "recenter"}}/{{ index . 0 }}/{{ index . 1 }}">{{ . }}</a> ]
+        [ <a href="{{ command "recenter"}}/{{ index . 0 }}/{{ index . 1 }}">({{ index . 0 }}, {{ index . 1 }})</a> ]
         {{ end }}<hr>{{ end }}
         {{ end }}
         </div>
@@ -245,6 +245,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 </div>
 
 <hr>
+<b>Planets:</b>
 {{ range index . "pvs"}}
 <div class="box">
         {{ $polar := .Loc.Polar }}
@@ -294,8 +295,18 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 NO PV FOUND<br>
 {{ end }}
 <hr>
-{{ range .svs }}
-SHIPVIEW: {{ . }}<br>
+{{ if .svs }}
+{{ $svsL := .svsL }}
+{{ $svsLV := .svsLV }}
+<b>Ships Detected:</b>
+<ul>
+{{ range $key, $val := .svs }}
+<li>Ship sized {{ $val.Size }} owned by {{ index $names $val.Controller }}<br>
+{{ if index $svsLV $key }}Currently at: {{ index $svsL $key }}{{ else }}Current location unknown{{ end }}<br>
+{{ if $val.Trail }}Detected travelling course: {{ range $val.Trail }}{{ . }} {{ end }}{{ end }}
+</li>
+{{ end }}
+</ul>
 {{ else }}
 NO SHIPVIEWS FOUND<br>
 {{ end }}
