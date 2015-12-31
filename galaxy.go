@@ -1,6 +1,7 @@
 package overpower
 
 import (
+	"math/rand"
 	"mule/hexagon"
 )
 
@@ -33,6 +34,7 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 	planets := []Planet{borion}
 	places := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
 	pids := map[int]bool{0: true, 999: true}
+	var farthest int
 	for i := 0; i < numP; i++ {
 		name := names[i]
 		var pid, res, inhab int
@@ -47,7 +49,7 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 		}
 		pids[pid] = true
 		spot := hexagon.Polar{pick(20), 0}
-		spot[1] = pick(spot[0]*6) - 1
+		spot[1] = rand.Intn(spot[0] * 6)
 		test := spot.Coord()
 		var steps int
 		for blocked := true; blocked; {
@@ -60,8 +62,11 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 			}
 			if blocked {
 				steps++
+				if steps > farthest {
+					farthest = steps
+				}
 				spot = hexagon.Polar{pick(20) + 5*steps, 0}
-				spot[1] = pick(spot[0]*6) - 1
+				spot[1] = rand.Intn(spot[0] * 6)
 				test = spot.Coord()
 			} else {
 				places[test] = true
@@ -73,13 +78,16 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 		}
 		planets = append(planets, p)
 	}
-	homeDist := 25
+	homeDist := 5 * (farthest + 1)
+	homeStart := rand.Intn(homeDist * 6)
+	homeStep := (homeDist * 6) / len(fids)
 	for i, fid := range fids {
+		start := homeStart + homeStep*i
 		var test hexagon.Coord
 		var pid int
 		for {
 			spot := hexagon.Polar{homeDist + pick(3), 0}
-			spot[1] = spot[0]*i + spot[0]/4 + pick(spot[0]/2) - 1
+			spot[1] = start + (spot[0]/4 + rand.Intn(spot[0]/4))
 			test = spot.Coord()
 			if !places[test] {
 				break
