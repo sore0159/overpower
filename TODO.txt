@@ -3,6 +3,17 @@ Reports:
     * Ship launches
     * Ship landings
 
+Game:
+    * Endstate: score?
+    * Galaxy creation: robustness
+UI:
+    * Sorted planet/shipviews, filterable
+    * Planet parts avail shown on map
+    * Directional order/ship visualizations
+
+
+// ========================= DONE ========================= //
+
 Interactive Map:
     * Javascript left/right click, wheelup/down
     * create orders
@@ -11,10 +22,3 @@ Interactive Map:
 
 UI:
     * 'Focused' coordinate
-    * Sorted planet/shipviews, filterable
-    * Planet parts avail shown on map
-    * Directional order/ship visualizations
-
-Game:
-    * Endstate: score?
-    * Galaxy creation: robustness

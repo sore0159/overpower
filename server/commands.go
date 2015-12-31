@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"mule/hexagon"
 	"mule/myweb"
 	"mule/overpower"
@@ -49,12 +50,23 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 		return
 	}
 	shift := r.FormValue("shift") == "true"
-	vp := mapping.GetVP(mv)
-	c := vp.HexContaining(hexagon.Pixel{float64(clickx), float64(clicky)})
-	if button == 1 {
-		if shift {
-			if zoom := mv.Zoom(); zoom < 100 {
-				if !OPDB.UpdateMapViewZoom(gid, fid, zoom+1) {
+	if button == 3 { // wheelspin
+		if clicky == 0 {
+			http.Error(w, "BAD CLICKY FORM DATA", http.StatusBadRequest)
+			return
+		} else if clicky > 0 {
+			if zoom := mv.Zoom(); zoom < 50 {
+				var amount int
+				if shift {
+					if zoom+10 > 50 {
+						amount = 50
+					} else {
+						amount = zoom + 10
+					}
+				} else {
+					amount = zoom + 1
+				}
+				if !OPDB.UpdateMapViewZoom(gid, fid, amount) {
 					http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
 					return false
 				}
@@ -64,7 +76,18 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 			}
 		} else {
 			if zoom := mv.Zoom(); zoom > 1 {
-				if !OPDB.UpdateMapViewZoom(gid, fid, zoom-1) {
+				var amount int
+				if shift {
+					if zoom-10 < 1 {
+						amount = 1
+					} else {
+						amount = zoom - 10
+					}
+				} else {
+					amount = zoom - 1
+				}
+
+				if !OPDB.UpdateMapViewZoom(gid, fid, amount) {
 					http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
 					return false
 				}
@@ -73,13 +96,18 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 				return true
 			}
 		}
+		return true
 	}
-	pvList, ok := OPDB.GetAllFactionPlanetViews(gid, fid)
+	vp := mapping.GetVP(mv)
+	c := vp.HexContaining(hexagon.Pixel{float64(clickx), float64(clicky)})
+	var pvList []overpower.PlanetView
+	var found bool
+	pvList, ok = OPDB.GetAllFactionPlanetViews(gid, fid)
 	if !ok {
 		http.Error(w, "DATABASE ERROR RETRIEVING PLANETVIEWS", http.StatusInternalServerError)
 		return
 	}
-	var found, foundNear bool
+	var foundNear bool
 	var near hexagon.Coord
 	if mv.Zoom() < 15 {
 		for _, pv := range pvList {
@@ -95,22 +123,24 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 			c = near
 			found = true
 		}
-	}
-	if button == 0 {
-		if !OPDB.UpdateMapViewCenter(gid, fid, c) {
-			http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-			return false
-		}
-		return true
-	}
-	if button == 2 {
-		var found bool
+	} else {
 		for _, pv := range pvList {
-			if pv.Loc() == c {
+			if loc := pv.Loc(); loc == c {
 				found = true
 				break
 			}
 		}
+	}
+	switch button {
+	case 0: // left
+		if !OPDB.UpdateMapViewCenter(gid, fid, c) {
+			http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+			return false
+		}
+	case 1: // wheelclick
+		fmt.Println("MID CLICK", c)
+		return true
+	case 2: // right
 		if found {
 			if !OPDB.UpdateMapViewFocus(gid, fid, true, c) {
 				http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
@@ -126,6 +156,11 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 		} else {
 			return true
 		}
+	case 3: // wheelspin
+	// SEE ABOVE
+	default:
+		http.Error(w, "UNKNOWN BUTTON VALUE", http.StatusBadRequest)
+		return
 	}
 	return true
 }
@@ -177,8 +212,8 @@ func (h *Handler) SetMapView(w http.ResponseWriter, r *http.Request, g overpower
 			zoom = 1
 			//	http.Error(w, "BAD VALUE FOR MAPVIEW ZOOM", http.StatusBadRequest)
 			//	return false
-		} else if zoom > 100 {
-			zoom = 100
+		} else if zoom > 50 {
+			zoom = 50
 		}
 		return OPDB.UpdateMapViewZoom(gid, fid, zoom)
 	}

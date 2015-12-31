@@ -201,10 +201,10 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	if zoom > 10 {
 		m["bigzoomout"] = zoom - 10
 	}
-	if zoom < 100 {
+	if zoom < 50 {
 		m["zoomin"] = zoom + 1
 	}
-	if zoom < 91 {
+	if zoom < 41 {
 		m["bigzoomin"] = zoom + 10
 	}
 	h.SetCommand(g)

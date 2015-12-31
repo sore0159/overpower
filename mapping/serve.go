@@ -81,6 +81,9 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	gc.SetStrokeColor(color.RGBA{0x3F, 0x3F, 0x9F, 0xFF})
 	draw2d.SetFontFolder("DATA")
 	gc.SetFontData(draw2d.FontData{Name: "DroidSansMono", Family: draw2d.FontFamilyMono})
+	focusC := color.RGBA{0x99, 0x99, 0x00, 0xFF}
+	selectC := color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
+	center := mv.Center()
 	//
 	rad := float64(zoom)
 	vp := GetVP(mv)
@@ -117,9 +120,9 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 				trToDraw[h] = list
 			}
 		}
+		gc.SetLineWidth(1)
 		if focusVis {
-			gc.SetLineWidth(1)
-			gc.SetStrokeColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
+			gc.SetStrokeColor(focusC)
 			corners := vp.CornersOf(focus)
 			gc.MoveTo(corners[0][0], corners[0][1])
 			for i, _ := range corners {
@@ -133,11 +136,25 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 			}
 			gc.Close()
 			gc.Stroke()
-			if zoom > 40 {
-				gc.SetLineWidth(.5)
+		}
+		gc.SetStrokeColor(selectC)
+		corners := vp.CornersOf(center)
+		gc.MoveTo(corners[0][0], corners[0][1])
+		for i, _ := range corners {
+			var px, py float64
+			if i == 5 {
+				px, py = corners[0][0], corners[0][1]
 			} else {
-				gc.SetLineWidth(.25)
+				px, py = corners[i+1][0], corners[i+1][1]
 			}
+			gc.LineTo(px, py)
+		}
+		gc.Close()
+		gc.Stroke()
+		if zoom > 40 {
+			gc.SetLineWidth(.5)
+		} else {
+			gc.SetLineWidth(.25)
 		}
 	} else {
 		for _, h := range vp.VisList() {
@@ -195,8 +212,11 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	}
 	gc.SetStrokeColor(color.Black)
 	for _, pv := range plToDraw {
-		if zoom < 15 && focValid && pv.Loc() == focus {
-			gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
+		h := pv.Loc()
+		if zoom < 15 && focValid && h == focus {
+			gc.SetFillColor(focusC)
+		} else if zoom < 15 && h == center {
+			gc.SetFillColor(selectC)
 		} else if pv.Turn() > 0 && pv.Controller() != 0 {
 			if pv.Controller() == fid {
 				gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
@@ -207,7 +227,6 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		} else {
 			gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0xFF})
 		}
-		h := pv.Loc()
 		c := vp.CenterOf(h)
 		if zoom > 10 {
 			gc.FillStringAt(fmt.Sprintf("%s (%d,%d)", pv.Name(), h[0], h[1]), c[0]+(rad*.25), c[1]-(.75*rad))
