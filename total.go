@@ -9,6 +9,7 @@ type TotallyOP struct {
 	Ships       []Ship
 	ShipViews   []ShipView
 	PlanetViews map[[2]int]PlanetView
+	Reports     map[int]Report
 }
 
 func NewTotallyOP() *TotallyOP {

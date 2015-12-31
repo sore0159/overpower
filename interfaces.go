@@ -12,6 +12,7 @@ type Source interface {
 	DropShip(Ship) bool
 	NewShipView(int, int, int, int, int, int, hexagon.Coord, bool, []hexagon.Coord) (ShipView, bool)
 	NewMapView(int, int, hexagon.Coord) (MapView, bool)
+	NewReport(int, int, int) (Report, bool)
 }
 
 type Game interface {
@@ -127,4 +128,12 @@ type MapView interface {
 	Focus() (hexagon.Coord, bool)
 	SetFocus(hexagon.Coord)
 	DropFocus()
+}
+
+type Report interface {
+	Gid() int
+	Fid() int
+	Turn() int
+	Contents() []string
+	AddContent(string)
 }

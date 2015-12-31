@@ -11,6 +11,7 @@ type Source struct {
 	MadePlanetViews map[[2]int]*PlanetView
 	MadeShipViews   []*ShipView
 	MadeMapViews    []*MapView
+	MadeReports     []*Report
 	DroppedShips    []overpower.Ship
 }
 
@@ -21,8 +22,16 @@ func (d DB) NewSource() *Source {
 		MadePlanetViews: map[[2]int]*PlanetView{},
 		MadeShipViews:   []*ShipView{},
 		MadeMapViews:    []*MapView{},
+		MadeReports:     []*Report{},
 		DroppedShips:    []overpower.Ship{},
 	}
+}
+
+func (s *Source) NewReport(gid, fid, turn int) (report overpower.Report, isOk bool) {
+	r := NewReport()
+	r.gid, r.fid, r.turn = gid, fid, turn
+	s.MadeReports = append(s.MadeReports, r)
+	return r, true
 }
 func (s *Source) NewMapView(gid, fid int, center hexagon.Coord) (mapview overpower.MapView, isOk bool) {
 	mv := NewMapView()

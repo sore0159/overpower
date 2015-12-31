@@ -44,6 +44,16 @@ func (d DB) RunGameTurn(g overpower.Game) (ok bool) {
 	op.Factions = facs
 	op.Orders = orders
 	op.Ships = ships
+	op.Reports = make(map[int]overpower.Report, len(facs))
+	turn := g.Turn()
+	for _, f := range facs {
+		fid := f.Fid()
+		r, ok := source.NewReport(gid, fid, turn)
+		if !ok {
+			return false
+		}
+		op.Reports[fid] = r
+	}
 	// -------- //
 	if !op.RunGameTurn() {
 		return false
@@ -64,6 +74,11 @@ func (d DB) RunGameTurn(g overpower.Game) (ok bool) {
 		list = append(list, x)
 	}
 	for _, x := range source.MadeShipViews {
+		if !x.Insert(d.db) {
+			return false
+		}
+	}
+	for _, x := range source.MadeReports {
 		if !x.Insert(d.db) {
 			return false
 		}

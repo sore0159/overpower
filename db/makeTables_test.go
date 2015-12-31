@@ -99,6 +99,14 @@ func MakeTables(db *sql.DB) (ok bool) {
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, sid)
 );`)
+	queries = append(queries, `create table reports(
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid integer NOT NULL,
+	turn integer NOT NULL,
+	contents text[] NOT NULL,
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, turn)
+);`)
 	for i, query := range queries {
 		if !mydb.ExecIf(db, query) {
 			fmt.Println("Failed table creation", i)
@@ -110,7 +118,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 }
 
 func DropTables(db *sql.DB) (ok bool) {
-	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders"
+	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders, reports"
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tables)
 	return mydb.ExecIf(db, query)
 }
