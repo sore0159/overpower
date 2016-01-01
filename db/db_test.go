@@ -100,11 +100,15 @@ func TestSecond(t *testing.T) {
 		at := hexagon.Coord{1, 1}
 		seen := []hexagon.Coord{{0, 0}, {1, 0}, {1, 1}}
 		for _, s := range ships {
-			sv := MakeShipView(s, 1, 1, at, seen)
-			if !sv.Insert(db.db) {
-				fmt.Println("FAILED SHIPVIEW INSERT")
-				return
-			}
+			_, _ = at, seen
+			fmt.Println("TODO: shipview from", s)
+			/*
+				sv := MakeShipView(s, 1, 1, at, seen)
+				if !sv.Insert(db.db) {
+					fmt.Println("FAILED SHIPVIEW INSERT")
+					return
+				}
+			*/
 		}
 		shipViews, ok = db.GetFidTurnShipViews(g.Gid(), 1, 1)
 		if len(shipViews) < 1 {

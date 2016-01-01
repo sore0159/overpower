@@ -10,7 +10,7 @@ type Source interface {
 	NewPlanet(string, int, int, int, int, int, int, hexagon.Coord) (Planet, bool)
 	NewShip(int, int, int, int, []hexagon.Coord) (Ship, bool)
 	DropShip(Ship) bool
-	NewShipView(int, int, int, int, int, int, hexagon.Coord, bool, []hexagon.Coord) (ShipView, bool)
+	NewShipView(int, int, int, int, int, int, hexagon.Coord, bool, hexagon.Coord, bool, []hexagon.Coord) (ShipView, bool)
 	NewMapView(int, int, hexagon.Coord) (MapView, bool)
 	NewReport(int, int, int) (Report, bool)
 }
@@ -113,6 +113,7 @@ type ShipView interface {
 	Size() int
 	Controller() int
 	Loc() (hexagon.Coord, bool)
+	Dest() (hexagon.Coord, bool)
 	Trail() []hexagon.Coord
 }
 

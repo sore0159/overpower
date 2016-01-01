@@ -93,6 +93,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 	sid integer NOT NULL,
 	turn integer NOT NULL,
 	loc point,
+	dest point,
 	trail point[],
 	size int NOT NULL,
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,

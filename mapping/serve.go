@@ -1,52 +1,25 @@
 package mapping
 
 import (
-	"fmt"
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
-	"math"
 	"math/rand"
 	"mule/hexagon"
 	"mule/overpower"
 	"net/http"
-	"strings"
+)
+
+const (
+	MAPW = 800
+	MAPH = 600
 )
 
 func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []overpower.Faction, pvList []overpower.PlanetView, svList []overpower.ShipView, orders []overpower.Order) {
-	planetGrid := make(map[hexagon.Coord]overpower.PlanetView, len(pvList))
-	plidGrid := make(map[int]overpower.PlanetView, len(pvList))
-	shipGrid := make(map[hexagon.Coord][]overpower.ShipView, len(svList))
-	trailGrid := make(map[hexagon.Coord][]overpower.ShipView, len(svList))
-	names := make(map[int]string, len(facList))
-	for _, fac := range facList {
-		names[fac.Fid()] = fac.Name()
-	}
-	for _, pv := range pvList {
-		planetGrid[pv.Loc()] = pv
-		plidGrid[pv.Pid()] = pv
-	}
-	for _, sv := range svList {
-		if l, ok := sv.Loc(); ok {
-			if list, ok := shipGrid[l]; ok {
-				shipGrid[l] = append(list, sv)
-			} else {
-				shipGrid[l] = []overpower.ShipView{sv}
-			}
-		}
-		for _, t := range sv.Trail() {
-			if list, ok := trailGrid[t]; ok {
-				trailGrid[t] = append(list, sv)
-			} else {
-				trailGrid[t] = []overpower.ShipView{sv}
-			}
-		}
-	}
-	// -------- //
-	width, height := 800, 600
+	width, height := MAPW, MAPH
 	frame := image.Rect(0, 0, width, height)
 	final := image.NewRGBA(frame)
 	draw.Draw(final, final.Bounds(), image.Black, image.ZP, draw.Src)
@@ -61,130 +34,165 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		final.Set(x, y, starC)
 	}
 	// -------- //
+	gridC := color.RGBA{0x3F, 0x3F, 0x9F, 0xFF}
+	focusC := color.RGBA{0x99, 0x99, 0x00, 0xFF}
+	selectC := color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
+	orderC := color.RGBA{0x0F, 0xAF, 0xAF, 0xFF}
+	trailDotC := color.RGBA{0x39, 0x39, 0x39, 0x3F}
+	trailLineC := color.RGBA{0xFF, 0xFF, 0xFF, 0xFF}
+	//destLineC := color.RGBA{0x0F, 0xFF, 0x0F, 0xFF}
+	destLineC := orderC
+	_ = trailDotC
 	gc := draw2dimg.NewGraphicContext(final)
+	draw2d.SetFontFolder("DATA")
+	gc.SetFontData(draw2d.FontData{Name: "DroidSansMono", Family: draw2d.FontFamilyMono})
 	zoom := mv.Zoom()
 	if zoom > 100 {
 		zoom = 100
 	} else if zoom < 1 {
 		zoom = 1
 	}
-	if zoom > 40 {
-		gc.SetLineWidth(.5)
-	} else {
-		gc.SetLineWidth(.25)
-	}
 	if zoom < 10 {
 		gc.SetFontSize(8)
 	} else {
 		gc.SetFontSize(10)
 	}
-	gc.SetStrokeColor(color.RGBA{0x3F, 0x3F, 0x9F, 0xFF})
-	draw2d.SetFontFolder("DATA")
-	gc.SetFontData(draw2d.FontData{Name: "DroidSansMono", Family: draw2d.FontFamilyMono})
-	focusC := color.RGBA{0x99, 0x99, 0x00, 0xFF}
-	selectC := color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
-	center := mv.Center()
+	if zoom > 40 {
+		gc.SetLineWidth(.5)
+	} else {
+		gc.SetLineWidth(.25)
+	}
 	//
-	rad := float64(zoom)
+	showGrid := zoom > 14
 	vp := GetVP(mv)
-	plToDraw := []overpower.PlanetView{}
-	shToDraw := map[hexagon.Coord][]overpower.ShipView{}
-	trToDraw := map[hexagon.Coord][]overpower.ShipView{}
+	center := mv.Center()
 	focus, focValid := mv.Focus()
-	var focusVis bool
-	if zoom > 14 {
-		for _, h := range vp.VisList() {
-			if focValid && !focusVis && h == focus {
-				focusVis = true
-			}
-			corners := vp.CornersOf(h)
-			gc.MoveTo(corners[0][0], corners[0][1])
-			for i, _ := range corners {
-				var px, py float64
-				if i == 5 {
-					px, py = corners[0][0], corners[0][1]
-				} else {
-					px, py = corners[i+1][0], corners[i+1][1]
-				}
-				gc.LineTo(px, py)
-			}
-			gc.Close()
-			gc.Stroke()
-			if pv, ok := planetGrid[h]; ok {
-				plToDraw = append(plToDraw, pv)
-			}
-			if list, ok := shipGrid[h]; ok {
-				shToDraw[h] = list
-			}
-			if list, ok := trailGrid[h]; ok {
-				trToDraw[h] = list
-			}
+	visList := vp.VisList()
+	visMap := make(map[hexagon.Coord]bool, len(visList))
+	gc.SetStrokeColor(gridC)
+	// ------------ GRID + SELECT + FOCUS ------------- //
+	for _, h := range vp.VisList() {
+		visMap[h] = true
+		if showGrid {
+			DrawHex(gc, vp, h)
 		}
+	}
+	if showGrid {
 		gc.SetLineWidth(1)
-		if focusVis {
+		if focValid && visMap[focus] {
 			gc.SetStrokeColor(focusC)
-			corners := vp.CornersOf(focus)
-			gc.MoveTo(corners[0][0], corners[0][1])
-			for i, _ := range corners {
-				var px, py float64
-				if i == 5 {
-					px, py = corners[0][0], corners[0][1]
-				} else {
-					px, py = corners[i+1][0], corners[i+1][1]
-				}
-				gc.LineTo(px, py)
-			}
-			gc.Close()
-			gc.Stroke()
+			DrawHex(gc, vp, focus)
 		}
 		gc.SetStrokeColor(selectC)
-		corners := vp.CornersOf(center)
-		gc.MoveTo(corners[0][0], corners[0][1])
-		for i, _ := range corners {
-			var px, py float64
-			if i == 5 {
-				px, py = corners[0][0], corners[0][1]
-			} else {
-				px, py = corners[i+1][0], corners[i+1][1]
-			}
-			gc.LineTo(px, py)
+		DrawHex(gc, vp, center)
+	}
+	// -------- PLANETS PREP ----------- //
+	plidGrid := make(map[int]overpower.PlanetView, len(pvList))
+	plToDraw := make([]overpower.PlanetView, 0, len(pvList))
+	availMap := map[int]int{}
+	for _, pv := range pvList {
+		pid := pv.Pid()
+		plidGrid[pid] = pv
+		if visMap[pv.Loc()] {
+			plToDraw = append(plToDraw, pv)
 		}
-		gc.Close()
-		gc.Stroke()
-		if zoom > 40 {
-			gc.SetLineWidth(.5)
-		} else {
-			gc.SetLineWidth(.25)
+		if pv.Controller() == fid {
+			availMap[pid] = pv.Parts()
 		}
-	} else {
-		for _, h := range vp.VisList() {
-			if pv, ok := planetGrid[h]; ok {
-				plToDraw = append(plToDraw, pv)
+	}
+	// ------------------- SHIPS ---------------------- //
+	names := make(map[int]string, len(facList))
+	for _, fac := range facList {
+		names[fac.Fid()] = fac.Name()
+	}
+	shToDraw := make(map[hexagon.Coord][]overpower.ShipView, 0)
+	destToDraw := make([][2]hexagon.Coord, 0)
+	trailToDraw := make([][2]hexagon.Coord, 0)
+	trailFids := make([]int, 0)
+	trailDots := make([]hexagon.Coord, 0)
+	for _, sv := range svList {
+		var locVis, locOk bool
+		loc, locOk := sv.Loc()
+		if locOk {
+			locVis = visMap[loc]
+			if locVis {
+				if list, ok := shToDraw[loc]; ok {
+					shToDraw[loc] = append(list, sv)
+				} else {
+					shToDraw[loc] = []overpower.ShipView{sv}
+				}
 			}
-			if list, ok := shipGrid[h]; ok {
-				shToDraw[h] = list
+			if dest, ok := sv.Dest(); ok && (locVis || visMap[dest]) {
+				destToDraw = append(destToDraw, [2]hexagon.Coord{loc, dest})
 			}
-			if list, ok := trailGrid[h]; ok {
-				trToDraw[h] = list
+		}
+		trail := sv.Trail()
+		for _, test := range trail {
+			if visMap[test] {
+				if showGrid {
+					trailDots = append(trailDots, test)
+				} else {
+					var end hexagon.Coord
+					if locOk {
+						end = loc
+					} else {
+						end = trail[len(trail)-1]
+					}
+					trailToDraw = append(trailToDraw, [2]hexagon.Coord{trail[0], end})
+					trailFids = append(trailFids, sv.Controller())
+					break
+				}
 			}
 		}
 	}
-	gc.SetStrokeColor(color.Black)
-	for c, list := range trToDraw {
-		DrawTrails(gc, vp, fid, rad, names, c, list)
+	if showGrid {
+		if len(trailDots) > 0 {
+			gc.SetLineWidth(.25)
+			gc.SetStrokeColor(color.Black)
+			gc.SetFillColor(trailDotC)
+			for _, c := range trailDots {
+				DrawTrailDot(gc, vp, c)
+			}
+		}
+	} else {
+		gc.SetLineWidth(1)
+		gc.SetFillColor(trailLineC)
+		for i, pts := range trailToDraw {
+			if pts[0] != pts[1] {
+				cont := trailFids[i]
+				if cont == fid {
+					gc.SetStrokeColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
+				} else {
+					gc.SetStrokeColor(color.RGBA{0xFF, 0x0F, 0x0F, 0xFF})
+				}
+				DrawLine(gc, vp, pts[0], pts[1])
+			} else {
+				gc.SetLineWidth(0)
+				DrawTrailDot(gc, vp, pts[0])
+				gc.SetLineWidth(1)
+			}
+		}
+	}
+	gc.SetLineWidth(1)
+	gc.SetStrokeColor(destLineC)
+	for _, pts := range destToDraw {
+		DrawDestLine(gc, vp, pts[0], pts[1], showGrid)
 	}
 	for c, list := range shToDraw {
-		DrawShips(gc, vp, fid, rad, names, c, list)
+		DrawShips(gc, vp, fid, names, c, list)
 	}
-	//gc.SetStrokeColor(color.RGBA{0x9F, 0x9F, 0x3F, 0xFF})
-	gc.SetStrokeColor(color.RGBA{0x0F, 0xAF, 0xAF, 0xFF})
-	if zoom > 40 {
-		gc.SetLineWidth(2)
-	} else if zoom > 10 {
-		gc.SetLineWidth(1)
-	} else {
-		gc.SetLineWidth(.5)
-	}
+	// ------------ ORDERS ------------- //
+	gc.SetStrokeColor(orderC)
+	/*
+		if zoom > 40 {
+			gc.SetLineWidth(2)
+		} else if zoom > 10 {
+			gc.SetLineWidth(1)
+		} else {
+			gc.SetLineWidth(.5)
+		}
+	*/
+	gc.SetLineWidth(2)
 	for _, o := range orders {
 		src, okS := plidGrid[o.Source()]
 		tar, okT := plidGrid[o.Target()]
@@ -195,115 +203,25 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		if src.Controller() != fid {
 			continue
 		}
-		srcP := vp.CenterOf(src.Loc())
-		tarP := vp.CenterOf(tar.Loc())
-		var yadj float64
-		if zoom > 10 {
-			yadj = rad * .25
-		}
-		gc.MoveTo(srcP[0], srcP[1]-yadj)
-		gc.LineTo(tarP[0], tarP[1]-yadj)
-		gc.Stroke()
+		availMap[src.Pid()] -= o.Size()
+		DrawOrderLine(gc, vp, src.Loc(), tar.Loc(), showGrid)
 	}
-	if zoom > 40 {
-		gc.SetLineWidth(.5)
-	} else {
-		gc.SetLineWidth(.25)
-	}
+	// -------------------- PLANETS --------------------- //
+	gc.SetLineWidth(.25)
 	gc.SetStrokeColor(color.Black)
 	for _, pv := range plToDraw {
-		h := pv.Loc()
-		if zoom < 15 && focValid && h == focus {
-			gc.SetFillColor(focusC)
-		} else if zoom < 15 && h == center {
-			gc.SetFillColor(selectC)
-		} else if pv.Turn() > 0 && pv.Controller() != 0 {
-			if pv.Controller() == fid {
-				gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
-			} else {
-				gc.SetFillColor(color.RGBA{0xFF, 0x0F, 0x0F, 0xFF})
-			}
-
+		loc := pv.Loc()
+		isFocus := focValid && (focus == loc)
+		isCenter := loc == center
+		var avail int
+		if pv.Controller() == fid {
+			avail = availMap[pv.Pid()]
 		} else {
-			gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0xFF})
+			avail = pv.Inhabitants()
 		}
-		c := vp.CenterOf(h)
-		if zoom > 10 {
-			gc.FillStringAt(fmt.Sprintf("%s (%d,%d)", pv.Name(), h[0], h[1]), c[0]+(rad*.25), c[1]-(.75*rad))
-			gc.ArcTo(c[0], c[1]-rad*.25, rad*.45, rad*.45, 0, -math.Pi*2)
-		} else if zoom >= 5 {
-			gc.FillStringAt(fmt.Sprintf("%s", pv.Name()), c[0]+(rad*.25), c[1]-(.75*rad))
-			gc.ArcTo(c[0], c[1], 5, 5, 0, -math.Pi*2)
-		} else {
-			gc.ArcTo(c[0], c[1], 3, 3, 0, -math.Pi*2)
-		}
-		gc.Close()
-		gc.FillStroke()
+		DrawPlanet(gc, vp, fid, avail, showGrid, isFocus, isCenter, pv)
 	}
 
 	// -------- //
 	png.Encode(w, final)
-}
-
-func DrawTrails(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, rad float64, names map[int]string, c hexagon.Coord, list []overpower.ShipView) {
-	trailC := color.RGBA{0x39, 0x39, 0x39, 0x3F}
-	gc.SetFillColor(trailC)
-	p := vp.CenterOf(c)
-	if rad > 10 {
-		gc.ArcTo(p[0], p[1], rad*.45, rad*.25, 0, -math.Pi*2)
-	} else if rad >= 5 {
-		gc.ArcTo(p[0], p[1], 5, 3, 0, -math.Pi*2)
-	} else {
-		gc.ArcTo(p[0], p[1], 3, 1, 0, -math.Pi*2)
-	}
-	gc.Close()
-	gc.FillStroke()
-}
-
-func DrawShips(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, rad float64, names map[int]string, c hexagon.Coord, list []overpower.ShipView) {
-	var anyYours bool
-
-	parts := make([]string, len(list))
-	for i, sv := range list {
-		if sv.Controller() == fid {
-			anyYours = true
-			parts[i] = fmt.Sprintf("YOURS(%d)", sv.Size())
-		} else {
-			parts[i] = fmt.Sprintf("%d(%d)", names[sv.Controller()], sv.Size())
-		}
-	}
-	var name string
-	if len(list) > 2 {
-		name = fmt.Sprintf("%d SHIPS", len(list))
-	} else {
-		name = strings.Join(parts, "||")
-	}
-	var shipC color.RGBA
-	if anyYours {
-		shipC = color.RGBA{0x09, 0xF9, 0x09, 0xFF}
-	} else {
-		shipC = color.RGBA{0xF9, 0x09, 0x09, 0xFF}
-	}
-	gc.SetFillColor(shipC)
-	p := vp.CenterOf(c)
-	if rad > 10 {
-		gc.ArcTo(p[0], p[1], rad*.45, rad*.25, 0, -math.Pi*2)
-	} else if rad >= 5 {
-		gc.ArcTo(p[0], p[1], 5, 3, 0, -math.Pi*2)
-	} else {
-		gc.ArcTo(p[0], p[1], 3, 1, 0, -math.Pi*2)
-	}
-	gc.Close()
-	gc.FillStroke()
-	if rad >= 5 {
-		gc.FillStringAt(name, p[0]+(rad*.55), p[1]+3)
-	}
-}
-
-func GetVP(mv overpower.MapView) *hexagon.Viewport {
-	vp := hexagon.MakeViewport(float64(mv.Zoom()), false, true)
-	center := mv.Center()
-	vp.SetAnchor(center[0], center[1], 400.0, 300.0)
-	vp.SetFrame(0, 0, 800, 600)
-	return vp
 }

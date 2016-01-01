@@ -59,16 +59,17 @@ func (op *TotallyOP) RunGameTurn() (ok bool) {
 		at := travelled[len(travelled)-1]
 		// ----- SHIP MOVEMENT IS SEEN ------ //
 		for fid, rList := range radar {
-			var spottedShip bool
+			var destValid, spottedShip bool
 			var spotted []hexagon.Coord
 			if fid == sh.Fid() {
 				spotted, spottedShip = travelled, true
+				destValid = true
 			} else {
 				spotted, spottedShip = RadarCheck(rList, travelled)
 			}
 			if len(spotted) > 0 {
 				var trail []hexagon.Coord
-				var loc hexagon.Coord
+				var loc, dest hexagon.Coord
 				locValid := spottedShip && !land
 				if locValid {
 					loc = at
@@ -76,7 +77,11 @@ func (op *TotallyOP) RunGameTurn() (ok bool) {
 				} else {
 					trail = spotted
 				}
-				sv, ok := op.Source.NewShipView(gid, fid, turn, sh.Sid(), sh.Fid(), sh.Size(), loc, locValid, trail)
+				if destValid {
+					path := sh.Path()
+					dest = path[len(path)-1]
+				}
+				sv, ok := op.Source.NewShipView(gid, fid, turn, sh.Sid(), sh.Fid(), sh.Size(), loc, locValid, dest, destValid, trail)
 				if !ok {
 					return false
 				}

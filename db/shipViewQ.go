@@ -8,12 +8,13 @@ import (
 	"mule/mydb"
 )
 
-const SVSQLVAL = `sid, gid, fid, turn, size, controller, loc, trail`
+const SVSQLVAL = `sid, gid, fid, turn, size, controller, loc, dest, trail`
 
 func (s *ShipView) RowScan(row mydb.Scanner) error {
 	var trailBytes []byte
 	var locBytes []byte
-	err := row.Scan(&(s.sid), &(s.gid), &(s.fid), &(s.turn), &(s.size), &(s.controller), &(locBytes), &(trailBytes))
+	var destBytes []byte
+	err := row.Scan(&(s.sid), &(s.gid), &(s.fid), &(s.turn), &(s.size), &(s.controller), &(locBytes), &(destBytes), &(trailBytes))
 	if err != nil {
 		return err
 	}
@@ -32,6 +33,12 @@ func (s *ShipView) RowScan(row mydb.Scanner) error {
 		(&c).Scan(locBytes)
 		s.loc = c
 	}
+	if !mydb.CheckNull(destBytes) {
+		s.destValid = true
+		c := hexagon.Coord{}
+		(&c).Scan(destBytes)
+		s.dest = c
+	}
 	return nil
 }
 
@@ -42,26 +49,30 @@ func (s *ShipView) InsertScan(row *sql.Row) error {
 	return nil
 }
 func (s *ShipView) InsertQ() (query string, scan bool) {
-	var trailStr, locStr string
+	var trailStr, locStr, destStr string
 	if len(s.trail) > 0 {
 		trailStr = hexagon.CoordList2Sql(s.trail)
 	} else {
 		trailStr = "NULL"
 	}
 	if s.locValid {
-		x, _ := s.loc.Value()
-		locStr = fmt.Sprintf("%s", x)
+		locStr = s.loc.SQLStr()
 	} else {
 		locStr = "NULL"
+	}
+	if s.destValid {
+		destStr = s.dest.SQLStr()
+	} else {
+		destStr = "NULL"
 	}
 	return fmt.Sprintf(`INSERT INTO shipviews (%s) VALUES(
 		%d, %d, %d, %d,
 		%d, %d, 
-		%s, %s
+		%s, %s, %s
 	) RETURNING sid`,
 		SVSQLVAL,
 		s.sid, s.gid, s.fid, s.turn,
 		s.size, s.controller,
-		locStr, trailStr,
+		locStr, destStr, trailStr,
 	), false
 }

@@ -2,7 +2,7 @@ package db
 
 import (
 	"mule/hexagon"
-	"mule/overpower"
+	//	"mule/overpower"
 )
 
 type ShipView struct {
@@ -14,6 +14,8 @@ type ShipView struct {
 	size       int
 	loc        hexagon.Coord
 	locValid   bool
+	dest       hexagon.Coord
+	destValid  bool
 	trail      []hexagon.Coord
 }
 
@@ -23,15 +25,22 @@ func NewShipView() *ShipView {
 	}
 }
 
+/*
 func MakeShipView(sh overpower.Ship, fid, turn int, loc hexagon.Coord, seen []hexagon.Coord) *ShipView {
+	shFid := sh.Fid()
 	sv := &ShipView{
 		gid:        sh.Gid(),
 		fid:        fid,
 		sid:        sh.Sid(),
 		turn:       turn,
-		controller: sh.Fid(),
+		controller: shFid,
 		size:       sh.Size(),
 		//
+	}
+	if shFid == fid {
+		sv.destValid = true
+		path := sh.Path()
+		sv.dest = path[len(path)-1]
 	}
 	trail := make([]hexagon.Coord, 0, len(seen))
 	for _, c := range seen {
@@ -45,6 +54,7 @@ func MakeShipView(sh overpower.Ship, fid, turn int, loc hexagon.Coord, seen []he
 	sv.trail = trail
 	return sv
 }
+*/
 
 func (s *ShipView) Gid() int {
 	return s.gid
@@ -72,4 +82,10 @@ func (s *ShipView) Loc() (hexagon.Coord, bool) {
 }
 func (s *ShipView) Trail() []hexagon.Coord {
 	return s.trail
+}
+func (s *ShipView) Dest() (hexagon.Coord, bool) {
+	if s.destValid {
+		return s.dest, true
+	}
+	return hexagon.Coord{0, 0}, false
 }

@@ -42,12 +42,16 @@ func (s *Source) NewMapView(gid, fid int, center hexagon.Coord) (mapview overpow
 	return mv, true
 }
 
-func (s *Source) NewShipView(gid, fid, turn, sid, controller, size int, loc hexagon.Coord, locValid bool, trail []hexagon.Coord) (shipview overpower.ShipView, isOk bool) {
+func (s *Source) NewShipView(gid, fid, turn, sid, controller, size int, loc hexagon.Coord, locValid bool, dest hexagon.Coord, destValid bool, trail []hexagon.Coord) (shipview overpower.ShipView, isOk bool) {
 	sv := NewShipView()
 	sv.gid, sv.fid, sv.turn, sv.sid, sv.controller, sv.size = gid, fid, turn, sid, controller, size
 	if locValid {
 		sv.locValid = true
 		sv.loc = loc
+	}
+	if destValid {
+		sv.destValid = true
+		sv.dest = dest
 	}
 	sv.trail = trail
 	s.MadeShipViews = append(s.MadeShipViews, sv)

@@ -8,8 +8,8 @@ Game:
     * Galaxy creation: robustness
 UI:
     * Sorted planet/shipviews, filterable
-    * Planet parts avail shown on map
     * Directional order/ship visualizations
+
 
 
 // ========================= DONE ========================= //
@@ -22,3 +22,8 @@ Interactive Map:
 
 UI:
     * 'Focused' coordinate
+    * Zoomed out indicator binary parts avail
+    * Planet parts avail shown on map
+
+Ships:
+    * Final destination to shipview of owner, line on map

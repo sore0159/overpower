@@ -91,6 +91,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	var fYou, cYou bool
 	var fPid, cPid int
 	var fPV overpower.PlanetView
+	locNames := make(map[hexagon.Coord]string, len(pvList))
 	for _, pv := range pvList {
 		plNames[pv.Pid()] = pv.Name()
 		if pv.Controller() != fid {
@@ -103,6 +104,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			availMap[pv.Pid()] = sum
 		}
 		loc := pv.Loc()
+		locNames[loc] = pv.Name()
 		if hasFocus && focus == loc {
 			m["focuspv"] = pv
 			fPid = pv.Pid()
@@ -165,12 +167,21 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		}
 	}
 	centerShips := []overpower.ShipView{}
-	shipVLoc := make([]hexagon.Coord, len(shipViews))
-	shipVLocV := make([]bool, len(shipViews))
-	for i, sv := range shipViews {
+	shipVLoc := make(map[int]hexagon.Coord, len(shipViews))
+	shipVLocV := make(map[int]bool, len(shipViews))
+	shipVDest := make(map[int]hexagon.Coord, len(shipViews))
+	shipVDestN := make(map[int]string, len(shipViews))
+	shipVDestV := make(map[int]bool, len(shipViews))
+	for _, sv := range shipViews {
+		sid := sv.Sid()
+		if test, ok := sv.Dest(); ok {
+			shipVDest[sid] = test
+			shipVDestN[sid] = locNames[test]
+			shipVDestV[sid] = true
+		}
 		if test, ok := sv.Loc(); ok {
-			shipVLoc[i] = test
-			shipVLocV[i] = true
+			shipVLoc[sid] = test
+			shipVLocV[sid] = true
 			if test == center {
 				centerShips = append(centerShips, sv)
 				continue
@@ -183,14 +194,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			}
 		}
 	}
-	cShipLoc := make([]hexagon.Coord, len(centerShips))
-	cShipLV := make([]bool, len(centerShips))
-	for i, sv := range centerShips {
-		cShipLoc[i], cShipLV[i] = sv.Loc()
-	}
 	m["centersv"] = centerShips
-	m["centersvL"] = cShipLoc
-	m["centersvLV"] = cShipLV
 	m["availparts"] = availMap
 	m["plnames"] = plNames
 	m["names"] = names
@@ -201,6 +205,9 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	m["svs"] = shipViews
 	m["svsL"] = shipVLoc
 	m["svsLV"] = shipVLocV
+	m["svsD"] = shipVDest
+	m["svsDN"] = shipVDestN
+	m["svsDV"] = shipVDestV
 	m["mapview"] = mapView
 	zoom := mapView.Zoom()
 	if zoom > 1 {
