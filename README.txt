@@ -10,6 +10,8 @@ How To Use This Code:
 
 ATTRIBUTIONS:
 
+Planets Nu (major inspiration for this game):
+    http://planets.nu/#/start
 Golang standard library (It's Amazing!):
     https://golang.org/pkg/
 Database: PostGreSQL

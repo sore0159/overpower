@@ -6,6 +6,11 @@ ul {
         margin-top: 0px;
         margin-bottom: 0px;
 }
+hr.target {
+        margin: 5px 25px 5px 25px;
+        padding-left:5px; padding-right:5px;
+        order: 1px solid #000000;
+}
 
 img.map {
         float: left;
@@ -71,17 +76,22 @@ div.rightframe {
         float:right;
         width: 49%;
         xborder: 2px solid #000000;
-        text-align:center;
+        ext-align:center;
 }
 div.leftframe {
         margin: 0px; padding: 0px;
+        padding-left: 10px;
         width: 49%;
         xborder: 2px solid #000000;
-        text-align:center;
+        ext-align:center;
 }
 div.clearer {
         clear:right;
         margin: 0px; padding: 0px;
+}
+div.center {
+        margin: 0px; padding: 0px;
+        text-align:center;
 }
 div.targetcenter {
         xborder: 2px solid #000000;

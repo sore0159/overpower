@@ -166,6 +166,11 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		}
 	} else {
 		gc.SetLineWidth(1)
+		if zoom > 5 {
+			gc.SetLineDash([]float64{8, 8}, 0)
+		} else if zoom > 1 {
+			gc.SetLineDash([]float64{3, 3}, 0)
+		}
 		for i, pts := range trailToDraw {
 			cont := trailFids[i]
 			if pts[0] != pts[1] {
@@ -186,6 +191,7 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 				gc.SetLineWidth(1)
 			}
 		}
+		gc.SetLineDash([]float64{}, 0)
 	}
 	gc.SetLineWidth(1)
 	gc.SetStrokeColor(destLineC)

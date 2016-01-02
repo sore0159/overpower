@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"mule/hexagon"
 	"mule/myweb"
 	"mule/overpower"
@@ -139,8 +138,7 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 			isOk = OPDB.UpdateMapViewTarget(gid, fid, true, hexagon.NullCoord{c, true})
 		}
 	case 1: // wheelclick
-		fmt.Println("MID CLICK", c)
-		return true
+		isOk = OPDB.UpdateMapViewCenter(gid, fid, c)
 	case 2: // right
 		if found {
 			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{c, true})

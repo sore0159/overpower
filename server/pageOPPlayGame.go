@@ -63,7 +63,6 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		return
 	}
 	m := h.DefaultApp()
-	_ = hexagon.Coord{}
 	// ---------------- DATA PROCESSING --------------- //
 	center, target1, target2 := mapView.Center(), mapView.Target1(), mapView.Target2()
 	// --------------- FACTION LOOP -------------- //
@@ -77,30 +76,121 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 			fNames[fid] = "Faction " + fac.Name()
 		}
 	}
-	availMap := make(map[int]int, len(pvList))
+	// --------------- ORDER LOOP -------------- //
+	oMap := make(map[int][]overpower.Order, len(orders))
+	for _, o := range orders {
+		src := o.Source()
+		if list, ok := oMap[src]; ok {
+			oMap[src] = append(list, o)
+		} else {
+			oMap[src] = []overpower.Order{o}
+		}
+	}
 	// --------------- PLANET LOOP -------------- //
+	availMap := make(map[int]int, len(pvList))
+	var t1Ords, t2Ords []overpower.Order
+	var t1Pid, t2Pid int
+	pidPV := make(map[int]overpower.PlanetView, len(pvList))
+	gridPV := make(map[hexagon.Coord]overpower.PlanetView, len(pvList))
+	m["pidPV"] = pidPV
 	for _, pv := range pvList {
+		pid := pv.Pid()
 		loc := pv.Loc()
+		pidPV[pid] = pv
+		gridPV[loc] = pv
+		yours := pv.Controller() == fid
+		if yours {
+			sum := pv.Parts()
+			if list, ok := oMap[pid]; ok {
+				for _, o := range list {
+					sum -= o.Size()
+				}
+			}
+			availMap[pid] = sum
+		} else {
+			delete(oMap, pid)
+		}
 		if loc == center {
 			m["centerpv"] = pv
 		}
 		if target1.IsCoord(loc) {
 			m["tar1pv"] = pv
+			t1Pid = pv.Pid()
+			if list, ok := oMap[pv.Pid()]; yours && ok {
+				t1Ords = list
+			}
 		} else if target2.IsCoord(loc) {
 			m["tar2pv"] = pv
-		}
-		if pv.Controller() == fid {
-			availMap[pv.Pid()] = pv.Parts()
+			t2Pid = pv.Pid()
+			if list, ok := oMap[pv.Pid()]; yours && ok {
+				t2Ords = list
+			}
 		}
 	}
-	// --------------- ORDER LOOP -------------- //
-	for _, o := range orders {
-		_ = o
+	if t1Ords != nil {
+		list := make([]overpower.Order, 0, len(t1Ords))
+		for _, o := range t1Ords {
+			if o.Target() == t2Pid {
+				m["t1t2ord"] = o
+			} else {
+				list = append(list, o)
+			}
+		}
+		if len(list) > 0 {
+			m["t1ords"] = list
+		}
+	}
+	if t2Ords != nil {
+		list := make([]overpower.Order, 0, len(t2Ords))
+		for _, o := range t2Ords {
+			if o.Target() == t1Pid {
+				m["t2t1ord"] = o
+			} else {
+				list = append(list, o)
+			}
+		}
+		if len(list) > 0 {
+			m["t2ords"] = list
+		}
 	}
 	// --------------- SHIP LOOP -------------- //
+	svDest := map[overpower.ShipView]overpower.PlanetView{}
+	svLoc := make(map[overpower.ShipView]hexagon.NullCoord, len(shipViews))
+	svAtT1 := []overpower.ShipView{}
+	svTrT1 := []overpower.ShipView{}
+	svAtT2 := []overpower.ShipView{}
+	svTrT2 := []overpower.ShipView{}
 	for _, sv := range shipViews {
-		_ = sv
+		loc, ok := sv.Loc()
+		svLoc[sv] = hexagon.NullCoord{loc, ok}
+		if ok {
+			if target1.IsCoord(loc) {
+				svAtT1 = append(svAtT1, sv)
+			} else if target2.IsCoord(loc) {
+				svAtT2 = append(svAtT2, sv)
+			}
+		}
+		for _, c := range sv.Trail() {
+			if target1.IsCoord(c) {
+				svTrT1 = append(svTrT1, sv)
+			} else if target2.IsCoord(c) {
+				svTrT2 = append(svTrT2, sv)
+			}
+		}
+		if dest, ok := sv.Dest(); ok {
+			svDest[sv] = gridPV[dest]
+		}
 	}
+	m["svAt1"] = svAtT1
+	m["svAt2"] = svAtT2
+	m["svTr1"] = svTrT1
+	m["svTr2"] = svTrT2
+	m["lAt1"] = len(svAtT1)
+	m["lAt2"] = len(svAtT2)
+	m["lTr1"] = len(svTrT1)
+	m["lTr2"] = len(svTrT2)
+	m["svDest"] = svDest
+	m["svLoc"] = svLoc
 	// ---------- BEGIN APP -------------- //
 	m["availMap"] = availMap
 	m["fNames"] = fNames
@@ -141,120 +231,3 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 	h.SetCommand(g)
 	h.Apply(TPOPPLAY, w)
 }
-
-/*
-
-	oMap := map[int][]overpower.Order{}
-	for _, o := range orders {
-		pid := o.Source()
-		if list, ok := oMap[pid]; ok {
-			oMap[pid] = append(list, o)
-		} else {
-			oMap[pid] = []overpower.Order{o}
-		}
-	}
-	availMap := map[int]int{}
-	plNames := make(map[int]string, len(pvList))
-	tar1, tar2 := mapView.Target1(), target2()
-	center := mapView.Center()
-	locNames := make(map[hexagon.Coord]string, len(pvList))
-	for _, pv := range pvList {
-		plNames[pv.Pid()] = pv.Name()
-		if pv.Controller() != fid {
-			delete(oMap, pv.Pid())
-		} else {
-			sum := pv.Parts()
-			for _, o := range oMap[pv.Pid()] {
-				sum -= o.Size()
-			}
-			availMap[pv.Pid()] = sum
-		}
-		loc := pv.Loc()
-		locNames[loc] = pv.Name()
-	}
-	/*
-		if fPid != 0 && cPid != 0 && (cYou || fYou) {
-			for _, o := range orders {
-				if fYou && o.Source() == fPid && o.Target() == cPid {
-					m["oftoc"] = o
-					fOrds := make([]overpower.Order, 0, len(oMap[cPid]))
-					for _, test := range oMap[fPid] {
-						if test != o {
-							fOrds = append(fOrds, test)
-						}
-					}
-					m["fords"] = fOrds
-					continue
-				}
-				if cYou && o.Source() == cPid && o.Target() == fPid {
-					m["octof"] = o
-					cOrds := make([]overpower.Order, 0, len(oMap[cPid]))
-					for _, test := range oMap[cPid] {
-						if test != o {
-							cOrds = append(cOrds, test)
-						}
-					}
-					m["cords"] = cOrds
-					continue
-				}
-			}
-		}
-		if fPid != 0 {
-			m["fcdist"] = fPV.Loc().StepsTo(center)
-		}
-		if _, ok := m["cords"]; cYou && !ok {
-			m["cords"] = oMap[cPid]
-		}
-		if _, ok := m["fords"]; fYou && !ok {
-			m["fords"] = oMap[fPid]
-		}
-
-		m["fyou"], m["cyou"] = fYou, cYou
-		names := map[int]string{0: "Hostile Natives"}
-		for _, fac := range facs {
-			if fac.Fid() == f.Fid() {
-				names[fac.Fid()] = "Your Faction"
-			} else {
-				names[fac.Fid()] = "Faction " + fac.Name()
-			}
-		}
-		shipVLoc := make(map[int]hexagon.Coord, len(shipViews))
-		shipVLocV := make(map[int]bool, len(shipViews))
-		shipVDest := make(map[int]hexagon.Coord, len(shipViews))
-		shipVDestN := make(map[int]string, len(shipViews))
-		shipVDestV := make(map[int]bool, len(shipViews))
-		for _, sv := range shipViews {
-			sid := sv.Sid()
-			if test, ok := sv.Dest(); ok {
-				shipVDest[sid] = test
-				shipVDestN[sid] = locNames[test]
-				shipVDestV[sid] = true
-			}
-			if test, ok := sv.Loc(); ok {
-				shipVLoc[sid] = test
-				shipVLocV[sid] = true
-				if test == center {
-					centerShips = append(centerShips, sv)
-					continue
-				}
-			}
-			for _, test := range sv.Trail() {
-				if test == center {
-					centerShips = append(centerShips, sv)
-					break
-				}
-			}
-		}
-		m["centersv"] = centerShips
-		m["availparts"] = availMap
-		m["plnames"] = plNames
-		m["names"] = names
-		m["orders"] = oMap
-		m["pvs"] = pvList
-		m["svs"] = shipViews
-		m["svsL"] = shipVLoc
-		m["svsLV"] = shipVLocV
-		m["svsD"] = shipVDest
-		m["svsDN"] = shipVDestN
-		m["svsDV"] = shipVDestV
-*/
