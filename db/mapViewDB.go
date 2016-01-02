@@ -21,12 +21,19 @@ func (d DB) UpdateMapViewCenter(gid, fid int, center hexagon.Coord) (ok bool) {
 	query := fmt.Sprintf("UPDATE mapviews SET center = %s WHERE gid = %d AND fid = %d", center.SQLStr(), gid, fid)
 	return mydb.Exec(d.db, query)
 }
-func (d DB) UpdateMapViewFocus(gid, fid int, valid bool, focus hexagon.Coord) (ok bool) {
-	var query string
-	if valid {
-		query = fmt.Sprintf("UPDATE mapviews SET focus = %s WHERE gid = %d AND fid = %d", focus.SQLStr(), gid, fid)
+
+func (d DB) UpdateMapViewTarget(gid, fid int, first bool, nc hexagon.NullCoord) (ok bool) {
+	var tarStr string
+	if first {
+		tarStr = "target1"
 	} else {
-		query = fmt.Sprintf("UPDATE mapviews SET focus = NULL WHERE gid = %d AND fid = %d", gid, fid)
+		tarStr = "target2"
 	}
+	query := fmt.Sprintf("UPDATE mapviews SET %s = %s WHERE gid = %d AND fid = %d", tarStr, nc.SQLStr(), gid, fid)
+	return mydb.Exec(d.db, query)
+}
+
+func (d DB) UpdateMapViewBothTargets(gid, fid int, nc1, nc2 hexagon.NullCoord) (ok bool) {
+	query := fmt.Sprintf("UPDATE mapviews SET target1 = %s, target2 = %s WHERE gid = %d AND fid = %d", nc1.SQLStr(), nc2.SQLStr(), gid, fid)
 	return mydb.Exec(d.db, query)
 }

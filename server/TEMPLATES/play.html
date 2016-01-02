@@ -1,26 +1,18 @@
 {{ define "title"}}Overpower Play Game Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
-{{ $g := index . "game" }}
-{{ $f := index . "fac" }}
-{{ $orders := index . "orders" }}
-{{ $availparts := index . "availparts" }}
-{{ $names := index . "names" }}
-{{ $plNames := index . "plnames" }}
+{{ $g := .game }}
+{{ $f := .fac }}
+{{ $fNames := .fNames }}
 {{ $center := .mapview.Center }}
-{{ $centerpv := .centerpv }}
-{{ $focuspv := .focuspv }}
-{{ $svsL := .svsL }}
-{{ $svsLV := .svsLV }}
-{{ $svsD := .svsD }}
-{{ $svsDV := .svsDV }}
-{{ $svsDN := .svsDN }}
+
 <div class="mapbox">
 <form id="mapform" action="" method="post" class="noblock">
 <input type="hidden" name="turn" value="{{ $g.Turn }}">
 <input type="hidden" name="action" value="mapclick">
 </form>
 <img id="map" class="map" src="/overpower/img/{{ $g.Gid }}" width=800 height=600 />
+
 Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }} 
 {{ if not $f.Done }}
 (In Progress)
@@ -35,14 +27,17 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setdone">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="done" value="true">
         <input type="hidden" name="done" value="false">
         <input type="submit" value="Cancel Turn Complete" class="noblock">
 </form>
 {{ end }}
-<hr>Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
+<hr>
+Map Centered on ({{ index $center 0}}, {{ index $center 1 }}):
+{{  if .centerpv }}{{ .centerpv.Name }}{{ else }}Empty Space{{ end }}<br>
+Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="subtype" value="zoom">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
         <input type="hidden" name="zoom" value="{{ .zoomin }}">
         <input type="submit" value="Zoom In" class="noblock">
@@ -52,6 +47,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 {{ if .zoomout }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="subtype" value="zoom">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
         <input type="hidden" name="zoom" value="{{ .zoomout }}">
         <input type="submit" value="Zoom Out" class="noblock">
@@ -60,6 +56,7 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
  {{ if .bigzoomin }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="subtype" value="zoom">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
         <input type="hidden" name="zoom" value="{{ .bigzoomin }}">
         <input type="submit" value="Big Zoom In" class="noblock">
@@ -68,266 +65,81 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
 {{ if .bigzoomout }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
+        <input type="hidden" name="subtype" value="zoom">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
         <input type="hidden" name="zoom" value="{{ .bigzoomout }}">
         <input type="submit" value="Big Zoom Out" class="noblock">
 </form>
 {{ end }}
-
 <hr>
-<b>Map Centered on ({{ index $center 0}}, {{ index $center 1 }}):</b>{{  if $centerpv }}
-{{ if .cyou }}
-        {{ $o := .octof }}
-        {{ $centerpv.Name }} (Your Planet) <br>
-        Inhabitants: {{ $centerpv.Inhabitants }} &bull; 
-        Resources: {{ $centerpv.Resources }} &bull;
-        Ship Parts: {{ $centerpv.Parts }} {{ if $centerpv.Parts }}(Available: {{ index $availparts $centerpv.Pid }}){{ end }}<br>
-        {{ if $o }}
-        <div class="box" style="margin-left:810px;">
-        You have {{ $focuspv.Name }} focused (distance {{ .fcdist }}) and are launching a size {{ $o.Size }} ship at it:<br>
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ $o.Source }}">
-        <input type="hidden" name="target" value="{{ $o.Target }}">
-        Change ship size (0 to cancel): <input type="text" size=2 name="size">
-        <input type="submit" value="CHANGE" class="noblock">
-        </form>
-        </div>
-        {{ else if (and (index $availparts .centerpv.Pid) (and $focuspv (not .cenfocused))) }}
-        <div class="box" style="margin-left:810px;">
-        You have {{ $focuspv.Name }} focused (distance {{ .fcdist }}) and up to {{ index $availparts .centerpv.Pid }} parts available for ship construction:<br>
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ $centerpv.Pid }}">
-        <input type="hidden" name="target" value="{{ $focuspv.Pid }}">
-        Ship size: <input type="text" size=2 name="size"> &bull;
-        <input type="submit" value="Order launch toward {{ $focuspv.Name }}" class="noblock">
-        </form>
-        </div>
-        {{ end }}
-        {{ if .cords }}
-        <div class="box" style="margin-left:810px;">
-        {{ if $o }}Other {{ end }}Planetary Launch Orders:<br>
-        <ul> {{ range .cords }}
-                <li>Size {{ .Size }} ship at {{ index $plNames .Target }}
-                <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ .Source }}">
-                <input type="hidden" name="target" value="{{ .Target }}">
-                <br> Change size (0 to cancel): <input type="text" size=2 name="size">
-                <input type="submit" value="CHANGE" class="noblock">
-                </form>
-                </li>
-                {{ end }}
-        </ul>
-        </div>
-        {{ else }}
-        You have no {{ if $o }}other {{ end }}launch orders from this planet.<br>
-        {{ end }}
-{{ else }}
-        {{ if $centerpv.Turn }}
-        {{ $centerpv.Name }} ({{ index $names $centerpv.Controller }}) <br>
-        Last Seen Turn {{ $centerpv.Turn }}<br>
-        Inhabitants: {{ $centerpv.Inhabitants }} &bull; 
-        Resources: {{ $centerpv.Resources }} &bull;
-        Ship Parts: {{ $centerpv.Parts }}<br>
-        {{ else }}
-        {{ $centerpv.Name }}<br>
-        No planetary information available<br>
-        <br>
-        {{ end }}
+
+<div class="targetframe">
+<div class="rightframe">
+        <b>Secondary Target:</b> {{ if .target2.Valid }}
+{{ if .targetsSame }} {{ .target2.Coord }} (Same as main target)<br> {{ else }}
+        {{ .target2.Coord }}<br>
+{{ if .cancenter2 }}
+[ <a href="{{ command "recenter"}}/{{ index .target2.Coord 0 }}/{{ index .target2.Coord 1 }}">Center map here</a> ]<br>
 {{ end }}
-{{ if not .cenfocused }}
-<form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="subtype" value="focus">
-        <input type="hidden" name="hexx" value="{{ index $centerpv.Loc 0 }}">
-        <input type="hidden" name="hexy" value="{{ index $centerpv.Loc 1 }}">
-        <input type="submit" value="Focus {{ $centerpv.Name}}" class="noblock">
-</form>
-{{ if $focuspv }}
+        {{ if .tar2pv }}
+        {{ $pl := .tar2pv }}
+        {{ $other := .tar1pv }}
+        {{ $yours := eq $pl.Controller $f.Fid }}
+        {{ $pl.Name }}<br>
+        {{ if not $pl.Turn }} No planetary information available.<br> {{ else }}
+        {{ if not $yours }}
+        Hostile planet: controlled by {{ index $fNames $pl.Controller }}<br>
+        Last seen on turn {{ $pl.Turn }}<br>
+        Inhabitants: {{ $pl.Inhabitants }} &bull; Resources: {{ $pl.Resources }}<br>
+        Ship parts: {{ $pl.Parts }}<br>
+
+
+        {{ else }}
+        {{ $avail := index .availMap $pl.Pid }}
+        Your planet<br>
+        Inhabitants: {{ $pl.Inhabitants }} &bull; Resources: {{ $pl.Resources }}<br>
+        Ship parts: {{ $pl.Parts }} ({{ $avail }} available)<br>
+        
+        {{ end }} {{ end }}{{ end }}
+        
+
+        {{ end }} {{ else }} 
+        None<br>
+        {{ end }}
+</div>
+<div class="leftframe">
+        <b>Main Target:</b> {{ if .target1.Valid }}
+        {{ .target1.Coord }}<br>
+{{ if .cancenter1 }}
+[ <a href="{{ command "recenter"}}/{{ index .target1.Coord 0 }}/{{ index .target1.Coord 1 }}">Center map here</a> ]<br>
+{{ end }}
+        {{ if .tar1pv }}
+        {{ $pl := .tar1pv }}
+        {{ $other := .tar2pv }}
+        PLANET STUFF HERE
+        {{ end }}
+
+
+        {{ else }} 
+        None<br>
+        {{ end }}
+</div>
+<div class="clearer"></div>
+<div class="targetcenter">
+{{ if .tarDist }}
+        Distance between targets: {{ .tarDist }}<br>
+{{ end }}
+{{ if .canswap }}
 <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setmap">
         <input type="hidden" name="subtype" value="swap">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="submit" value="Swap Focus/Center" class="noblock">
+        <input type="submit" value="Swap main/secondary targets" class="noblock">
 </form>
-{{ end }}<br>
 {{ end }}
-
-{{ else if not .centersv }}
-    Empty Space
-{{ end }}
-{{ if .centersv }}
-        <div class="box" style="margin-left:810px;">
-        Ship passage detected through {{ index $center 0}}, {{ index $center 1 }}:<br>
-        {{ range .centersv }}
-        {{ $sid := .Sid }}
-        <hr>
-        Owner: {{ index $names .Controller }} &bull; Size: {{ .Size }}<br>  
-        {{ if (index $svsLV $sid)  }}
-          {{ $p := index $svsL $sid }}Ship currently at: [ <a href="{{ command "recenter"}}/{{ index $p 0 }}/{{ index $p 1 }}">({{ index $p 0 }}, {{ index $p 1 }})</a> ] <br>
-        {{ else }}
-          {{ if not (index $svsDV $sid) }}
-            Current ship location unknown<br>
-          {{ end }}
-        {{ end }}
-        {{ if index $svsDV $sid }}
-          {{ $c := index $svsD $sid }}
-          {{ if (index $svsLV $sid) }}
-                  Destination: [ <a href="{{ command "recenter" }}/{{ index $c 0 }}/{{ index $c 1 }}">{{ index $svsDN $sid }}</a> ]<br>
-          {{ else }}
-                  Landed at: [ <a href="{{ command "recenter" }}/{{ index $c 0 }}/{{ index $c 1 }}">{{ index $svsDN $sid }}</a> ]<br>
-          {{ end }}
-        {{ end }}
-        {{ if .Trail }}Ship course: {{ range .Trail }}
-        [ <a href="{{ command "recenter"}}/{{ index . 0 }}/{{ index . 1 }}">({{ index . 0 }}, {{ index . 1 }})</a> ]
-        {{ end }}<hr>{{ end }}
-        {{ end }}
-        </div>
-{{ end }}
-
-{{ if .focus }} <hr> {{ if .cenfocused }}
-        <b>Focused:</b> {{ $focuspv.Name }}<br>
-{{ else }} {{ if $focuspv }}
-        <b>Focused:</b> {{ $focuspv.Name }} (Distance {{ .fcdist }} from map center)<br>
-        {{ if .fyou }}{{ $o := .oftoc }}
-        Controlled by: You<br>
-        Inhabitants: {{ $focuspv.Inhabitants }} &bull; 
-        Resources: {{ $focuspv.Resources }} &bull;
-        Ship Parts: {{ $focuspv.Parts }} {{ if $focuspv.Parts }}(Available: {{ index $availparts $focuspv.Pid }}){{ end }}<br>
-        {{ if $o }}
-                <div class="box" style="margin-left:810px;">
-                You have {{ $centerpv.Name }} centered in your map (distance {{ .fcdist }}) and are launching a size {{ $o.Size }} ship at it:<br>
-                <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ $o.Source }}">
-                <input type="hidden" name="target" value="{{ $o.Target }}">
-                Change ship size (0 to cancel): <input type="text" size=2 name="size">
-                <input type="submit" value="CHANGE" class="noblock">
-                </form>
-                </div>
-        {{ else if (and (index $availparts $focuspv.Pid) $centerpv) }}
-                <div class="box" style="margin-left:810px;">
-                You have {{ $centerpv.Name }} centered in your map (distance {{ .fcdist }}) and up to {{ index $availparts $focuspv.Pid }} parts available for ship construction:<br>
-                <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ $focuspv.Pid }}">
-                <input type="hidden" name="target" value="{{ $centerpv.Pid }}">
-                Ship size: <input type="text" size=2 name="size"> &bull;
-                <input type="submit" value="Order launch toward {{ $centerpv.Name }}" class="noblock">
-                </form>
-                </div>
-        {{ end }}
-        {{ if .fords }}
-        <div class="box" style="margin-left:810px;">
-        {{ if $o }}Other {{ end }}Planetary Launch Orders:<br>
-        <ul> {{ range .fords }}
-                <li>Size {{ .Size }} ship at {{ index $plNames .Target }}
-                <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ .Source }}">
-                <input type="hidden" name="target" value="{{ .Target }}">
-                <br> Change size (0 to cancel): <input type="text" size=2 name="size">
-                <input type="submit" value="CHANGE" class="noblock">
-                </form>
-                </li>
-                {{ end }}
-        </ul>
-        </div>
-        {{ else }}
-        You have no {{ if $o }}other {{ end }}launch orders from this planet.<br>
-        {{ end }}
-
-
-
-        {{ else }}
-            {{ if $focuspv.Turn }}
-            Controlled by: {{ index $names $focuspv.Controller }} &bull;
-            Last seen on turn {{ $focuspv.Turn }}<br>
-            Inhabitants: {{ $focuspv.Inhabitants }} &bull; 
-            Resources: {{ $focuspv.Resources }} &bull;
-            Ship Parts: {{ $focuspv.Parts }}<br>
-            {{ else }}
-            No planetary information available.<br>
-            {{ end }}
-        {{ end }}
-        [ <a href="{{ command "recenter"}}/{{ index $focuspv.Loc 0 }}/{{ index $focuspv.Loc 1 }}">Center Map on {{ $focuspv.Name }}</a> ]
-{{ end }} {{ end }} <hr> {{ end }}
+</div>
 </div>
 
-<hr>
-<b>Planets:</b>
-{{ range index . "pvs"}}
-<div class="box">
-        {{ $polar := .Loc.Polar }}
-        {{ .Name }} || Pid: {{ .Pid }} || Grid: {{ .Loc }} ({{ if index $polar 0 }}Sector: {{ .Loc.Sector }} Radius: {{ index $polar 0 }}{{ else }}GALACTIC CENTER{{ end }})<br>
-{{ if eq .Controller $f.Fid }}
-        YOUR PLANET || Inhabitants: {{ .Inhabitants }}<br>
-        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }} {{ if .Parts }}(Available: {{ index $availparts .Pid }}){{ end }}<br>
-        <hr>
-        ORDERS:<br>
-        <ul> {{ range index $orders .Pid }}
-                <li>
-                TARGET: {{ index $plNames .Target }} ({{ .Target }}) || 
-                SIZE: {{ .Size }}
-                <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ .Source }}">
-                <input type="hidden" name="target" value="{{ .Target }}">
-                <br> CHANGE SIZE (0 to cancel):<input type="text" name="size">
-                <input type="submit" value="CHANGE" class="noblock">
-                </form>
-
-                </li>
-                {{ else }}
-                <li>NONE</li>
-                {{ end }}
-        </ul>
-        NEW ORDER:<br>
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ .Pid }}">
-        TARGET:<input type="text" name="target">
-        SIZE:<input type="text" name="size">
-        <input type="submit" value="ORDER SHIP CONSTRUCTION" class="noblock">
-        </form>
-        <br>
-{{ else }}
-        {{ if .Turn }}Last Seen: Turn {{ .Turn }}<br>
-        Owner: {{ index $names .Controller }} || Inhabitants: {{ .Inhabitants }}<br>
-        Resources: {{ .Resources }} || Ship Parts: {{ .Parts }}<br>
-        {{ else }}No planetary information available<br>{{end}}
-{{ end }}
-        [ <a href="{{ command "recenter"}}/{{ index .Loc 0 }}/{{ index .Loc 1 }}">Center Map on {{ .Name }}</a> ]
 </div>
-{{ else }}
-NO PV FOUND<br>
-{{ end }}
-<hr>
-{{ if .svs }}
-{{ $svsL := .svsL }}
-{{ $svsLV := .svsLV }}
-<b>Ships Detected:</b>
-<ul>
-{{ range $key, $val := .svs }}
-<li>Ship sized {{ $val.Size }} owned by {{ index $names $val.Controller }}<br>
-{{ if index $svsLV $key }}Currently at: {{ index $svsL $key }}{{ else }}Current location unknown{{ end }}<br>
-{{ if $val.Trail }}Detected travelling course: {{ range $val.Trail }}{{ . }} {{ end }}{{ end }}
-</li>
-{{ end }}
-</ul>
-{{ else }}
-NO SHIPVIEWS FOUND<br>
-{{ end }}
 <script src="/static/js/overpower.js"></script>
 {{ end }}

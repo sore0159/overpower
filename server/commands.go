@@ -133,34 +133,29 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 	}
 	switch button {
 	case 0: // left
-		if !OPDB.UpdateMapViewCenter(gid, fid, c) {
-			http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-			return false
+		if shift {
+			isOk = OPDB.UpdateMapViewCenter(gid, fid, c)
+		} else {
+			isOk = OPDB.UpdateMapViewTarget(gid, fid, true, hexagon.NullCoord{c, true})
 		}
 	case 1: // wheelclick
 		fmt.Println("MID CLICK", c)
 		return true
 	case 2: // right
 		if found {
-			if !OPDB.UpdateMapViewFocus(gid, fid, true, c) {
-				http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-				return false
-			}
-			return true
-		} else if shift {
-			if !OPDB.UpdateMapViewFocus(gid, fid, false, hexagon.Coord{}) {
-				http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-				return false
-			}
-			return true
+			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{c, true})
 		} else {
-			return true
+			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{})
 		}
 	case 3: // wheelspin
 	// SEE ABOVE
 	default:
 		http.Error(w, "UNKNOWN BUTTON VALUE", http.StatusBadRequest)
 		return
+	}
+	if !isOk {
+		http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
+		return false
 	}
 	return true
 }
@@ -171,64 +166,59 @@ func (h *Handler) SetMapView(w http.ResponseWriter, r *http.Request, g overpower
 		http.Error(w, "FORM TURN DOES NOT MATCH GAME TURN", http.StatusBadRequest)
 		return
 	}
+	gid, fid := f.Gid(), f.Fid()
+	subtype := r.FormValue("subtype")
 	zoom, zOk := mp["zoom"]
 	hexX, xOk := mp["hexx"]
 	hexY, yOk := mp["hexy"]
-	subtype := r.FormValue("subtype")
-	gid, fid := f.Gid(), f.Fid()
-	if subtype == "swap" {
+	isOk = true
+	switch subtype {
+	case "swap":
 		mv, ok := OPDB.GetFidMapView(gid, fid)
 		if !ok {
 			http.Error(w, "DATABASE ERROR GETTING MAPVIEW", http.StatusInternalServerError)
 			return false
 		}
-		foc, ok := mv.Focus()
-		if !ok {
-			http.Error(w, "MAPVIEW HAS NO FOCUS TO SWAP", http.StatusBadRequest)
-			return false
-		}
-		c := mv.Center()
-		if !OPDB.UpdateMapViewFocus(gid, fid, true, c) {
+		tar1, tar2 := mv.Target1(), mv.Target2()
+		if !OPDB.UpdateMapViewBothTargets(gid, fid, tar2, tar1) {
 			http.Error(w, "DATABASE ERROR SETTING MAPVIEW", http.StatusInternalServerError)
 			return false
 		}
-		if !OPDB.UpdateMapViewCenter(gid, fid, foc) {
-			http.Error(w, "DATABASE ERROR SETTING MAPVIEW", http.StatusInternalServerError)
+	case "zoom":
+		if !zOk {
+			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
 			return false
 		}
-
-		return true
-	}
-	if !zOk && !xOk && !yOk {
-		http.Error(w, "NO DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
-		return false
-	}
-	if zOk && (xOk || yOk) {
-		http.Error(w, "CANNOT CHANGE MAPVIEW ZOOM AND CENTER SIMULTANIOUSLY", http.StatusBadRequest)
-		return false
-	}
-	if zOk {
 		if zoom < 1 {
 			zoom = 1
-			//	http.Error(w, "BAD VALUE FOR MAPVIEW ZOOM", http.StatusBadRequest)
-			//	return false
 		} else if zoom > 50 {
 			zoom = 50
 		}
-		return OPDB.UpdateMapViewZoom(gid, fid, zoom)
-	}
-	if !(xOk && yOk) {
-		http.Error(w, "INCOMPLETE DATA FOR MAPVIEW COORDS", http.StatusBadRequest)
+		isOk = OPDB.UpdateMapViewZoom(gid, fid, zoom)
+	case "target1":
+		if !xOk || !yOk {
+			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
+			return false
+		}
+		isOk = OPDB.UpdateMapViewTarget(gid, fid, true, hexagon.NullCoord{hexagon.Coord{hexX, hexY}, true})
+	case "target2":
+		if !xOk || !yOk {
+			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
+			return false
+		}
+		isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{hexagon.Coord{hexX, hexY}, true})
+	case "center":
+		if !xOk || !yOk {
+			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
+			return false
+		}
+		isOk = OPDB.UpdateMapViewCenter(gid, fid, hexagon.Coord{hexX, hexY})
+	default:
+		http.Error(w, "UNKNOWN ACTION TYPE", http.StatusBadRequest)
 		return false
 	}
-	var ok bool
-	if subtype == "focus" {
-		ok = OPDB.UpdateMapViewFocus(gid, fid, true, hexagon.Coord{hexX, hexY})
-	} else {
-		ok = OPDB.UpdateMapViewCenter(gid, fid, hexagon.Coord{hexX, hexY})
-	}
-	if !ok {
-		http.Error(w, "DATABASE ERROR SETTING MAPVIEW", http.StatusInternalServerError)
+	if !isOk {
+		http.Error(w, "DATABASE ERROR EXECUTING COMMAND", http.StatusInternalServerError)
 		return false
 	}
 	return true

@@ -9,8 +9,8 @@ Game:
 UI:
     * Sorted planet/shipviews, filterable
     * Directional order/ship visualizations
-
-
+    * 2 Column "select" windows
+    * lclick selects, shift-lclick recenters map
 
 // ========================= DONE ========================= //
 

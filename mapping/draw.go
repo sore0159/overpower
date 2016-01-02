@@ -10,12 +10,13 @@ import (
 	"strings"
 )
 
-func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail int, showGrid, isFocus, isCenter bool, pv overpower.PlanetView) {
-	if !showGrid && isCenter {
+func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail int, showGrid, isTar1, isTar2 bool, pv overpower.PlanetView) {
+	cont, turn := pv.Controller(), pv.Turn()
+	if !showGrid && isTar1 {
 		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
-	} else if !showGrid && isFocus {
+	} else if !showGrid && isTar2 {
 		gc.SetFillColor(color.RGBA{0x99, 0x99, 0x00, 0xFF})
-	} else if cont := pv.Controller(); pv.Turn() > 0 && cont != 0 {
+	} else if turn > 0 && cont != 0 {
 		if cont == fid {
 			gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
 		} else {
@@ -26,9 +27,6 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 	}
 	c := vp.CenterOf(pv.Loc())
 	rad := vp.HexR
-	if showGrid {
-		c[1] -= rad * .25
-	}
 	var size float64
 	if rad > 10 {
 		size = rad * .45
@@ -37,19 +35,31 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 	} else {
 		size = 3
 	}
-	var plStr string
-	if avail > 0 {
-		plStr = fmt.Sprintf("(%d)%s", avail, pv.Name())
-	} else {
-		plStr = fmt.Sprintf("%s", pv.Name())
+	if showGrid {
+		c[1] -= rad * .25
 	}
-	//
-	if rad > 4 {
-		gc.FillStringAt(plStr, c[0]+(rad*.25), c[1]-(.75*rad))
-	} else if rad > 2 && avail > 0 {
-		plStr := fmt.Sprintf("(%d)", avail)
-		gc.FillStringAt(plStr, c[0]+(rad*.25), c[1]-(.75*rad))
+	if rad > 3 {
+		var nameStr string
+		if avail > 0 {
+			nameStr = fmt.Sprintf("(%d)%s", avail, pv.Name())
+		} else {
+			nameStr = pv.Name()
+		}
+		gc.FillStringAt(nameStr, c[0]+(rad*.25), c[1]-(.75*rad))
 	}
+	if rad > 1 && turn > 0 {
+		var statStr string
+		if cont == fid {
+			statStr = fmt.Sprintf("%d|%d|%d", pv.Inhabitants(), pv.Resources(), pv.Parts())
+		} else {
+			statStr = fmt.Sprintf("%d?|%d?", pv.Inhabitants(), pv.Resources())
+		}
+		lf, top, rt, bot := gc.GetStringBounds(statStr)
+		h := bot - top
+		w := rt - lf
+		gc.FillStringAt(statStr, c[0]-w/2, c[1]+float64(size)+h)
+	}
+
 	gc.ArcTo(c[0], c[1], size, size, 0, -math.Pi*2)
 	gc.Close()
 	gc.FillStroke()

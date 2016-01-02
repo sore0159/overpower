@@ -126,9 +126,12 @@ type MapView interface {
 	Center() hexagon.Coord
 	SetZoom(int)
 	SetCenter(hexagon.Coord)
-	Focus() (hexagon.Coord, bool)
-	SetFocus(hexagon.Coord)
-	DropFocus()
+	Target1() hexagon.NullCoord
+	SetTarget1(hexagon.Coord)
+	DropTarget1()
+	Target2() hexagon.NullCoord
+	SetTarget2(hexagon.Coord)
+	DropTarget2()
 }
 
 type Report interface {

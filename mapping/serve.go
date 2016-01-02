@@ -23,9 +23,11 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	frame := image.Rect(0, 0, width, height)
 	final := image.NewRGBA(frame)
 	draw.Draw(final, final.Bounds(), image.Black, image.ZP, draw.Src)
-	starC := color.RGBA{50, 50, 50, 255}
+	starC := color.RGBA{25, 25, 25, 255}
 	for i := 0; i < 12000; i++ {
 		if i == 6000 {
+			starC = color.RGBA{50, 50, 50, 255}
+		} else if i == 9000 {
 			starC = color.RGBA{100, 100, 100, 255}
 		} else if i == 11000 {
 			starC = color.RGBA{200, 200, 200, 255}
@@ -35,8 +37,8 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	}
 	// -------- //
 	gridC := color.RGBA{0x3F, 0x3F, 0x9F, 0xFF}
-	focusC := color.RGBA{0x99, 0x99, 0x00, 0xFF}
-	selectC := color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
+	target1C := color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
+	target2C := color.RGBA{0x99, 0x99, 0x00, 0xFF}
 	orderC := color.RGBA{0x0F, 0xAF, 0xAF, 0xFF}
 	ownTrailDotC := color.RGBA{0x0F, 0x4F, 0x0F, 0x3F}
 	enTrailDotC := color.RGBA{0x4F, 0x0F, 0x0F, 0x3F}
@@ -65,8 +67,7 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	//
 	showGrid := zoom > 14
 	vp := GetVP(mv)
-	center := mv.Center()
-	focus, focValid := mv.Focus()
+	target1, target2 := mv.Target1(), mv.Target2()
 	visList := vp.VisList()
 	visMap := make(map[hexagon.Coord]bool, len(visList))
 	gc.SetStrokeColor(gridC)
@@ -79,12 +80,14 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	}
 	if showGrid {
 		gc.SetLineWidth(1)
-		if focValid && visMap[focus] {
-			gc.SetStrokeColor(focusC)
-			DrawHex(gc, vp, focus)
+		if target2.Valid && !target2.Eq(target1) && visMap[target2.Coord] {
+			gc.SetStrokeColor(target2C)
+			DrawHex(gc, vp, target2.Coord)
 		}
-		gc.SetStrokeColor(selectC)
-		DrawHex(gc, vp, center)
+		if target1.Valid && visMap[target1.Coord] {
+			gc.SetStrokeColor(target1C)
+			DrawHex(gc, vp, target1.Coord)
+		}
 	}
 	// -------- PLANETS PREP ----------- //
 	plidGrid := make(map[int]overpower.PlanetView, len(pvList))
@@ -223,15 +226,13 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	gc.SetStrokeColor(color.Black)
 	for _, pv := range plToDraw {
 		loc := pv.Loc()
-		isFocus := focValid && (focus == loc)
-		isCenter := loc == center
+		isTar1 := target1.IsCoord(loc)
+		isTar2 := target2.IsCoord(loc)
 		var avail int
 		if pv.Controller() == fid {
 			avail = availMap[pv.Pid()]
-		} else {
-			avail = pv.Inhabitants()
 		}
-		DrawPlanet(gc, vp, fid, avail, showGrid, isFocus, isCenter, pv)
+		DrawPlanet(gc, vp, fid, avail, showGrid, isTar1, isTar2, pv)
 	}
 
 	// -------- //

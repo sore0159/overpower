@@ -7,12 +7,12 @@ import (
 
 type MapView struct {
 	*mydb.SQLHandler
-	gid        int
-	fid        int
-	center     hexagon.Coord
-	focusValid bool
-	focus      hexagon.Coord
-	zoom       int
+	gid     int
+	fid     int
+	center  hexagon.Coord
+	target1 hexagon.NullCoord
+	target2 hexagon.NullCoord
+	zoom    int
 }
 
 func NewMapView() *MapView {
@@ -49,25 +49,39 @@ func (mv *MapView) SetZoom(x int) {
 	mv.SetInt("zoom", x)
 }
 
-func (mv *MapView) Focus() (hexagon.Coord, bool) {
-	if mv.focusValid {
-		return mv.focus, true
-	}
-	return hexagon.Coord{}, false
+func (mv *MapView) Target1() hexagon.NullCoord {
+	return mv.target1
+}
+func (mv *MapView) Target2() hexagon.NullCoord {
+	return mv.target2
 }
 
-func (mv *MapView) SetFocus(x hexagon.Coord) {
-	if mv.focus == x && mv.focusValid {
+func (mv *MapView) SetTarget1(x hexagon.Coord) {
+	if mv.target1.Valid && mv.target1.Coord == x {
 		return
 	}
-	mv.focus = x
-	mv.SetEtc("focus", x.SQLStr())
-	mv.focusValid = true
+	mv.target1 = hexagon.NullCoord{x, true}
+	mv.SetEtc("target1", x.SQLStr())
 }
-func (mv *MapView) DropFocus() {
-	if !mv.focusValid {
+func (mv *MapView) DropTarget1() {
+	if !mv.target1.Valid {
 		return
 	}
-	mv.focusValid = false
-	mv.SetNull("focus")
+	mv.target1 = hexagon.NullCoord{}
+	mv.SetNull("target1")
+}
+
+func (mv *MapView) SetTarget2(x hexagon.Coord) {
+	if mv.target2.Valid && mv.target2.Coord == x {
+		return
+	}
+	mv.target2 = hexagon.NullCoord{x, true}
+	mv.SetEtc("target2", x.SQLStr())
+}
+func (mv *MapView) DropTarget2() {
+	if !mv.target2.Valid {
+		return
+	}
+	mv.target2 = hexagon.NullCoord{}
+	mv.SetNull("target2")
 }

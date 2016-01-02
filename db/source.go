@@ -37,7 +37,6 @@ func (s *Source) NewMapView(gid, fid int, center hexagon.Coord) (mapview overpow
 	mv := NewMapView()
 	mv.gid, mv.fid, mv.center = gid, fid, center
 	mv.zoom = overpower.DEFAULTZOOM
-	mv.focusValid = false
 	s.MadeMapViews = append(s.MadeMapViews, mv)
 	return mv, true
 }

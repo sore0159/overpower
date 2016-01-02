@@ -1,5 +1,6 @@
 body {
         padding-bottom:200px;
+        min-width: 1100px;
 }
 ul {
         margin-top: 0px;
@@ -14,8 +15,6 @@ img.map {
 div.mapbox {
         margin: 3px; padding: 3px;
         margin-top: -10px;
-        xborder: 2px solid #000000;
-        xborder-radius: 5px;
         height: 600px;
 }
 div.box {
@@ -57,4 +56,37 @@ div.errorbox {
 
 form.noblock {
         display:inline;
+}
+
+div.targetframe {
+        margin: 0px; padding: 0px;
+        margin-left: 810px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        border: 2px solid #000000;
+        border-radius: 5px;
+}
+div.rightframe {
+        margin: 0px; padding: 0px;
+        float:right;
+        width: 49%;
+        xborder: 2px solid #000000;
+        text-align:center;
+}
+div.leftframe {
+        margin: 0px; padding: 0px;
+        width: 49%;
+        xborder: 2px solid #000000;
+        text-align:center;
+}
+div.clearer {
+        clear:right;
+        margin: 0px; padding: 0px;
+}
+div.targetcenter {
+        xborder: 2px solid #000000;
+        margin: 0px; padding: 0px;
+        text-align:center;
+        padding-top:10px;
+        padding-bottom:5px;
 }
