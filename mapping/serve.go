@@ -38,11 +38,11 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	focusC := color.RGBA{0x99, 0x99, 0x00, 0xFF}
 	selectC := color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
 	orderC := color.RGBA{0x0F, 0xAF, 0xAF, 0xFF}
-	trailDotC := color.RGBA{0x39, 0x39, 0x39, 0x3F}
-	trailLineC := color.RGBA{0xFF, 0xFF, 0xFF, 0xFF}
-	//destLineC := color.RGBA{0x0F, 0xFF, 0x0F, 0xFF}
+	ownTrailDotC := color.RGBA{0x0F, 0x4F, 0x0F, 0x3F}
+	enTrailDotC := color.RGBA{0x4F, 0x0F, 0x0F, 0x3F}
 	destLineC := orderC
-	_ = trailDotC
+	//trailDotC := color.RGBA{0x39, 0x39, 0x39, 0x3F}
+	//destLineC := color.RGBA{0x0F, 0xFF, 0x0F, 0xFF}
 	gc := draw2dimg.NewGraphicContext(final)
 	draw2d.SetFontFolder("DATA")
 	gc.SetFontData(draw2d.FontData{Name: "DroidSansMono", Family: draw2d.FontFamilyMono})
@@ -109,7 +109,7 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	destToDraw := make([][2]hexagon.Coord, 0)
 	trailToDraw := make([][2]hexagon.Coord, 0)
 	trailFids := make([]int, 0)
-	trailDots := make([]hexagon.Coord, 0)
+	trailDots := map[hexagon.Coord]bool{}
 	for _, sv := range svList {
 		var locVis, locOk bool
 		loc, locOk := sv.Loc()
@@ -130,7 +130,10 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		for _, test := range trail {
 			if visMap[test] {
 				if showGrid {
-					trailDots = append(trailDots, test)
+					if trailDots[test] {
+						continue
+					}
+					trailDots[test] = sv.Controller() != fid
 				} else {
 					var end hexagon.Coord
 					if locOk {
@@ -149,17 +152,20 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		if len(trailDots) > 0 {
 			gc.SetLineWidth(.25)
 			gc.SetStrokeColor(color.Black)
-			gc.SetFillColor(trailDotC)
-			for _, c := range trailDots {
+			for c, enemy := range trailDots {
+				if enemy {
+					gc.SetFillColor(enTrailDotC)
+				} else {
+					gc.SetFillColor(ownTrailDotC)
+				}
 				DrawTrailDot(gc, vp, c)
 			}
 		}
 	} else {
 		gc.SetLineWidth(1)
-		gc.SetFillColor(trailLineC)
 		for i, pts := range trailToDraw {
+			cont := trailFids[i]
 			if pts[0] != pts[1] {
-				cont := trailFids[i]
 				if cont == fid {
 					gc.SetStrokeColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
 				} else {
@@ -168,6 +174,11 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 				DrawLine(gc, vp, pts[0], pts[1])
 			} else {
 				gc.SetLineWidth(0)
+				if cont == fid {
+					gc.SetFillColor(ownTrailDotC)
+				} else {
+					gc.SetFillColor(enTrailDotC)
+				}
 				DrawTrailDot(gc, vp, pts[0])
 				gc.SetLineWidth(1)
 			}
@@ -178,6 +189,7 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 	for _, pts := range destToDraw {
 		DrawDestLine(gc, vp, pts[0], pts[1], showGrid)
 	}
+	gc.SetStrokeColor(color.Black)
 	for c, list := range shToDraw {
 		DrawShips(gc, vp, fid, names, c, list)
 	}

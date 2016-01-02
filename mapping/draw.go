@@ -48,8 +48,8 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 	//
 	if rad > 4 {
 		gc.FillStringAt(plStr, c[0]+(rad*.25), c[1]-(.75*rad))
-	} else if avail > 0 {
-		plStr := fmt.Sprintf("((%d))", avail)
+	} else if rad > 2 && avail > 0 {
+		plStr := fmt.Sprintf("(%d)", avail)
 		gc.FillStringAt(plStr, c[0]+(rad*.25), c[1]-(.75*rad))
 	}
 	gc.ArcTo(c[0], c[1], size, size, 0, -math.Pi*2)
