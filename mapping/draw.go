@@ -11,16 +11,16 @@ import (
 )
 
 func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail int, showGrid, isFocus, isCenter bool, pv overpower.PlanetView) {
-	if cont := pv.Controller(); pv.Turn() > 0 && cont != 0 {
+	if !showGrid && isCenter {
+		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
+	} else if !showGrid && isFocus {
+		gc.SetFillColor(color.RGBA{0x99, 0x99, 0x00, 0xFF})
+	} else if cont := pv.Controller(); pv.Turn() > 0 && cont != 0 {
 		if cont == fid {
 			gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
 		} else {
 			gc.SetFillColor(color.RGBA{0xFF, 0x0F, 0x0F, 0xFF})
 		}
-	} else if !showGrid && isCenter {
-		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
-	} else if !showGrid && isFocus {
-		gc.SetFillColor(color.RGBA{0x99, 0x99, 0x00, 0xFF})
 	} else {
 		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0xFF})
 	}
