@@ -1,29 +1,133 @@
 {{ define "title"}}Overpower Index Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
-OVERPOWER INDEX PAGE GOES HERE<br>
-<b>Managing Games:</b><ul>
-        <li>You must be logged in to play, view, or manage games.</li>
-        <li>Create a new game from your home base page.  Set a password if you want to limit who can play.  You can delete this game at any time from your home page.  You can have at most one game to your name at a time.</li>
-        <li>Users can join your game by creating a faction on the game view page.  You can play in a game you create, but it is not required.</li>
-        <li>When you have at least one faction in your game and you are ready to start, you can have your game begin by pressing "Start Game" from your home base page.  This will begin turn 1 of your game and the factions playing it can then access the game play page to play the game.</li>
-        <li>Factions begin each turn set to "In Progress", and when the faction is done giving orders they can set "Turn Complete" from their game play page or from the game view page.  Factions that are set to "Turn Complete" can change back to "In Progress" as long as another faction is still "In Progress".</li>
-        <li>When all factions have set "Turn Complete" at the same time, the turn is complete, all orders are executed, and the next turn begin.  The owner of the game can also force all factions to be set to "Turn Complete" from their home base page.</li>
-</ul>
-<br>
-<b>Using the play game webpage:</b><ul>
-        <li>Right-click anywhere on the map to recenter it to where ever you click.  Click on planets to see information about them. Areas selected in this way will appear bright yellow.</li>
-        <li>Left-click on a planet to set it as "focus", which will stay until you left-click another planet or shift-left-click on empty space.  By focusing a planet you can easily order ship launches between planets.  Areas focused this way will appear a darker yellow.</li>
-        <li>Spinning the mousewheel up zooms in, and spinning it down zooms out.  Holding shift while spinning the mousewheel will zoom faster.  There are also buttons to control the zoom if you don't have a mousewheel.</li>
-        <li>Planets you control that have ship parts can launch ships at other planets.  If you have such a planet selected or focused information about the ships currently under construction on that planet will appear beside the map, and buttons to order further construction if parts are available.</li>
-        <li>Ships under construction reduce the available parts for further ships, but construction can be cancelled at any time before the ship is completed to reclaim those parts as available.  Construction orders appear as blue lines between planets on the map.  Ship construction is completed at the end of every turn.</li>
-        <li>If you have two different planets as your focus and selection, if either of those planets can launch ships you will have an option to order a launch at the other planet from the information window beside the map.</li>
-
-</ul>
+<h3>Overpower</h3>
 {{ if index . "loggedin" }}
-Go to <a href="/overpower/home">Your home base</a>.
+Go to [ <a href="/overpower/home">your home base</a> ].
 {{ else }}
-Go <a href="/auth/login">log in</a>.
+Go [ <a href="/auth/login">log in</a> ].
 {{ end }}<br>
-Go to the <a href="/overpower/view/">Games List</a>.
+Go to the [ <a href="/overpower/view/">Games List</a> ].
+<h3>Rules of the Game</h3>
+<b>Games:</b><ul>
+        <li>You must be logged in to play, view, or manage games.</li>
+        <li>Each account can be the manager of one game of Overpower.</li>
+        <li>Managers do not need to play the game that they are managing, but they can.</li>
+        <li>When creating a game, managers can set if a game requires a password to join.</li>
+        <li>After a manager creates a game, it is available for players to join.</li>
+        <li>Users can be players in as many games of Overpower as they wish.</li>
+        <li>Games of Overpower are for 1 to (TODO) players.</li>
+        <li>When joining a game, a user must create a faction name for that game.  </li>
+        <li>Faction names do not have to be similar to the owner's user name but must not be the same as any existing faction name for that game.</li>
+        <li>Players who have joined a game must wait for the manager of the game to start the game's first turn before they can play.</li>
+        <li>Players can join or leave a game at any time before the first turn begins, but cannot join or leave after.</li>
+        <li>A game's manager can delete that game at any time, even after the first turn has begun.</li>
+        <li>A game's manager can set at what rate the game's turns will automatically progress (TODO).</li>
+</ul>
+<b>Turns:</b><ul>
+        <li>Overpower takes places over several turns.  The players begin the game on turn one.</li>
+        <li>As the players play the game, they give orders to their game faction to take certain actions but no orders are executed as they are given.</li>
+        <li>All players can give and change orders to their game faction until all players indicate that they are done giving orders, or the time limit on giving orders runs out.</li>
+        <li>A player can still give or change orders even after they have indicated that they are done, as long as there is still at least one player who is not done giving orders.</li>
+        <li>When orders are done, all orders are simultaniously executed and the consequences determined, and then the next turn begins.</li>
+        <li>At the beginning of each turn, all factions have their turn progress set as "In Progress".</li>
+</ul>
+<b>Planets:</b><ul>
+        <li>Each game of Overpower has a galaxy of planets spread throughout a grid in space.</li>
+        <li>Each planet will have a coordinate (x, y) and a name, and all players will start the game knowing the coordinate and name of all planets in the galaxy.</li>
+        <li>Planets are either controlled by one of the player factions or are neutral and inactive.  The game begins with each faction controlling one planet at the outskirts of the galaxy.</li>
+        <li>Factions start the game with no information about which factions control which planets (other than their own faction/planet).</li>
+        <br>
+        <li>Planets have a number of inhabitants.  This number represents intrenched producers and defenders.</li>
+        <li>If a planet is not controlled by any faction and has inhabitants, these inhabitants will be hostile to all factions but will produce nothing.</li>
+        <li>A planet's inhabitants can only change in number when a spaceship lands on a planet.</li>
+        <br>
+        <li>Planets have an amount of resources.  This number can not be increased, and will decrease as inhabitants of a planet controlled by a faction produce ship parts.</li>
+        <br>
+        <li>Planets have a stock of ship parts.  Planets all begin the game with no ship parts, and neutral planets will not produce more.  Planets controlled by player factions will produce ship parts and consume resources at the end of every turn.</li>
+        <li>Ship parts are used to build spaceships.  Spaceships take a number of parts to build equal to their size.  
+        <li>Parts used to build spaceships are consumed completely and cannot be regained even when a spaceship lands on a planet.</li>
+        <li>Parts are produced at a rate equal to the number of inhabitants on the planet that have not just arrived that turn.  Production consumes resources and will stop when resources run out.</li>
+        <br>
+        <li>Factions start the game with no information about the inhabitants, resources, or ship parts of any planet other than the one they control.</li>
+        <li>At the beginning of every turn, each faction gains full information about every planet they control.</li>
+        <li>Planetary landings that are repulsed reveal to the spaceship controller full information about the planet's owner, remaining inhabitants, and all other planetary information at the time of the landing.  This information is not updated as it later changes.</li>
+        <li>There is no other in-game source of information about planetary data.</li>
+</ul>
+<b>Spaceships:</b><ul>
+        <li>Players may create launch orders for planets they control.  Launch orders specify the source planet, spaceship size, and target planet for a space ship launch.</li>
+        <li>Launch orders cannot have the same source and target.</li>
+        <li>Each spaceship launch will consume ship parts on the source planet equal to the ship size.  You cannot launch more or larger ships than a planet's parts stock will supply.</li>
+        <li>Spaceships must target a planet, and cannot change course mid-flight</li>
+        <li>Spaceships are one-use only, are destroyed upon landing on a planet, and the parts used to launch them cannot be reclaimed.</li>
+        <li>Launching a ship does not decrease the population of the planet that launched it, only the ship parts.</li>
+        <br>
+        <li>Spaceship travel 10 spaces each turn.  If a destination planet is described as "10 away" from a spaceship, the spaceship will reach the planet at the end of it's next movement, but if the planet is "11 away" from the spaceship, the spaceship will end its next movement "1 away" from the planet.</li>
+        <li>Spaceships that reach their target planet immediately perform a planetary landing.</li>
+        <br>
+        <li>A faction will always have full information about the position, movement, size, and destination of all of the spaceships it has launched.</li>
+        <li>If a spaceship moves through or ends its movement on an area within 20 spaces of a planet controlled by another faction, that faction will gain information about the owner and size of the spaceship.</li>
+        <li>A faction that spots an enemy spaceship will know which areas within 20 of its planets the spaceship travelled through, but not any other information about the ship's travels or destination.</li>
+</ul>
+
+<b>Planetary landings:</b><ul>
+        <li>Planetary landings happen when a spaceship reaches its target planet.</li>
+        <li>A spaceship deposits a number of colonists on a planet equal to the spaceship's size.</li>
+        <li>If there are no hostile inhabitants of the planet, the colonists all become inhabitants and the spaceship's faction takes control of the planet if it did not already control it.</li>
+        <li>If there are hostile inhabitants, either hostile natives or an enemy faction, there is a battle for control of the planet.</li>
+        <li>In a battle for control of a planet whichever side has the most people wins, and inhabitants win ties.  The loser is completely annhilated and the winner loses people equal to the size of the loser.</li>
+        <li>Any new inhabitants that arrive from planetary landings do not contribute to the planet's production on that turn, but will contribute to planetary defense if there are later planetary landings by enemy forces.</li>
+        <li>If multiple ships reach a planet during the same turn, planetary landings are resolved in order of distance traveled that turn: least distance first, most distance last.</li>
+        <li>Example: If at the start of a turn Ship One is 3 spaces away from a target and Ship Two is 4 spaces away, then during movement Ship One will perform a full planetary landing, and then Ship Two will perform a full planetary landing.</li>
+        <li>If two ships travel equal distance to their target before a landing then their landing order will be randomly determined.</li>
+</ul>
+
+<br>
+<h3>Operating the Game</h3>
+<b>Webpage layout</b><ul>
+        <li>Login page</li>
+        <li>User homebase Page</li>
+        <li>Game List Page</li>
+        <li>Game Overview Page</li>
+        <li>Game Play Page</li>
+</ul>
+
+<b>Game Map</b><ul>
+        <li>The game play page has a 800x600 .png file that is an interactive map of the game.</li>
+        <li>You can interact with this map by clicking on it with your mouse or by scrolling your mousewheel while your cursor is over it.</li>
+        <li>Holding shift while clicking or scrolling can change some interactions.</li>
+        <br>
+        <li>You can move or zoom the map with the middle mouse button.</li>
+        <li>Scrolling the mousewheel up will zoom the map in, and down will zoom the map out.  Holding shift while scrolling the mousewheel will zoom faster.</li>
+        <li>Clicking the mousewheel will center the map wherever you click.  Holding shift and clicking the left mousebutton will also center the map where you click.</li>
+        <br>
+        <li>You can select spaces on the map as your "main" or "secondary" targets, and the page will display information about things in those spaces.</li>
+        <li>You control the "main target" with the left mousebutton.  Your main target will appear in bright yellow if it is on the map.</li>
+        <li>You control the "secondary target" with the right mousebutton.  Your secondary target will appear as a dull yellow if it is on the map.</li>
+        <br>
+        <li>If you have different planets as your main and secondary targets then if either of them are under your control and can launch spaceships, the information windows will have a shortcut to launch a ship at the other planet.</li>
+        <li>Launch orders will appear as bright blue lines between the source planet and the target planet.</li>
+        <li>You will have the ability to cancel or modify a launch order from the information window after setting the order's source as either your main or secondary target.</li>
+</ul>
+
+<h3>Attributions</h3>
+<ul>
+        <li>Planets Nu (major inspiration for this game):<br>
+                <a href="http://planets.nu/#/start">
+                        http://planets.nu/#/start</a></li>
+        <li>Golang standard library (it's amazing!):<br>
+<a href="https://golang.org/pkg/">
+        https://golang.org/pkg/</a></li>
+        <li>Database: PostGreSQL<br>
+<a href="http://www.postgresql.org/">
+        http://www.postgresql.org/</a></li>
+        <li>Drivers: PostGreSQL Go Drivers<br>
+<a href="https://github.com/lib/pq">
+        https://github.com/lib/pq</a></li>
+        <li>Graphics library: Draw2D<br>
+<a href="https://github.com/llgcode/draw2d/">
+        https://github.com/llgcode/draw2d/</a></li>
+        <li>Map Image Font: Droid Sans Mono <br>
+<a href="http://www.fontsquirrel.com/fonts/droid-sans-mono">
+        http://www.fontsquirrel.com/fonts/droid-sans-mono</a></li>
 {{ end }}

@@ -140,10 +140,10 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 	case 1: // wheelclick
 		isOk = OPDB.UpdateMapViewCenter(gid, fid, c)
 	case 2: // right
-		if found {
-			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{c, true})
-		} else {
+		if shift {
 			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{})
+		} else {
+			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{c, true})
 		}
 	case 3: // wheelspin
 	// SEE ABOVE

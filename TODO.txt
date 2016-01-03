@@ -2,15 +2,15 @@ Reports:
     * Generation/Display
     * Ship launches
     * Ship landings
-
 Game:
     * Endstate: score?
     * Galaxy creation: robustness
+    * Manager-set auto-run controls
 UI:
     * Sorted planet/shipviews, filterable
     * Directional order/ship visualizations
-    * 2 Column "select" windows
-    * lclick selects, shift-lclick recenters map
+    * Sort out help/instruction pages for everything
+    * Drop target buttons?
 
 // ========================= DONE ========================= //
 
@@ -24,6 +24,8 @@ UI:
     * 'Focused' coordinate
     * Zoomed out indicator binary parts avail
     * Planet parts avail shown on map
+    * 2 Column "select" windows
+    * lclick selects, shift-lclick recenters map
 
 Ships:
     * Final destination to shipview of owner, line on map

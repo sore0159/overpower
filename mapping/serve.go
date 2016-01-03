@@ -213,7 +213,13 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 			gc.SetLineWidth(.5)
 		}
 	*/
-	gc.SetLineWidth(2)
+	if zoom > 14 {
+		gc.SetLineWidth(2)
+	} else if zoom > 5 {
+		gc.SetLineWidth(1)
+	} else {
+		gc.SetLineWidth(.25)
+	}
 	for _, o := range orders {
 		src, okS := plidGrid[o.Source()]
 		tar, okT := plidGrid[o.Target()]
