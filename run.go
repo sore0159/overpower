@@ -1,15 +1,11 @@
 package overpower
 
 import (
+	"fmt"
 	"mule/hexagon"
 )
 
 func (op *TotallyOP) RunGameTurn() (ok bool) {
-	names := make(map[int]string, len(op.Factions))
-	for _, f := range op.Factions {
-		f.SetDone(false)
-		names[f.Fid()] = f.Name()
-	}
 	planets := make(map[hexagon.Coord]Planet, len(op.Planets))
 	plids := make(map[int]Planet, len(op.Planets))
 	radar := make(map[int][]hexagon.Coord, len(op.Factions))
@@ -26,6 +22,18 @@ func (op *TotallyOP) RunGameTurn() (ok bool) {
 		}
 	}
 	gid, turn := op.Game.Gid(), op.Game.Turn()
+	names := make(map[int]string, len(op.Factions))
+	op.Reports = make(map[int]Report, len(op.Factions))
+	for _, f := range op.Factions {
+		f.SetDone(false)
+		fid := f.Fid()
+		names[fid] = "faction " + f.Name()
+		rp, ok := op.Source.NewReport(gid, fid, turn)
+		if !ok {
+			return false
+		}
+		op.Reports[fid] = rp
+	}
 	// ---- SHIPS LAUNCH ---- //
 	for _, o := range op.Orders {
 		tar, ok1 := plids[o.Target()]
@@ -42,6 +50,8 @@ func (op *TotallyOP) RunGameTurn() (ok bool) {
 		src.SetParts(src.Parts() - size)
 		path := src.Loc().PathTo(tar.Loc())
 		sh, ok := op.Source.NewShip(gid, src.Controller(), size, turn, path)
+		rStr := fmt.Sprintf("%s launched size %d ship toward %s", src.Name(), size, tar.Name())
+		op.AddReport(src.Controller(), rStr)
 		if !ok {
 			return false
 		}

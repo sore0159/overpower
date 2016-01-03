@@ -11,6 +11,10 @@ var (
 )
 
 func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction, facs []overpower.Faction) {
+	if h.LastFull() > 4 {
+		http.Redirect(w, r, h.NewPath(5), http.StatusFound)
+		return
+	}
 	turn := g.Turn()
 	if turn < 1 {
 		http.Redirect(w, r, h.NewPath(4), http.StatusFound)
@@ -63,6 +67,11 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		return
 	}
 	m := h.DefaultApp()
+	rp, ok := OPDB.GetReport(gid, fid, turn-1)
+	m["prevturn"] = turn - 1
+	if ok {
+		m["reportlen"] = len(rp.Contents())
+	}
 	// ---------------- DATA PROCESSING --------------- //
 	center, target1, target2 := mapView.Center(), mapView.Target1(), mapView.Target2()
 	// --------------- FACTION LOOP -------------- //

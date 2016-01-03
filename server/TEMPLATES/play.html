@@ -16,7 +16,7 @@
 </form>
 <img id="map" class="map" src="/overpower/img/{{ $g.Gid }}" width=800 height=600 />
 
-Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Faction: {{ $f.Name }} &bull; Turn: {{ $g.Turn }} 
+<b>Game:</b> [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; <b>Faction:</b> {{ $f.Name }} &bull; <b>Turn:</b> {{ $g.Turn }} 
 {{ if not $f.Done }}
 (In Progress)
 <form action="" method="post" class="noblock">
@@ -33,6 +33,17 @@ Game: [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; Factio
         <input type="hidden" name="done" value="false">
         <input type="submit" value="Cancel Turn Complete" class="noblock">
 </form>
+{{ end }}
+<br>
+<b>Reports:</b>
+{{ if .reportlen }}
+[ <a href="/overpower/view/{{ $g.Gid }}/reports/{{ .prevturn }}">{{ .reportlen }} Report{{ if not (eq .reportlen 1) }}s{{end}} for turn {{ .prevturn }}</a> ]
+{{ else }}
+{{ if .prevturn }}
+[ <a href="/overpower/view/{{ $g.Gid }}/reports/{{ .prevturn }}">No reports for turn {{ .prevturn }}</a> ]
+{{ else }}
+[ No reports yet generated ]
+{{ end }}
 {{ end }}
 <hr>
 Map Centered on ({{ index $center 0}}, {{ index $center 1 }}):

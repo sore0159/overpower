@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const UPDATETABLES = true
+const UPDATETABLES = false
 
 func MakeTables(db *sql.DB) (ok bool) {
 	queries := []string{}

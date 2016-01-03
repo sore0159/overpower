@@ -33,6 +33,7 @@ func (s *Source) NewReport(gid, fid, turn int) (report overpower.Report, isOk bo
 	s.MadeReports = append(s.MadeReports, r)
 	return r, true
 }
+
 func (s *Source) NewMapView(gid, fid int, center hexagon.Coord) (mapview overpower.MapView, isOk bool) {
 	mv := NewMapView()
 	mv.gid, mv.fid, mv.center = gid, fid, center

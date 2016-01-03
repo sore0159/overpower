@@ -23,3 +23,7 @@ func NewTotallyOP() *TotallyOP {
 func (op *TotallyOP) SetPV(pv PlanetView) {
 	op.PlanetViews[[2]int{pv.Pid(), pv.Fid()}] = pv
 }
+
+func (op *TotallyOP) AddReport(fid int, x string) {
+	op.Reports[fid].AddContent(x)
+}

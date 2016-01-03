@@ -11,7 +11,33 @@ func TestFirst(t *testing.T) {
 	fmt.Println("TESTING")
 }
 
-func TestSecond(t *testing.T) {
+func TestThird(t *testing.T) {
+	db, ok := LoadDB()
+	fmt.Println("TEST THIRD Got DB ok:", ok)
+	if !ok {
+		return
+	}
+	r, ok := db.GetReport(1, 1, 1)
+	fmt.Println("GET REPORT ok:", ok)
+	if !ok {
+		rp := &Report{1, 1, 1, []string{"test1", "test2", "test3"}}
+		ok = rp.Insert(db.db)
+		if ok {
+			fmt.Println("INSERT PASSED")
+		} else {
+			fmt.Println("INSERT FAILED")
+			return
+		}
+		r, ok = db.GetReport(1, 1, 1)
+		if !ok {
+			fmt.Println("SECOND GET FAILED")
+			return
+		}
+	}
+	fmt.Println("GOT REPORT:", r)
+}
+
+func XTestSecond(t *testing.T) {
 	db, ok := LoadDB()
 	fmt.Println("TEST SECOND Got DB ok:", ok)
 	if !ok {
@@ -68,19 +94,21 @@ func TestSecond(t *testing.T) {
 		fmt.Println("GOT SHIP:", s)
 	}
 	if len(ships) > 0 {
-		s, _ := ships[0].(*Ship)
-		s.path = []hexagon.Coord{hexagon.Coord{0, 1}, {0, 2}}
-		ok = s.Insert(db.db)
+		/*
+			s, _ := ships[0].(*Ship)
+			s.path = []hexagon.Coord{hexagon.Coord{0, 1}, {0, 2}}
+			ok = s.Insert(db.db)
+		*/
 	} else {
 		fmt.Println("NO SHIPS FOUND")
 		s := &Ship{1, 1, 0, 5, 5, []hexagon.Coord{{0, 1}}}
 		ok = s.Insert(db.db)
-	}
-	if !ok {
-		fmt.Println("INSERT FAILED")
-		return
-	} else {
-		fmt.Println("INSERT PASSED")
+		if !ok {
+			fmt.Println("INSERT FAILED")
+			return
+		} else {
+			fmt.Println("INSERT PASSED")
+		}
 	}
 	ships, ok = db.GetAllGidShips(g.Gid())
 	if !ok {
@@ -100,15 +128,11 @@ func TestSecond(t *testing.T) {
 		at := hexagon.Coord{1, 1}
 		seen := []hexagon.Coord{{0, 0}, {1, 0}, {1, 1}}
 		for _, s := range ships {
-			_, _ = at, seen
-			fmt.Println("TODO: shipview from", s)
-			/*
-				sv := MakeShipView(s, 1, 1, at, seen)
-				if !sv.Insert(db.db) {
-					fmt.Println("FAILED SHIPVIEW INSERT")
-					return
-				}
-			*/
+			sv := ShipView{s.Gid(), s.Fid(), s.Sid(), 1, s.Fid(), s.Size(), at, true, s.Path()[len(s.Path())-1], true, seen}
+			if !sv.Insert(db.db) {
+				fmt.Println("FAILED SHIPVIEW INSERT")
+				return
+			}
 		}
 		shipViews, ok = db.GetFidTurnShipViews(g.Gid(), 1, 1)
 		if len(shipViews) < 1 {
