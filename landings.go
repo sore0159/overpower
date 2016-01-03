@@ -58,7 +58,6 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 	pl.SetInhabitants(0)
 	atk -= def
 	arrivals[plid] = atk
-	pl.SetInhabitants(def - atk)
 	if dSum == 0 {
 		var shStr string
 		if plFid == 0 {
