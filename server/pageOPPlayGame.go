@@ -82,7 +82,7 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		if fid == testFid {
 			fNames[fid] = "your faction"
 		} else {
-			fNames[fid] = "Faction " + fac.Name()
+			fNames[testFid] = "Faction " + fac.Name()
 		}
 	}
 	// --------------- ORDER LOOP -------------- //

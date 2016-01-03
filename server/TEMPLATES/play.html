@@ -18,16 +18,14 @@
 
 <b>Game:</b> [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; <b>Faction:</b> {{ $f.Name }} &bull; <b>Turn:</b> {{ $g.Turn }} 
 {{ if not $f.Done }}
-(In Progress)
-<form action="" method="post" class="noblock">
+(In Progress) <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setdone">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
         <input type="hidden" name="done" value="true">
         <input type="submit" value="Set Turn Complete" class="noblock">
 </form>
 {{ else }}
-(Complete)
-<form action="" method="post" class="noblock">
+(Complete) <form action="" method="post" class="noblock">
         <input type="hidden" name="action" value="setdone">
         <input type="hidden" name="turn" value="{{ $g.Turn }}">
         <input type="hidden" name="done" value="false">
