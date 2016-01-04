@@ -11,7 +11,13 @@ func TestFirst(t *testing.T) {
 	fmt.Println("TESTING")
 }
 
-func TestThird(t *testing.T) {
+func TestFourth(*testing.T) {
+	g := &Game{}
+	g.SetAutoDays([7]bool{true, true, false, true, true, true, true})
+	fmt.Println("AUTODAYS:", g.AutoDays())
+}
+
+func XTestThird(t *testing.T) {
 	db, ok := LoadDB()
 	fmt.Println("TEST THIRD Got DB ok:", ok)
 	if !ok {

@@ -11,6 +11,16 @@ func (d DB) SetTurnDone(f overpower.Faction, done bool) (ok bool) {
 }
 
 func (d DB) RunGameTurn(g overpower.Game) (ok bool) {
+	for _, b := range g.AutoDays() {
+		if b {
+			g.SetFreeAutos(g.FreeAutos() + 1)
+			break
+		}
+	}
+	return d.AutoRunGameTurn(g)
+}
+
+func (d DB) AutoRunGameTurn(g overpower.Game) (ok bool) {
 	gid := g.Gid()
 	facs, ok := d.GetGidFactions(gid)
 	if !ok {

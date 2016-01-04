@@ -26,15 +26,15 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 		gFacs, gHasF = OPDB.GetGidFactions(g.Gid())
 	}
 	if r.Method == "POST" {
+		if DBLOCK {
+			http.Error(w, "GAME DOWN FOR DAYLY MAINT: 10-20MIN", http.StatusInternalServerError)
+			return
+		}
 		action := r.FormValue("action")
 		switch action {
-		case "nextturn":
+		case "nextturn", "setautos":
 			if !hasG {
 				http.Error(w, "USER HAS NO GAME TO PROGRESS", http.StatusBadRequest)
-				return
-			}
-			if g.Turn() < 1 {
-				http.Error(w, "GAME NOT YET BEGUN", http.StatusBadRequest)
 				return
 			}
 			mp, ok := GetInts(r, "turn")
@@ -47,9 +47,29 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "BAD TURN DATA", http.StatusBadRequest)
 				return
 			}
-			if !OPDB.RunGameTurn(g) {
-				http.Error(w, "DATABASE ERROR RUNNING GAME TURN", http.StatusInternalServerError)
-				return
+			if action == "nextturn" {
+				if g.Turn() < 1 {
+					http.Error(w, "GAME NOT YET BEGUN", http.StatusBadRequest)
+					return
+				}
+				if !OPDB.RunGameTurn(g) {
+					http.Error(w, "DATABASE ERROR RUNNING GAME TURN", http.StatusInternalServerError)
+					return
+				}
+			} else {
+				dayBool := [7]bool{}
+				dayBool[0] = r.FormValue("sunday") == "on"
+				dayBool[1] = r.FormValue("monday") == "on"
+				dayBool[2] = r.FormValue("tuesday") == "on"
+				dayBool[3] = r.FormValue("wednesday") == "on"
+				dayBool[4] = r.FormValue("thursday") == "on"
+				dayBool[5] = r.FormValue("friday") == "on"
+				dayBool[6] = r.FormValue("saturday") == "on"
+				g.SetAutoDays(dayBool)
+				if !OPDB.UpdateGame(g) {
+					http.Error(w, "DATABASE ERROR CHANGING GAME AUTOTURNS", http.StatusInternalServerError)
+					return
+				}
 			}
 		case "startgame":
 			if !hasG {
@@ -125,6 +145,17 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 	}
 	if gHasF {
 		m["gfactions"] = gFacs
+	}
+	days := g.AutoDays()
+	var any bool
+	for _, b := range days {
+		if b {
+			any = true
+			break
+		}
+	}
+	if !any {
+		m["noauto"] = true
 	}
 	oFacs, oHasF := OPDB.GetAllOwnerFactions(h.User.String())
 	if oHasF {

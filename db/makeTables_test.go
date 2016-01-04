@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const UPDATETABLES = false
+const UPDATETABLES = true
 
 func MakeTables(db *sql.DB) (ok bool) {
 	queries := []string{}
@@ -16,6 +16,8 @@ func MakeTables(db *sql.DB) (ok bool) {
 	owner varchar(20) NOT NULL UNIQUE,
 	name varchar(20) NOT NULL,
 	turn int NOT NULL,
+	autoturn int NOT NULL,
+	freeautos int NOT NULL,
 	password varchar(20)
 );`)
 	queries = append(queries, `create table factions(

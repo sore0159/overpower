@@ -23,6 +23,10 @@ func SetupMux() {
 
 // /overpower/view/GAMEID/
 func muxView(w http.ResponseWriter, r *http.Request) {
+	if DBLOCK {
+		http.Error(w, "GAME DOWN FOR DAYLY MAINT: 10-20MIN", http.StatusInternalServerError)
+		return
+	}
 	h := MakeHandler(w, r)
 	lastFull := h.LastFull()
 	if lastFull < 3 {
@@ -81,6 +85,10 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 
 // /overpower/command/GAMEID/TURN/ACTIONNAME/ARGS
 func muxCommand(w http.ResponseWriter, r *http.Request) {
+	if DBLOCK {
+		http.Error(w, "GAME DOWN FOR DAYLY MAINT: 10-20MIN", http.StatusInternalServerError)
+		return
+	}
 	h := MakeHandler(w, r)
 	if !h.LoggedIn {
 		http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)

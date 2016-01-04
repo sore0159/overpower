@@ -6,6 +6,9 @@ import (
 	"mule/overpower"
 )
 
+func (d DB) UpdateGame(g overpower.Game) (ok bool) {
+	return mydb.Update(d.db, []mydb.Updater{g})
+}
 func (d DB) MakeGame(owner, name, password string) (ok bool) {
 	g := NewGame()
 	g.owner, g.name, g.password = owner, name, password

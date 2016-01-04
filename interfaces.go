@@ -26,6 +26,10 @@ type Game interface {
 	Owner() string
 	HasPW() bool
 	IsPwd(string) bool
+	AutoDays() [7]bool
+	SetAutoDays([7]bool)
+	FreeAutos() int
+	SetFreeAutos(int)
 }
 
 type Faction interface {

@@ -8,6 +8,10 @@ import (
 
 // /overpower/img/GID
 func pageMap(w http.ResponseWriter, r *http.Request) {
+	if DBLOCK {
+		http.Error(w, "GAME DOWN FOR DAYLY MAINT: 10-20MIN", http.StatusInternalServerError)
+		return
+	}
 	h := MakeHandler(w, r)
 	if !h.LoggedIn {
 		http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)

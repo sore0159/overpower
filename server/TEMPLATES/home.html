@@ -22,6 +22,35 @@
 {{ else }}
 GAME HAS NO USERS SIGNED UP TO PLAY<br>
 {{ end }}
+
+{{ $autodays := $g.AutoDays }}
+<br>
+Auto Run Days: &bull;
+{{ if .noauto }}
+        None! &bull;
+{{ else }}
+        {{ if index $autodays 0 }}Sunday &bull; {{ end }}
+        {{ if index $autodays 1 }}Monday &bull; {{ end }}
+        {{ if index $autodays 2 }}Tuesday &bull; {{ end }}
+        {{ if index $autodays 3 }}Wednesday &bull; {{ end }}
+        {{ if index $autodays 4 }}Thursday &bull; {{ end }}
+        {{ if index $autodays 5 }}Friday &bull; {{ end }}
+        {{ if index $autodays 6 }}Saturday &bull; {{ end }}
+        <br>
+        {{ if $g.FreeAutos }}Free Turns: {{ $g.FreeAutos }}{{ end }}
+{{ end }}
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setautos">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Change auto-run days:">
+<input type="checkbox" name="sunday" {{ if index $autodays 0 }}checked="true"{{ end }}>Sunday &bull;
+<input type="checkbox" name="monday" {{ if index $autodays 1 }}checked="true"{{ end }}>Monday &bull;
+<input type="checkbox" name="tuesday" {{ if index $autodays 2 }}checked="true"{{ end }}>Tuesday &bull;
+<input type="checkbox" name="wednesday" {{ if index $autodays 3 }}checked="true"{{ end }}>Wednesday &bull;
+<input type="checkbox" name="thursday" {{ if index $autodays 4 }}checked="true"{{ end }}>Thursday &bull;
+<input type="checkbox" name="friday" {{ if index $autodays 5 }}checked="true"{{ end }}>Friday &bull;
+<input type="checkbox" name="saturday" {{ if index $autodays 6 }}checked="true"{{ end }}>Saturday <br>
+ </form>
 {{ if $active }}
 <br><br>
  <form action="" method="post">

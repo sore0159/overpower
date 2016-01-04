@@ -14,6 +14,7 @@ const (
 var (
 	USERREG *users.Registry
 	OPDB    db.DB
+	DBLOCK  bool
 )
 
 func main() {
@@ -27,6 +28,7 @@ func main() {
 		log.Fatal("Can't load planet data")
 	}
 	defer OPDB.Close()
+	go AutoTimer()
 	SetupMux()
 	log.Println("STARTING SERVER AT", SERVPORT)
 	err := http.ListenAndServe(SERVPORT, nil)

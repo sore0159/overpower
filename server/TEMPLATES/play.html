@@ -200,7 +200,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
         {{ end }}<br> {{ end }}
 
   {{ else }}
-        {{ index $fNames .Controller }}, size {{ .Size }}<br>
+        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
         {{ if .Trail }} Passed Through: {{ range .Trail }}
         <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
 
@@ -248,7 +248,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 
   {{ else }}
         {{ $loc := index $svLoc . }}
-        {{ index $fNames .Controller }}, size {{ .Size }}<br>
+        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
 
       {{ if $loc.Valid }}
         {{ if $loc.IsCoord $center }}
@@ -386,7 +386,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
         {{ end }}<br> {{ end }}
 
   {{ else }}
-        {{ index $fNames .Controller }}, size {{ .Size }}<br>
+        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
         {{ if .Trail }} Passed Through: {{ range .Trail }}
         <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
 
@@ -434,7 +434,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 
   {{ else }}
         {{ $loc := index $svLoc . }}
-        {{ index $fNames .Controller }}, size {{ .Size }}<br>
+        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
 
       {{ if $loc.Valid }}
         {{ if $loc.IsCoord $center }}

@@ -96,5 +96,16 @@ func (h *Handler) pageOPViewGame(w http.ResponseWriter, r *http.Request, g overp
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return
 	}
+	days := g.AutoDays()
+	var any bool
+	for _, b := range days {
+		if b {
+			any = true
+			break
+		}
+	}
+	if !any {
+		m["noauto"] = true
+	}
 	h.Apply(TPVIEW, w)
 }

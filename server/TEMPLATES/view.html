@@ -6,6 +6,21 @@
 {{ $ownedf := index . "ownedf" }}
 GAME:  {{ $g.Name }} &bull; OWNER: {{ $g.Owner }} &bull; {{ if $active }}TURN: {{ $g.Turn }}{{ else }}NOT STARTED{{ end }}<br>
 
+{{ $autodays := $g.AutoDays }}
+Auto Run Days: &bull;
+{{ if .noauto }}
+None! &bull;<br>
+{{ else }}
+{{ if index $autodays 0 }}Sunday &bull; {{ end }}
+{{ if index $autodays 1 }}Monday &bull; {{ end }}
+{{ if index $autodays 2 }}Tuesday &bull; {{ end }}
+{{ if index $autodays 3 }}Wednesday &bull; {{ end }}
+{{ if index $autodays 4 }}Thursday &bull; {{ end }}
+{{ if index $autodays 5 }}Friday &bull; {{ end }}
+{{ if index $autodays 6 }}Saturday &bull; {{ end }}<br>
+{{ if $g.FreeAutos }}Free Turns: {{ $g.FreeAutos }}<br>{{ end }}
+{{ end }}
+
 {{ if $ownedf }}
 <div class="box">
 {{ if $active }}
