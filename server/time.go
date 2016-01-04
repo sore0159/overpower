@@ -36,6 +36,9 @@ func AutoTimer() {
 		countChan := make(chan byte)
 		wkDay := int(now.Weekday())
 		for _, g := range games {
+			if g.Turn() < 1 {
+				continue
+			}
 			days := g.AutoDays()
 			if days[wkDay] {
 				var run bool
