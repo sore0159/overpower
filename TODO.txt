@@ -1,11 +1,6 @@
-Reports: 
-    * Generation/Display
-    * Ship launches
-    * Ship landings
 Game:
     * Endstate: score?
     * Galaxy creation: robustness
-    * Manager-set auto-run controls
 UI:
     * Sorted planet/shipviews, filterable
     * Directional order/ship visualizations
@@ -13,6 +8,13 @@ UI:
     * Drop target buttons?
 
 // ========================= DONE ========================= //
+Reports: 
+    * Generation/Display
+    * Ship launches
+    * Ship landings
+
+Game:
+    * Manager-set auto-run controls
 
 Interactive Map:
     * Javascript left/right click, wheelup/down
