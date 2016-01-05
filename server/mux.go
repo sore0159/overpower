@@ -135,6 +135,5 @@ func muxCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func imgFavIcon(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PING")
 	http.ServeFile(w, r, "STATIC/img/favicon.ico")
 }

@@ -26,7 +26,7 @@ func AutoTimer() {
 			Log("Autotimer woke:", now)
 		}
 		DBLOCK = true
-		time.Sleep(10 * time.Minute)
+		time.Sleep(5 * time.Minute)
 		games, ok := OPDB.AllGames()
 		if !ok {
 			Log("AUTO RUN ERROR FETCHING GAMES")

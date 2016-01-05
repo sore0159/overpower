@@ -24,6 +24,10 @@ None! &bull;<br>
 {{ if $ownedf }}
 <div class="box">
 {{ if $active }}
+ <div style="text-align:center;float:right;margin:10px 10px 10px 10px;">
+         [ <a href="/overpower/quit/{{ $g.Gid }}">Quit Game?</a> ]<br>
+         ( will ask for confirmation )
+ </div>
 YOUR FAC:  <a href="{{ link "play" }}">{{ $ownedf.Name }}</a> 
 {{ if $ownedf.Done }}
 (Turn Complete)
@@ -50,6 +54,7 @@ YOUR FAC: {{ $ownedf.Name }}<br>
 <input type="submit" value="LEAVE GAME" class="noblock">
 </form>
 {{ end }}
+<div class="clearer"></div>
 </div>
 {{ else }}
 {{ if not $active }}
