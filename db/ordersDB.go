@@ -52,6 +52,11 @@ func (d DB) SetOrder(gid, fid, source, target, size int) (ok bool) {
 	return mydb.Upsert(d.db, o)
 }
 
+func (d DB) DropAllFidOrders(gid, fid int) (ok bool) {
+	query := fmt.Sprintf("DELETE FROM orders WHERE gid = %d AND fid = %d", gid, fid)
+	return mydb.ExecIf(d.db, query)
+}
+
 func (d DB) DropAllGidOrders(gid int) (ok bool) {
 	query := fmt.Sprintf("DELETE FROM orders WHERE gid = %d", gid)
 	return mydb.ExecIf(d.db, query)
@@ -59,6 +64,11 @@ func (d DB) DropAllGidOrders(gid int) (ok bool) {
 
 func (d DB) GetAllSourceOrders(gid, pid int) (orders []overpower.Order, ok bool) {
 	query := fmt.Sprintf("SELECT %s FROM orders WHERE gid = %d AND source = %d", ODSQLVAL, gid, pid)
+	return d.GetOrdersQuery(query)
+}
+
+func (d DB) GetAllFidOrders(gid, fid int) (orders []overpower.Order, ok bool) {
+	query := fmt.Sprintf("SELECT %s FROM orders WHERE gid = %d AND fid = %d", ODSQLVAL, gid, fid)
 	return d.GetOrdersQuery(query)
 }
 

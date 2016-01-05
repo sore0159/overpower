@@ -43,7 +43,11 @@ func (p *Planet) SetController(x int) {
 		return
 	}
 	p.controller = x
-	p.SetInt("controller", x)
+	if x == 0 {
+		p.SetNull("controller")
+	} else {
+		p.SetInt("controller", x)
+	}
 }
 func (p *Planet) Inhabitants() int {
 	return p.inhabitants

@@ -6,6 +6,35 @@ import (
 	"mule/overpower"
 )
 
+func (d DB) DropInProgressFaction(gid, fid int) (ok bool) {
+	// drop fid orders
+	if !d.DropAllFidOrders(gid, fid) {
+		return false
+	}
+	planets, ok := d.GetAllGidPlanets(gid)
+	if !ok {
+		return false
+	}
+	updateList := []mydb.Updater{}
+	// set planets neutral
+	for _, p := range planets {
+		if p.Controller() == fid {
+			p.SetController(0)
+			p.SetResources(p.Resources() + p.Parts())
+			p.SetParts(0)
+			updateList = append(updateList, p)
+		}
+	}
+	if !mydb.Update(d.db, updateList) {
+		return false
+	}
+	// drop faction
+	if !d.DropFaction(gid, fid) {
+		return false
+	}
+	return true
+}
+
 func (d DB) MakeFaction(gid int, owner, name string) (ok bool) {
 	f := NewFaction()
 	f.gid, f.owner, f.name = gid, owner, name

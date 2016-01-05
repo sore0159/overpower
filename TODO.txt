@@ -1,11 +1,22 @@
+API:
+    * JSON?  Bytes?
+    * Game turn
+    * Faction turnDone status
+
+Misc: 
+    * Optional email notifications on new turns/last player not done
+
 Game:
     * Endstate: score?
     * Galaxy creation: robustness
+    * Quit option: turn planets neutral
+
 UI:
     * Sorted planet/shipviews, filterable
     * Directional order/ship visualizations
     * Sort out help/instruction pages for everything
     * Drop target buttons?
+    * favicon.ico - stock and "New turn avail" versions
 
 // ========================= DONE ========================= //
 Reports: 
