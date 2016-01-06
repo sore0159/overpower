@@ -19,6 +19,7 @@ func SetupMux() {
 	http.HandleFunc("/overpower/view/", muxView)
 	http.HandleFunc("/overpower/command/", muxCommand)
 	http.HandleFunc("/overpower/img/", pageMap)
+	http.HandleFunc("/overpower/json/", apiJson)
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
 }
