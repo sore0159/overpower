@@ -72,16 +72,19 @@ div.targetframe {
         border-radius: 5px;
 }
 div.rightframe {
-        margin: 0px; padding: 0px;
+        margin: 5px; padding: 2px;
+        margin-left:10px;
+        padding-bottom:5px;
         float:right;
         width: 49%;
-        xborder: 2px solid #000000;
-        ext-align:center;
+        border: 2px solid #000000;
+        text-align:center;
+        border-radius: 5px;
 }
 div.leftframe {
         margin: 0px; padding: 0px;
         padding-left: 10px;
-        width: 49%;
+        idth: 49%;
         xborder: 2px solid #000000;
         ext-align:center;
 }

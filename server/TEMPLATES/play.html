@@ -87,190 +87,34 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 
 <div class="targetframe">
 <div class="rightframe">
-        <div class="center">
-        <b>Secondary Target:</b> {{ if .target2.Valid }}
-        {{ if .targetsSame }} ({{ index .target2.Coord 0 }}, {{ index .target2.Coord 1 }})<br> (Same as main target)</div> {{ else }}
-        ({{ index .target2.Coord 0 }}, {{ index .target2.Coord 1 }})<br>
-{{ if .cancenter2 }}
-[ <a href="{{ command "recenter"}}/{{ index .target2.Coord 0 }}/{{ index .target2.Coord 1 }}">Center map here</a> ]<br>
-{{ end }}
-        </div>
-        {{ if .tar2pv }}
-        {{ $pl := .tar2pv }}
-        {{ $other := .tar1pv }}
-        {{ $yours := eq $pl.Controller $f.Fid }}
-        <hr class="target">
-        {{ $pl.Name }}<br>
-        {{ if not $pl.Turn }} No planetary information available.<br> {{ else }}
-        {{ if not $yours }}
-        Hostile planet: {{ index $fNames $pl.Controller }}<br>
-        Last seen on turn {{ $pl.Turn }}<br>
-        Inhabitants: {{ $pl.Inhabitants }} &bull; Resources: {{ $pl.Resources }}<br>
-        Ship parts: {{ $pl.Parts }}<br>
-
-
-        {{ else }}
-        {{ $avail := index .availMap $pl.Pid }}
-        Your planet<br>
-        Inhabitants: {{ $pl.Inhabitants }} &bull; Resources: {{ $pl.Resources }}<br>
-        Ship parts: {{ $pl.Parts }} ({{ $avail }} available)<br>
-
-        {{ if $other }} {{ if .t2t1ord }}
-        <hr class="target">
-        You have {{ $other.Name }} as your main target and are launching a ship sized {{ .t2t1ord.Size }} at it.  Change this launch order?<br>
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ $pl.Pid }}">
-        <input type="hidden" name="target" value="{{ $other.Pid }}">
-        &bull; <input type="text" size=2 name="size">
-        <input type="submit" value="Change size" class="noblock"> (0 to cancel)
-        </form>
-       
-        {{ else if $avail }}
-        <hr class="target">
-        You have {{ $other.Name }} as your main target (distance {{ .tarDist }}) and have {{ $avail }} ship parts available to launch a ship at it.  <br>
-        Order a launch? &bull;
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ $pl.Pid }}">
-        <input type="hidden" name="target" value="{{ $other.Pid }}">
-        Ship size: <input type="text" size=2 name="size"><br>
-        <input type="submit" value="Order launch at {{ $other.Name }}" class="noblock">
-        </form>
-        {{ end }} {{ end }}
-        
-        {{ if .t2ords }}
-        <hr class="target">
-        {{ if .t2t1ord }}Other {{end}}Planetary launch orders:<br>
-        {{ range .t2ords }}
-        {{ $pv := index $pidPV .Target }}
-        {{ $loc := $pv.Loc }}
-        {{ if ne $loc.String $center.String }}
-        Ship size {{ .Size }} at [ <a href="{{ command "recenter" }}/{{ index $loc 0}}/{{ index $loc 1 }}">{{ $pv.Name }}</a> ] <br>
-        {{ else }}
-        Ship size {{ .Size }} at [ {{ $pv.Name }} ] <br>
-        {{ end }}
-        &bull;  <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ .Source }}">
-                <input type="hidden" name="target" value="{{ .Target }}">
-                <input type="text" size=2 name="size">
-                <input type="submit" value="Change size" class="noblock"> (0 to cancel)
-                </form>
-       
-        {{ end }}
-        {{ else }}
-        <hr class="target">
-        You have no {{ if .t2t1ord }}other {{ end }}launch orders from {{ $pl.Name }}.<br>
-        {{ end }}
-        
-        {{ end }} {{ end }}{{ end }}
-        
-
-        {{ end }} {{ else }} 
-        None<br>
-        </div>
-        {{ end }}
-
-
-{{ if .svAt2 }}
-<hr class="target">
-  {{ if eq .lAt2 1 }}
-          One Ship Detected:<br>
-  {{ else }}
-          {{ .lAt2 }} Ships Detected:<br>
-  {{ end }}
-
-  {{ range .svAt2 }}
-  {{ if eq $f.Fid .Controller }}
-        {{ $dest := (index $svDest .) }}
-        {{ $loc := $dest.Loc }}
-        &bull; Your faction, size {{ .Size }}<br>
-        {{ if eq $loc.String $center.String }}
-        Destination: [ {{ $dest.Name }} ]<br>
-        {{ else }}
-        Destination: [ <a href="{{ command "recenter" }}/{{ index $loc 0 }}/{{ index $loc 1}}">{{ $dest.Name }}</a> ]<br>
-        {{ end }}
-
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-        {{ end }}<br> {{ end }}
-
-  {{ else }}
-        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-
-        {{ end }}<br>{{ end }}
-  {{ end }}
-  {{ end }}
-
-{{ end }}
-
-{{ if .svTr2 }}
-        <hr class="target">
-{{ if eq .lTr2 1 }}
-        One Ship Passage Detected:<br>
+<b>Secondary Target:</b> 
+{{ if not .target2.Valid }} 
+  None<br>
 {{ else }}
-        {{ .lTr2 }} Ship Passages Detected:<br>
-{{ end }}
-
-  {{ range .svTr2 }}
-  {{ if eq $f.Fid .Controller }}
-        {{ $dest := (index $svDest .) }}
-        {{ $loc := index $svLoc . }}
-        {{ $dloc := $dest.Loc }}
-        &bull; Your faction, size {{ .Size }}<br>
-
-      {{ if $loc.Valid }}
-        {{ if $loc.IsCoord $center }}
-          Current location: ({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})<br>
-        {{ else }}
-        Current location: <a href="{{ command "recenter" }}/{{ index $loc.Coord 0 }}/{{ index $loc.Coord 1 }}">({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})</a><br>
-        {{ end }}
-      {{ else }}
-        Current location unknown<br>
-      {{ end }}
-
-        {{ if eq $dloc.String $center.String }}
-        Destination: [ {{ $dest.Name }} ]<br>
-        {{ else }}
-        Destination: [ <a href="{{ command "recenter" }}/{{ index $dloc 0 }}/{{ index $dloc 1}}">{{ $dest.Name }}</a> ]<br>
-        {{ end }}
-
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-        {{ end }}<br> {{ end }}
-
-
+    ({{ index .target2.Coord 0 }}, {{ index .target2.Coord 1 }})
+  {{ if .targetsSame }} 
+    <br> (Same as main target)</div> 
   {{ else }}
-        {{ $loc := index $svLoc . }}
-        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
-
-      {{ if $loc.Valid }}
-        {{ if $loc.IsCoord $center }}
-          Current location: ({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})<br>
-        {{ else }}
-        Current location: <a href="{{ command "recenter" }}/{{ index $loc.Coord 0 }}/{{ index $loc.Coord 1 }}">({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})</a><br>
+    {{ if .tar2pv }}
+      <br>{{ .tar2pv.Name }}
+    {{ end }}
+    {{ if .cancenter2 }}
+      <br>[ <a href="{{ command "recenter"}}/{{ index .target2.Coord 0 }}/{{ index .target2.Coord 1 }}">Center map here</a> ]
+    {{ end }}
+        {{ if .tarDist }}
+        <br>Distance between targets: {{ .tarDist }}
         {{ end }}
-      {{ else }}
-        Current location unknown<br>
-      {{ end }}
-
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-        {{ end }}<br> {{ end }}
-
-  {{ end }}
-  {{ end }}
-
+        {{ if .canswap }}
+        <form action="" method="post">
+                <input type="hidden" name="action" value="setmap">
+                <input type="hidden" name="subtype" value="swap">
+                <input type="hidden" name="turn" value="{{ $g.Turn }}">
+                <input type="submit" value="Swap main/secondary targets" class="noblock">
+        </form>
+        {{ end }}
 {{ end }}
-
-
 </div>
+
 <div class="leftframe">
         <div class="center"><b>Main Target:</b> {{ if .target1.Valid }}
         ({{ index .target1.Coord 0 }}, {{ index .target1.Coord 1 }})<br>
@@ -460,21 +304,11 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 </div>
 <div class="clearer"></div>
 <div class="targetcenter">
-{{ if or .tarDist .canswap }} <hr class="target"> {{ end }}
-{{ if .tarDist }}
-        Distance between targets: {{ .tarDist }}<br>
-{{ end }}
-{{ if .canswap }}
-<form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="subtype" value="swap">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="submit" value="Swap main/secondary targets" class="noblock">
-</form>
+
 {{ end }}
 </div>
 </div>
 
 </div>
-<script src="/static/js/overpower.js"></script>
+<script src="/static/js/mapclicks.js"></script>
 {{ end }}
