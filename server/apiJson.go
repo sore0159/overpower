@@ -1,7 +1,8 @@
 package main
 
 import (
-	"mule/overpower/opjson"
+	"mule/jsend"
+	"mule/overpower/json"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ func apiJson(w http.ResponseWriter, r *http.Request) {
 		apiJsonGET(w, r)
 	//case "PUT":
 	default:
-		opjson.HttpError(w, 400, "BAD REQUEST METHOD")
+		jsend.Fail(w, 400, map[string]string{"method": "BAD REQUEST METHOD"})
 		return
 	}
 }
@@ -21,7 +22,7 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 	h := MakeHandler(w, r)
 	lastFull := h.LastFull()
 	if lastFull < 3 {
-		opjson.HttpError(w, 404, "BAD URL PATH: No object type given")
+		jsend.Fail(w, 404, map[string]string{"url": "no object type given"})
 		return
 	}
 	switch h.Path[3] {
@@ -29,7 +30,7 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 		h.apiJsonGETGames(w, r)
 		return
 	default:
-		opjson.HttpError(w, 404, "BAD URL PATH: unknown object type")
+		jsend.Fail(w, 404, map[string]string{"url": "unknown object type given"})
 		return
 	}
 }
@@ -40,28 +41,28 @@ func (h *Handler) apiJsonGETGames(w http.ResponseWriter, r *http.Request) {
 	if lastFull == 3 {
 		games, ok := OPDB.AllGames()
 		if !ok {
-			opjson.HttpError(w, 500, "DATABASE ERROR")
+			jsend.Kirk(w)
 			return
 		}
-		jsonGames := opjson.LoadGames(games)
-		opjson.HttpServe(w, jsonGames)
+		jsonGames := json.LoadGames(games)
+		jsend.Success(w, jsonGames)
 		return
 	}
 	gid, ok := h.IntAt(4)
 	if !ok {
-		opjson.HttpError(w, 400, "Unreadable ID for object")
+		jsend.Fail(w, 400, map[string]string{"params": "unreadable id for object"})
 		return
 	}
 	if lastFull == 4 {
 		g, ok := OPDB.GetGame(gid)
 		if !ok {
-			opjson.HttpError(w, 400, "ID does not correspond to any existing object")
+			jsend.Fail(w, 400, map[string]string{"params": "id does not correspond to any existing object"})
 			return
 		}
-		jsG := opjson.LoadGame(g)
-		opjson.HttpServe(w, jsG)
+		jsG := json.LoadGame(g)
+		jsend.Success(w, jsG)
 		return
 	}
-	opjson.HttpError(w, 404, "BAD URL PATH: rambling path, don't know where to go")
+	jsend.Fail(w, 404, map[string]string{"url": "rambling path, too many parameters given"})
 	return
 }
