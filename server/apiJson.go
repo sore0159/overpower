@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"mule/overpower/opjson"
 	"net/http"
 )
@@ -13,7 +12,7 @@ func apiJson(w http.ResponseWriter, r *http.Request) {
 		apiJsonGET(w, r)
 	//case "PUT":
 	default:
-		opjson.HttpError(w, fmt.Errorf("BAD REQUEST METHOD"), http.StatusMethodNotAllowed)
+		opjson.HttpError(w, 400, "BAD REQUEST METHOD")
 		return
 	}
 }
@@ -22,7 +21,7 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 	h := MakeHandler(w, r)
 	lastFull := h.LastFull()
 	if lastFull < 3 {
-		opjson.HttpError(w, fmt.Errorf("BAD LINK"), http.StatusNotFound)
+		opjson.HttpError(w, 404, "BAD URL PATH: No object type given")
 		return
 	}
 	switch h.Path[3] {
@@ -30,7 +29,7 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 		h.apiJsonGETGames(w, r)
 		return
 	default:
-		opjson.HttpError(w, fmt.Errorf("BAD LINK"), http.StatusNotFound)
+		opjson.HttpError(w, 404, "BAD URL PATH: unknown object type")
 		return
 	}
 }
@@ -41,7 +40,7 @@ func (h *Handler) apiJsonGETGames(w http.ResponseWriter, r *http.Request) {
 	if lastFull == 3 {
 		games, ok := OPDB.AllGames()
 		if !ok {
-			opjson.HttpError(w, fmt.Errorf("DATABASE ERROR"), http.StatusInternalServerError)
+			opjson.HttpError(w, 500, "DATABASE ERROR")
 			return
 		}
 		jsonGames := opjson.LoadGames(games)
@@ -50,19 +49,19 @@ func (h *Handler) apiJsonGETGames(w http.ResponseWriter, r *http.Request) {
 	}
 	gid, ok := h.IntAt(4)
 	if !ok {
-		opjson.HttpError(w, fmt.Errorf("UNREADABLE GID"), http.StatusBadRequest)
+		opjson.HttpError(w, 400, "Unreadable ID for object")
 		return
 	}
 	if lastFull == 4 {
 		g, ok := OPDB.GetGame(gid)
 		if !ok {
-			opjson.HttpError(w, fmt.Errorf("GID NOT FOUND"), http.StatusBadRequest)
+			opjson.HttpError(w, 400, "ID does not correspond to any existing object")
 			return
 		}
 		jsG := opjson.LoadGame(g)
 		opjson.HttpServe(w, jsG)
 		return
 	}
-	opjson.HttpError(w, fmt.Errorf("BAD LINK"), http.StatusNotFound)
+	opjson.HttpError(w, 404, "BAD URL PATH: rambling path, don't know where to go")
 	return
 }

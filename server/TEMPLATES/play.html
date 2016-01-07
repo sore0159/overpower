@@ -93,7 +93,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 {{ else }}
     ({{ index .target2.Coord 0 }}, {{ index .target2.Coord 1 }})
   {{ if .targetsSame }} 
-    <br> (Same as main target)</div> 
+    <br> (Same as main target)
   {{ else }}
     {{ if .tar2pv }}
       <br>{{ .tar2pv.Name }}
@@ -112,6 +112,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
                 <input type="submit" value="Swap main/secondary targets" class="noblock">
         </form>
         {{ end }}
+  {{ end }}
 {{ end }}
 </div>
 
@@ -152,7 +153,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
         <input type="hidden" name="target" value="{{ $other.Pid }}">
         &bull; <input type="text" size=2 name="size">
         <input type="submit" value="Change size" class="noblock"> (0 to cancel)
-        </form>
+        </form><br>
        
         {{ else if $avail }}
         <hr class="target">
@@ -186,6 +187,7 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
                 <input type="hidden" name="target" value="{{ .Target }}">
                 <input type="text" size=2 name="size">
                 <input type="submit" value="Change size" class="noblock"> (0 to cancel)
+                <br>
                 </form>
        
         {{ end }}
@@ -303,10 +305,6 @@ Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
 
 </div>
 <div class="clearer"></div>
-<div class="targetcenter">
-
-{{ end }}
-</div>
 </div>
 
 </div>

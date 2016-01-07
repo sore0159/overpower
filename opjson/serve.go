@@ -2,6 +2,7 @@ package opjson
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,12 +21,9 @@ func SetLogger(f func(...interface{})) {
 
 func HttpServe(w http.ResponseWriter, j interface{}) (ok bool) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(j); err != nil {
-		Log("JSON MARSHAL ERROR:", err)
-		return false
-	}
-	return true
+	sh, ok := MakeShell(j)
+	sh.Serve(w)
+	return
 }
 
 func HttpRead(w http.ResponseWriter, r *http.Request, j interface{}) (ok bool) {
@@ -33,7 +31,7 @@ func HttpRead(w http.ResponseWriter, r *http.Request, j interface{}) (ok bool) {
 	var err error
 	defer func() {
 		if !ok {
-			HttpError(w, err, 422)
+			HttpError(w, 422, "Object read failed:", err)
 		}
 	}()
 	var bytes []byte
@@ -52,11 +50,40 @@ func HttpRead(w http.ResponseWriter, r *http.Request, j interface{}) (ok bool) {
 	return true
 }
 
-func HttpError(w http.ResponseWriter, err error, code int) (ok bool) {
-	w.WriteHeader(code)
-	if err = json.NewEncoder(w).Encode(err); err != nil {
-		Log("JSON ERROR ENCODE ERROR:", err)
-		return false
+func HttpError(w http.ResponseWriter, code int, msg ...interface{}) {
+	var status string
+	switch code {
+	case 400: // Status: Zoidberg
+		status = "fail"
+	case 401: // Status: Gandalf
+		status = "fail"
+	case 404: // Status: Galt
+		status = "error"
+	case 500: // Status: Kirk
+		status = "error"
+	default:
+		msg = append([]interface{}{"BAD CODE PASSED TO HTTPERROR:", code, "\nFOR MSG:"}, msg...)
+		code = 500
 	}
-	return true
+	sh := NewShell()
+	sh.Code = code
+	sh.Status = status
+	sh.Message = fmt.Sprint(msg...)
+	sh.Serve(w)
+}
+
+func (sh *Shell) Serve(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	switch sh.Status {
+	case "success":
+		w.WriteHeader(http.StatusOK)
+	case "error", "fail":
+		w.WriteHeader(sh.Code)
+	default:
+		w.WriteHeader(500)
+		sh = MakeServerErrShell("BAD SHELL STATUS PASSED TO ServeShell:", sh.Status)
+	}
+	if err := json.NewEncoder(w).Encode(sh); err != nil {
+		Log("JSON SERVESHELL ERROR ENCODE ERROR:", sh, "\n", err)
+	}
 }

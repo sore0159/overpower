@@ -10,7 +10,7 @@ func TestFirst(t *testing.T) {
 	log.Println("TEST FIRST")
 }
 
-func TestSecond(t *testing.T) {
+func XTestSecond(t *testing.T) {
 	const SERVPORT = ":8080"
 	log.Println("STARTING SERVER AT", SERVPORT)
 	http.HandleFunc("/serve", pageTestServeJson)
