@@ -12,6 +12,9 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 	def := arrivals[plid]
 	aSum := atk
 	dSum := def + pl.Inhabitants()
+	if atk < 1 {
+		return true
+	}
 	if shFid == plFid {
 		rStr := fmt.Sprintf("Your ship landed at %s with %d colonists, reinforcing inhabitants to %d.", pl.Name(), aSum, dSum+aSum)
 		op.AddReport(shFid, rStr)

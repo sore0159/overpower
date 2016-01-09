@@ -63,6 +63,6 @@ func (h *Handler) apiJsonGETGames(w http.ResponseWriter, r *http.Request) {
 		jsend.Success(w, jsG)
 		return
 	}
-	jsend.Fail(w, 404, map[string]string{"url": "rambling path, too many parameters given"})
+	jsend.Fail(w, 404, map[string]string{"url": "too many parameters given"})
 	return
 }

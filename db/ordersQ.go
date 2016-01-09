@@ -32,6 +32,9 @@ func (o *Order) InsertScan(row *sql.Row) error {
 	return nil
 }
 func (o *Order) InsertQ() (query string, scan bool) {
+	if o.size < 1 {
+		return "", false
+	}
 	return fmt.Sprintf(`INSERT INTO orders (%s) VALUES(
 		%d, %d, 
 		%d, %d, %d

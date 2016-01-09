@@ -43,6 +43,9 @@ func (op *TotallyOP) RunGameTurn() (ok bool) {
 			return false
 		}
 		size := o.Size()
+		if size < 1 {
+			continue
+		}
 		if src.Controller() == 0 && src.Parts() < size {
 			// Log("BAD ORDER: PLANET NOT SUITABLE FOR LAUNCH", src, o)
 			return false
