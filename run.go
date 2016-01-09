@@ -40,15 +40,15 @@ func (op *TotallyOP) RunGameTurn() (ok bool) {
 		src, ok2 := plids[o.Source()]
 		if !(ok1 && ok2) {
 			// Log("BAD ORDER, PLANETS NOT FOUND:", o)
-			return false
+			continue
 		}
 		size := o.Size()
 		if size < 1 {
 			continue
 		}
-		if src.Controller() == 0 && src.Parts() < size {
+		if cont := src.Controller(); cont == 0 || src.Parts() < size || cont != o.Fid() {
 			// Log("BAD ORDER: PLANET NOT SUITABLE FOR LAUNCH", src, o)
-			return false
+			continue
 		}
 		src.SetParts(src.Parts() - size)
 		path := src.Loc().PathTo(tar.Loc())
