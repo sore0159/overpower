@@ -30,4 +30,5 @@ func init() {
 	mylog.SetErr(DATADIR + "errors.txt")
 	myweb.SetLogger(mylog.QuietErr)
 	mydb.SetLogger(mylog.QuietErr)
+	jsend.SetLogger(mylog.QuietErr)
 }
