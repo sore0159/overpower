@@ -28,3 +28,7 @@ func shuffleInts(list []int) []int {
 func pick(n int) int {
 	return rand.Intn(n) + 1
 }
+
+func RandF(x float64) float64 {
+	return rand.Float64() * x
+}

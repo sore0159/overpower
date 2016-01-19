@@ -209,9 +209,17 @@ func GetAdj(n int) []string {
 		"guttural",
 		"madly",
 	}
-	if n > len(list) {
-		panic("Calling for more planets than we have names for!")
+	for n > len(list) {
+		list2 := make([]string, len(list))
+		copy(list2, list)
+		for _, nm := range list {
+			list2 = append(list2, nm+"X")
+		}
+		list = list2
 	}
+	//if n > len(list) {
+	//	panic("Calling for more planets than we have names for!")
+	//}
 	order := rand.Perm(len(list))
 	r := make([]string, n)
 	for i, _ := range r {
