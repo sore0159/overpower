@@ -28,10 +28,13 @@ func MakeHandler(w http.ResponseWriter, r *http.Request) *Handler {
 }
 
 func (h *Handler) Apply(t *template.Template, w http.ResponseWriter) {
-	h.Handler.Apply(w, t.Funcs(template.FuncMap{
+	err := h.Handler.Apply(w, t.Funcs(template.FuncMap{
 		"link":    h.Link,
 		"command": h.Command,
 	}), "frame", h)
+	if my, bad := Check(err, "handler apply failure", "path", h.Path, "template", t); bad {
+		Log(my)
+	}
 }
 
 func (h *Handler) SetCommand(g overpower.Game) {

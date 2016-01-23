@@ -2,7 +2,6 @@ package overpower
 
 import (
 	"mule/hexagon"
-	"mule/mydb"
 )
 
 type Source interface {
@@ -16,8 +15,6 @@ type Source interface {
 }
 
 type Game interface {
-	mydb.Updater
-	//
 	Turn() int
 	SetTurn(int)
 	IncTurn()
@@ -30,11 +27,12 @@ type Game interface {
 	SetAutoDays([7]bool)
 	FreeAutos() int
 	SetFreeAutos(int)
+	WinPercent() int
+	HighScore() int
+	SetHighScore(int)
 }
 
 type Faction interface {
-	mydb.Updater
-	//
 	Gid() int
 	Fid() int
 	Owner() string
@@ -44,9 +42,6 @@ type Faction interface {
 }
 
 type Planet interface {
-	mydb.Updater
-	mydb.Inserter
-	//
 	Gid() int
 	Pid() int
 	Name() string
@@ -62,9 +57,6 @@ type Planet interface {
 }
 
 type PlanetView interface {
-	mydb.Updater
-	mydb.Inserter
-	//
 	Gid() int
 	Pid() int
 	Fid() int
@@ -83,8 +75,6 @@ type PlanetView interface {
 }
 
 type FactionView interface {
-	mydb.Updater
-	//
 	Gid() int
 	Fid() int
 	Center() hexagon.Pixel
@@ -122,8 +112,6 @@ type ShipView interface {
 }
 
 type MapView interface {
-	mydb.Updater
-	//
 	Gid() int
 	Fid() int
 	Zoom() int

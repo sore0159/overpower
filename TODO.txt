@@ -1,3 +1,8 @@
+DB:
+    * Switch to psx?
+    * Jasonb it up?
+    * Revamp query construction: use $N and mass inserts
+
 API:
     * JSON?  Bytes?
     * Game turn
@@ -5,11 +10,14 @@ API:
 
 Misc: 
     * Optional email notifications on new turns/last player not done
+    * Let players set "auto turn-done" counters: N turns or forever
+    * Have auto turn done when no ship parts to use
 
 Game:
     * Endstate: score?
-    * Galaxy creation: robustness
-    * Quit option: turn planets neutral
+    * Show planet count of self, and winner
+    * What % planets to win: game creation decides?
+    * What happens on game over?
 
 UI:
     * Sorted planet/shipviews, filterable
@@ -26,6 +34,8 @@ Reports:
 
 Game:
     * Manager-set auto-run controls
+    * Quit option: turn planets neutral
+    * Galaxy creation: robustness ( ??? )
 
 Interactive Map:
     * Javascript left/right click, wheelup/down

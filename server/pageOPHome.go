@@ -37,13 +37,13 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "USER HAS NO GAME TO PROGRESS", http.StatusBadRequest)
 				return
 			}
-			mp, ok := GetInts(r, "turn")
+			ints, ok := GetInts(r, "turn")
 			if !ok {
 				http.Error(w, "MALFORMED TURN DATA", http.StatusBadRequest)
 				return
 			}
-			turn, ok := mp["turn"]
-			if !ok || turn != g.Turn() {
+			turn := ints[0]
+			if turn != g.Turn() {
 				http.Error(w, "BAD TURN DATA", http.StatusBadRequest)
 				return
 			}

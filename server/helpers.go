@@ -1,7 +1,7 @@
 package main
 
 import (
-	"mule/jsend"
+	"mule/mybad"
 	"mule/mydb"
 	"mule/mylog"
 	"mule/myweb"
@@ -13,8 +13,11 @@ const (
 )
 
 var (
-	Log     = mylog.QuietErr
-	MixTemp = myweb.MakeMixer(TPDIR, map[string]interface{}{
+	Logger     = mylog.MustErrFile(DATADIR + "errors.txt")
+	InfoLogger = mylog.Must(mylog.StockInfoLogger().AddFiles(DATADIR + "info.txt"))
+	Log        = Logger.Println
+	InfoLog    = InfoLogger.Println
+	MixTemp    = myweb.MakeMixer(TPDIR, map[string]interface{}{
 		"link": func(placeholder string) string {
 			return "PLACEHOLDER"
 		},
@@ -25,11 +28,10 @@ var (
 	})
 	ValidText = myweb.TextValid
 	GetInts   = myweb.GetInts
+	GetIntsIf = myweb.GetIntsIf
+	Check     = mybad.BuildCheck("package", "overpower/server")
 )
 
 func init() {
-	mylog.SetErr(DATADIR + "errors.txt")
-	myweb.SetLogger(mylog.QuietErr)
-	mydb.SetLogger(mylog.QuietErr)
-	jsend.SetLogger(mylog.QuietErr)
+	mydb.SetLogger(Log)
 }

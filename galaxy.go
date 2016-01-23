@@ -41,6 +41,9 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 	}
 	planets := []Planet{borion}
 	places := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
+	for _, pt := range borion.Loc().Ring(1) {
+		places[pt] = true
+	}
 	pids := map[int]bool{0: true, 9999: true}
 	nameCount := 0
 	// ---- INNER ---- //

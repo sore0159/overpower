@@ -18,7 +18,8 @@ func (s *ShipView) RowScan(row mydb.Scanner) error {
 	if err != nil {
 		return err
 	}
-	if mydb.CheckNull(trailBytes) {
+	if trailBytes == nil {
+		//if mydb.CheckNull(trailBytes) {
 		s.trail = []hexagon.Coord{}
 	} else {
 		var ok bool
@@ -27,13 +28,15 @@ func (s *ShipView) RowScan(row mydb.Scanner) error {
 			return errors.New("BAD BYTES SCANNED FOR SHIPVIEW TRAIL")
 		}
 	}
-	if !mydb.CheckNull(locBytes) {
+	//if !mydb.CheckNull(locBytes) {
+	if locBytes != nil {
 		s.locValid = true
 		c := hexagon.Coord{}
 		(&c).Scan(locBytes)
 		s.loc = c
 	}
-	if !mydb.CheckNull(destBytes) {
+	if destBytes != nil {
+		//if !mydb.CheckNull(destBytes) {
 		s.destValid = true
 		c := hexagon.Coord{}
 		(&c).Scan(destBytes)

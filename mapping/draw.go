@@ -12,19 +12,7 @@ import (
 
 func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail int, showGrid, isTar1, isTar2 bool, pv overpower.PlanetView) {
 	cont, turn := pv.Controller(), pv.Turn()
-	if !showGrid && isTar1 {
-		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
-	} else if !showGrid && isTar2 {
-		gc.SetFillColor(color.RGBA{0x99, 0x99, 0x00, 0xFF})
-	} else if turn > 0 && cont != 0 {
-		if cont == fid {
-			gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
-		} else {
-			gc.SetFillColor(color.RGBA{0xFF, 0x0F, 0x0F, 0xFF})
-		}
-	} else {
-		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0xFF})
-	}
+	// ------------- ADJUST DIMENSIONS ------------ //
 	c := vp.CenterOf(pv.Loc())
 	rad := vp.HexR
 	var size float64
@@ -38,7 +26,22 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 	if showGrid {
 		c[1] -= rad * .25
 	}
-	if rad > 3 {
+	// ------------- SET COLOR ------------ //
+	if !showGrid && isTar1 {
+		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0x00, 0xFF})
+	} else if !showGrid && isTar2 {
+		gc.SetFillColor(color.RGBA{0x99, 0x99, 0x00, 0xFF})
+	} else if turn > 0 && cont != 0 {
+		if cont == fid {
+			gc.SetFillColor(color.RGBA{0x0F, 0xFF, 0x0F, 0xFF})
+		} else {
+			gc.SetFillColor(color.RGBA{0xFF, 0x0F, 0x0F, 0xFF})
+		}
+	} else {
+		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0xFF})
+	}
+	// ------------- SHOW PLANET NAME ------------ //
+	if rad > 5 {
 		var nameStr string
 		if avail > 0 {
 			nameStr = fmt.Sprintf("(%d)%s", avail, pv.Name())
@@ -47,6 +50,7 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 		}
 		gc.FillStringAt(nameStr, c[0]+(rad*.25), c[1]-(.75*rad))
 	}
+	// ------------- SHOW PLANET DATA ------------ //
 	if rad > 1 && turn > 0 {
 		var statStr string
 		if cont == fid {
@@ -60,6 +64,7 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 		gc.FillStringAt(statStr, c[0]-w/2, c[1]+float64(size)+h)
 	}
 
+	// ------------- SHOW PLANET ------------ //
 	gc.ArcTo(c[0], c[1], size, size, 0, -math.Pi*2)
 	gc.Close()
 	gc.FillStroke()

@@ -30,10 +30,10 @@ func main() {
 	defer OPDB.Close()
 	go AutoTimer()
 	SetupMux()
-	log.Println("STARTING SERVER AT", SERVPORT)
+	InfoLog("STARTING SERVER AT", SERVPORT)
 	err := http.ListenAndServe(SERVPORT, nil)
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println("STOPPING SERVER")
+	InfoLog("STOPPING SERVER")
 }

@@ -15,7 +15,7 @@ func AutoTimer() {
 			then = then.Add(time.Hour * time.Duration(23-hour))
 		}
 		then = then.Add(time.Minute * time.Duration(2))
-		Log("Starting autotimer:", now, "\n SLEEP TILL:", then)
+		InfoLog("Starting autotimer:", now, "\n SLEEP TILL:", then)
 		dur := then.Sub(now)
 		time.Sleep(dur)
 		now = time.Now()
@@ -23,7 +23,7 @@ func AutoTimer() {
 			Log("AUTO RUN ERROR: SLEEP DID NOT REACH HOUR 23")
 			continue
 		} else {
-			Log("Autotimer woke:", now)
+			InfoLog("Autotimer woke:", now)
 		}
 		DBLOCK = true
 		time.Sleep(5 * time.Minute)
@@ -50,7 +50,7 @@ func AutoTimer() {
 				count++
 				go func(g overpower.Game, run bool, done chan byte) {
 					if run {
-						Log("AUTO RUNNING GAME", g.Gid())
+						InfoLog("AUTO RUNNING GAME", g.Gid())
 						if !OPDB.AutoRunGameTurn(g) {
 							Log("ERROR AUTO RUNNING GAME", g.Gid())
 						}

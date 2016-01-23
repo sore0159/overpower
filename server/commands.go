@@ -32,12 +32,12 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "GAME NOT IN PROGRESS", http.StatusBadRequest)
 		return
 	}
-	mp, ok := myweb.GetIntsQuiet(r, "turn", "button", "clickx", "clicky")
+	ints, ok := GetInts(r, "turn", "button", "clickx", "clicky")
 	if !ok {
 		http.Error(w, "BAD FORM DATA", http.StatusBadRequest)
 		return
 	}
-	turn, button, clickx, clicky := mp["turn"], mp["button"], mp["clickx"], mp["clicky"]
+	turn, button, clickx, clicky := ints[0], ints[1], ints[2], ints[3]
 	if turn != g.Turn() {
 		http.Error(w, "FORM TURN DOES NOT MATCH GAME TURN", http.StatusBadRequest)
 		return
@@ -231,12 +231,12 @@ func (h *Handler) SetOrder(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "GAME NOT IN PROGRESS", http.StatusBadRequest)
 		return
 	}
-	mp, ok := GetInts(r, "turn", "source", "target", "size")
+	ints, ok := GetInts(r, "turn", "source", "target", "size")
 	if !ok {
 		http.Error(w, "BAD FORM DATA", http.StatusBadRequest)
 		return
 	}
-	turn, source, target, size := mp["turn"], mp["source"], mp["target"], mp["size"]
+	turn, source, target, size := ints[0], ints[1], ints[2], ints[3]
 	if turn != g.Turn() {
 		http.Error(w, "FORM TURN DOES NOT MATCH GAME TURN", http.StatusBadRequest)
 		return
@@ -311,13 +311,13 @@ func (h *Handler) SetTurnDone(w http.ResponseWriter, r *http.Request, g overpowe
 		http.Error(w, "DATABASE ERROR RETRIEVING FACTIONS", http.StatusInternalServerError)
 		return false
 	}
-	mp, ok := GetInts(r, "turn")
+	ints, ok := GetInts(r, "turn")
 	if !ok {
 		http.Error(w, "MALFORMED TURN DATA", http.StatusBadRequest)
 		return
 	}
-	turn, ok := mp["turn"]
-	if !ok || turn != g.Turn() {
+	turn := ints[0]
+	if turn != g.Turn() {
 		http.Error(w, "BAD TURN DATA", http.StatusBadRequest)
 		return
 	}
