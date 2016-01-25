@@ -1,31 +1,32 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
-	"mule/mydb"
+	"log"
 	"testing"
 )
 
-const UPDATETABLES = true
+const UPDATETABLES byte = 0
 
-func MakeTables(db *sql.DB) (ok bool) {
+func (d DB) MakeTables() (err error) {
 	queries := []string{}
 	queries = append(queries, `create table games(
 	gid SERIAL PRIMARY KEY,
 	owner varchar(20) NOT NULL UNIQUE,
 	name varchar(20) NOT NULL,
-	turn int NOT NULL,
-	autoturn int NOT NULL,
-	freeautos int NOT NULL,
-	password varchar(20)
+	turn int NOT NULL DEFAULT 0,
+	autoturn int NOT NULL DEFAULT 0,
+	freeautos int NOT NULL DEFAULT 0,
+	winpercent int NOT NULL,
+	highscore int NOT NULL DEFAULT 0,
+	password varchar(20) DEFAULT NULL
 );`)
 	queries = append(queries, `create table factions(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid SERIAL NOT NULL,
 	owner varchar(20) NOT NULL,
 	name varchar(20) NOT NULL,
-	done bool NOT NULL,
+	done bool NOT NULL DEFAULT false,
 	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
 );`)
@@ -33,9 +34,9 @@ func MakeTables(db *sql.DB) (ok bool) {
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
 	center point NOT NULL,
-	zoom int NOT NULL,
-	target1 point,
-	target2 point,
+	zoom int NOT NULL DEFAULT 14, 
+	target1 point DEFAULT NULL,
+	target2 point DEFAULT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY (gid, fid)
 );`)
@@ -60,9 +61,9 @@ func MakeTables(db *sql.DB) (ok bool) {
 	loc point NOT NULL,
 	turn int NOT NULL,
 	controller int,
-	inhabitants int NOT NULL,
-	resources int NOT NULL,
-	parts int NOT NULL,
+	inhabitants int,
+	resources int,
+	parts int,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, pid) REFERENCES planets ON DELETE CASCADE,
@@ -97,7 +98,7 @@ func MakeTables(db *sql.DB) (ok bool) {
 	turn integer NOT NULL,
 	loc point,
 	dest point,
-	trail point[],
+	trail point[] NOT NULL,
 	size int NOT NULL,
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
@@ -112,38 +113,38 @@ func MakeTables(db *sql.DB) (ok bool) {
 	PRIMARY KEY(gid, fid, turn)
 );`)
 	for i, query := range queries {
-		if !mydb.ExecIf(db, query) {
-			fmt.Println("Failed table creation", i)
-			return false
+		_, err := d.db().Exec(query)
+		if my, bad := Check(err, "failed table creation", "index", i); bad {
+			return my
 		}
-		fmt.Println("Table update", i, "passed")
+		log.Println("Table update", i, "passed")
 	}
-	return true
+	return nil
 }
 
-func DropTables(db *sql.DB) (ok bool) {
+func (d DB) DropTables() (err error) {
 	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders, reports"
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tables)
-	return mydb.ExecIf(db, query)
+	_, err = d.db().Exec(query)
+	return err
 }
 
 func TestUpdateTables(t *testing.T) {
-	if UPDATETABLES {
-		d, ok := LoadDB()
-		if !ok {
-			fmt.Println("FAILED TO LOAD DB")
+	if UPDATETABLES == 1 {
+		db, err := LoadDB()
+		if my, bad := Check(err, "update tables failed"); bad {
+			log.Println(my.MuleError())
 			return
 		}
-		db := d.db
-		if DropTables(db) {
-			fmt.Println("Dropped tables!")
-		} else {
-			fmt.Println("failed dropped tables!")
+		if my, bad := Check(db.DropTables(), "update tables droptables failed"); bad {
+			log.Println(my.MuleError())
+			return
 		}
-		if MakeTables(db) {
-			fmt.Println("Made tables!")
-		} else {
-			fmt.Println("failed make tables!")
+		log.Println("Dropped tables!")
+		if my, bad := Check(db.MakeTables(), "update tables loadtables failed"); bad {
+			log.Println(my.MuleError())
+			return
 		}
+		log.Println("Made tables!")
 	}
 }

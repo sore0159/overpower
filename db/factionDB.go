@@ -1,83 +1,64 @@
 package db
 
 import (
-	"fmt"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
 )
 
-func (d DB) DropInProgressFaction(gid, fid int) (ok bool) {
-	// drop fid orders
-	if !d.DropAllFidOrders(gid, fid) {
-		return false
+type FactionGroup struct {
+	List []*Faction
+}
+
+func NewFactionGroup() *FactionGroup {
+	return &FactionGroup{
+		List: []*Faction{},
 	}
-	planets, ok := d.GetAllGidPlanets(gid)
-	if !ok {
-		return false
-	}
-	updateList := []mydb.Updater{}
-	// set planets neutral
-	for _, p := range planets {
-		if p.Controller() == fid {
-			p.SetController(0)
-			p.SetResources(p.Resources() + p.Parts())
-			p.SetParts(0)
-			updateList = append(updateList, p)
+}
+
+func (group *FactionGroup) New() mydb.SQLer {
+	item := NewFaction()
+	group.List = append(group.List, item)
+	return item
+}
+
+func (group *FactionGroup) UpdateList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		if item.modified {
+			list = append(list, item)
 		}
 	}
-	if !mydb.Update(d.db, updateList) {
-		return false
-	}
-	// drop faction
-	if !d.DropFaction(gid, fid) {
-		return false
-	}
-	return true
+	return list
 }
 
-func (d DB) MakeFaction(gid int, owner, name string) (ok bool) {
-	f := NewFaction()
-	f.gid, f.owner, f.name = gid, owner, name
-	return f.Insert(d.db)
-}
-func (d DB) DropFaction(gid, fid int) (ok bool) {
-	query := fmt.Sprintf("DELETE FROM factions WHERE gid = %d AND fid = %d", gid, fid)
-	return mydb.Exec(d.db, query)
-}
-
-func (d DB) GetFidFaction(gid, fid int) (faction overpower.Faction, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM factions WHERE gid = %d AND fid = %d", FACSQLVAL, gid, fid)
-	f := NewFaction()
-	return f, mydb.GetOneIf(d.db, query, f)
-}
-
-func (d DB) GetOwnerFaction(gid int, owner string) (faction overpower.Faction, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM factions WHERE gid = %d AND owner = '%s'", FACSQLVAL, gid, owner)
-	f := NewFaction()
-	return f, mydb.GetOneIf(d.db, query, f)
-}
-
-func (d DB) GetGidFactions(gid int) (factions []overpower.Faction, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM factions WHERE gid = %d", FACSQLVAL, gid)
-	return d.GetFactionsQuery(query)
-}
-func (d DB) GetAllOwnerFactions(owner string) (factions []overpower.Faction, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM factions WHERE owner = '%s'", FACSQLVAL, owner)
-	return d.GetFactionsQuery(query)
-}
-
-func (d DB) GetFactionsQuery(query string) (factions []overpower.Faction, ok bool) {
-	factionL := []*Faction{}
-	maker := func() mydb.Rower {
-		f := NewFaction()
-		return f
+func (group *FactionGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
 	}
-	if !mydb.Get(d.db, query, &factionL, maker) {
-		return nil, false
+	return list
+}
+
+func convertFactions2DB(list ...overpower.Faction) ([]*Faction, error) {
+	mylist := make([]*Faction, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*Faction); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad Faction struct type for op/db")
+		}
 	}
-	factions = make([]overpower.Faction, len(factionL))
-	for i, f := range factionL {
-		factions[i] = f
+	return mylist, nil
+}
+
+func convertFactions2OP(list ...*Faction) []overpower.Faction {
+	converted := make([]overpower.Faction, len(list))
+	for i, item := range list {
+		converted[i] = item
 	}
-	return factions, true
+	return converted
 }

@@ -1,5 +1,6 @@
 package db
 
+/*
 import (
 	"mule/hexagon"
 	"mule/overpower"
@@ -101,3 +102,4 @@ func (s *Source) NewPlanetView(fid, turn int, pl overpower.Planet) (planetview o
 	s.MadePlanetViews[[2]int{pv.pid, pv.fid}] = pv
 	return pv, true
 }
+*/

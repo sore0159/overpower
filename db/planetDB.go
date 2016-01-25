@@ -1,42 +1,67 @@
 package db
 
 import (
-	"fmt"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
-	"strings"
 )
 
-func (d DB) GetPidPlanets(gid int, plids ...int) (planets []overpower.Planet, ok bool) {
-	if len(plids) < 1 {
-		return nil, true
-	}
-	query := fmt.Sprintf("SELECT %s FROM planets WHERE gid = %d AND (", PLSQLVAL, gid)
-	parts := make([]string, len(plids))
-	for i, _ := range parts {
-		parts[i] = fmt.Sprintf("pid = %d", plids[i])
-	}
-	query += strings.Join(parts, " OR ") + ")"
-	return d.GetPlanetsQuery(query)
+type PlanetGroup struct {
+	List []*Planet
 }
 
-func (d DB) GetAllGidPlanets(gid int) (planets []overpower.Planet, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM planets WHERE gid = %d", PLSQLVAL, gid)
-	return d.GetPlanetsQuery(query)
+func NewPlanetGroup() *PlanetGroup {
+	return &PlanetGroup{
+		List: []*Planet{},
+	}
 }
 
-func (d DB) GetPlanetsQuery(query string) (planets []overpower.Planet, ok bool) {
-	pvs := []*Planet{}
-	maker := func() mydb.Rower {
-		pv := NewPlanet()
-		return pv
-	}
-	if !mydb.Get(d.db, query, &pvs, maker) {
-		return nil, false
-	}
-	planets = make([]overpower.Planet, len(pvs))
-	for i, pv := range pvs {
-		planets[i] = pv
-	}
-	return planets, true
+func (group *PlanetGroup) New() mydb.SQLer {
+	item := NewPlanet()
+	group.List = append(group.List, item)
+	return item
 }
+
+func (group *PlanetGroup) UpdateList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		if item.modified {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func (group *PlanetGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
+	}
+	return list
+}
+
+func convertPlanets2DB(list ...overpower.Planet) ([]*Planet, error) {
+	mylist := make([]*Planet, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*Planet); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad Planet struct type for op/db")
+		}
+	}
+	return mylist, nil
+}
+
+func convertPlanets2OP(list ...*Planet) []overpower.Planet {
+	converted := make([]overpower.Planet, len(list))
+	for i, item := range list {
+		converted[i] = item
+	}
+	return converted
+}
+
+/*
+ */

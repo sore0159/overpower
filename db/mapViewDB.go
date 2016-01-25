@@ -1,39 +1,64 @@
 package db
 
 import (
-	"fmt"
-	"mule/hexagon"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
 )
 
-func (d DB) GetFidMapView(gid, fid int) (mapview overpower.MapView, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM mapviews WHERE gid = %d AND fid = %d", MVSQLVAL, gid, fid)
-	mv := NewMapView()
-	return mv, mydb.GetOne(d.db, query, mv)
+type MapViewGroup struct {
+	List []*MapView
 }
 
-func (d DB) UpdateMapViewZoom(gid, fid, zoom int) (ok bool) {
-	query := fmt.Sprintf("UPDATE mapviews SET zoom = %d WHERE gid = %d AND fid = %d", zoom, gid, fid)
-	return mydb.Exec(d.db, query)
-}
-func (d DB) UpdateMapViewCenter(gid, fid int, center hexagon.Coord) (ok bool) {
-	query := fmt.Sprintf("UPDATE mapviews SET center = %s WHERE gid = %d AND fid = %d", center.SQLStr(), gid, fid)
-	return mydb.Exec(d.db, query)
-}
-
-func (d DB) UpdateMapViewTarget(gid, fid int, first bool, nc hexagon.NullCoord) (ok bool) {
-	var tarStr string
-	if first {
-		tarStr = "target1"
-	} else {
-		tarStr = "target2"
+func NewMapViewGroup() *MapViewGroup {
+	return &MapViewGroup{
+		List: []*MapView{},
 	}
-	query := fmt.Sprintf("UPDATE mapviews SET %s = %s WHERE gid = %d AND fid = %d", tarStr, nc.SQLStr(), gid, fid)
-	return mydb.Exec(d.db, query)
 }
 
-func (d DB) UpdateMapViewBothTargets(gid, fid int, nc1, nc2 hexagon.NullCoord) (ok bool) {
-	query := fmt.Sprintf("UPDATE mapviews SET target1 = %s, target2 = %s WHERE gid = %d AND fid = %d", nc1.SQLStr(), nc2.SQLStr(), gid, fid)
-	return mydb.Exec(d.db, query)
+func (group *MapViewGroup) New() mydb.SQLer {
+	item := NewMapView()
+	group.List = append(group.List, item)
+	return item
+}
+
+func (group *MapViewGroup) UpdateList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		if item.modified {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func (group *MapViewGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
+	}
+	return list
+}
+
+func convertMapViews2DB(list ...overpower.MapView) ([]*MapView, error) {
+	mylist := make([]*MapView, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*MapView); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad MapView struct type for op/db")
+		}
+	}
+	return mylist, nil
+}
+
+func convertMapViews2OP(list ...*MapView) []overpower.MapView {
+	converted := make([]overpower.MapView, len(list))
+	for i, item := range list {
+		converted[i] = item
+	}
+	return converted
 }

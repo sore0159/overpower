@@ -1,17 +1,18 @@
 package db
 
 import (
+	"database/sql"
 	"mule/hexagon"
-	"mule/mydb"
 )
 
 type Planet struct {
-	*mydb.SQLHandler
+	modified bool
+	//
 	gid         int
 	pid         int
 	name        string
 	loc         hexagon.Coord
-	controller  int
+	controller  sql.NullInt64
 	inhabitants int
 	resources   int
 	parts       int
@@ -19,7 +20,7 @@ type Planet struct {
 
 func NewPlanet() *Planet {
 	return &Planet{
-		SQLHandler: mydb.NewSQLHandler(),
+	//
 	}
 }
 
@@ -36,17 +37,26 @@ func (p *Planet) Loc() hexagon.Coord {
 	return p.loc
 }
 func (p *Planet) Controller() int {
-	return p.controller
+	if p.controller.Valid {
+		return int(p.controller.Int64)
+	}
+	return 0
 }
 func (p *Planet) SetController(x int) {
-	if p.controller == x {
-		return
-	}
-	p.controller = x
 	if x == 0 {
-		p.SetNull("controller")
+		if !p.controller.Valid {
+			return
+		}
+		p.controller.Int64 = 0
+		p.controller.Valid = false
+		p.modified = true
 	} else {
-		p.SetInt("controller", x)
+		if p.controller.Valid && int(p.controller.Int64) == x {
+			return
+		}
+		p.controller.Int64 = int64(x)
+		p.controller.Valid = true
+		p.modified = true
 	}
 }
 func (p *Planet) Inhabitants() int {
@@ -57,7 +67,7 @@ func (p *Planet) SetInhabitants(x int) {
 		return
 	}
 	p.inhabitants = x
-	p.SetInt("inhabitants", x)
+	p.modified = true
 }
 func (p *Planet) Resources() int {
 	return p.resources
@@ -67,7 +77,7 @@ func (p *Planet) SetResources(x int) {
 		return
 	}
 	p.resources = x
-	p.SetInt("resources", x)
+	p.modified = true
 }
 func (p *Planet) Parts() int {
 	return p.parts
@@ -77,5 +87,98 @@ func (p *Planet) SetParts(x int) {
 		return
 	}
 	p.parts = x
-	p.SetInt("parts", x)
+	p.modified = true
+}
+func (p *Planet) SQLVal(name string) interface{} {
+	switch name {
+	case "gid":
+		return p.gid
+	case "pid":
+		return p.pid
+	case "name":
+		return p.name
+	case "loc":
+		return p.loc
+	case "controller":
+		return p.controller
+	case "inhabitants":
+		return p.inhabitants
+	case "resources":
+		return p.resources
+	case "parts":
+		return p.parts
+	}
+	return nil
+}
+func (p *Planet) SQLPtr(name string) interface{} {
+	switch name {
+	case "gid":
+		return &p.gid
+	case "pid":
+		return &p.pid
+	case "name":
+		return &p.name
+	case "loc":
+		return &p.loc
+	case "controller":
+		return &p.controller
+	case "inhabitants":
+		return &p.inhabitants
+	case "resources":
+		return &p.resources
+	case "parts":
+		return &p.parts
+	}
+	return nil
+}
+
+func (p *Planet) SQLTable() string {
+	return "planets"
+}
+
+func (group *PlanetGroup) SQLTable() string {
+	return "planets"
+}
+
+func (group *PlanetGroup) SelectCols() []string {
+	return []string{
+		"gid",
+		"pid",
+		"name",
+		"loc",
+		"controller",
+		"inhabitants",
+		"resources",
+		"parts",
+	}
+}
+
+func (group *PlanetGroup) UpdateCols() []string {
+	return []string{
+		"controller",
+		"inhabitants",
+		"resources",
+		"parts",
+	}
+}
+
+func (group *PlanetGroup) PKCols() []string {
+	return []string{"gid", "pid"}
+}
+
+func (group *PlanetGroup) InsertCols() []string {
+	return []string{
+		"gid",
+		"pid",
+		"name",
+		"loc",
+		"controller",
+		"inhabitants",
+		"resources",
+		"parts",
+	}
+}
+
+func (group *PlanetGroup) InsertScanCols() []string {
+	return nil
 }

@@ -96,7 +96,7 @@ type Ship interface {
 	Sid() int
 	Size() int
 	Launched() int
-	Path() []hexagon.Coord
+	Path() hexagon.CoordList
 }
 
 type ShipView interface {
@@ -108,7 +108,7 @@ type ShipView interface {
 	Controller() int
 	Loc() (hexagon.Coord, bool)
 	Dest() (hexagon.Coord, bool)
-	Trail() []hexagon.Coord
+	Trail() hexagon.CoordList
 }
 
 type MapView interface {

@@ -6,23 +6,23 @@ import (
 	"mule/overpower"
 )
 
-type ShipGroup struct {
-	List []*Ship
+type OrderGroup struct {
+	List []*Order
 }
 
-func NewShipGroup() *ShipGroup {
-	return &ShipGroup{
-		List: []*Ship{},
+func NewOrderGroup() *OrderGroup {
+	return &OrderGroup{
+		List: []*Order{},
 	}
 }
 
-func (group *ShipGroup) New() mydb.SQLer {
-	item := NewShip()
+func (group *OrderGroup) New() mydb.SQLer {
+	item := NewOrder()
 	group.List = append(group.List, item)
 	return item
 }
 
-func (group *ShipGroup) UpdateList() []mydb.SQLer {
+func (group *OrderGroup) UpdateList() []mydb.SQLer {
 	list := make([]mydb.SQLer, 0, len(group.List))
 	for _, item := range group.List {
 		list = append(list, item)
@@ -30,7 +30,7 @@ func (group *ShipGroup) UpdateList() []mydb.SQLer {
 	return list
 }
 
-func (group *ShipGroup) InsertList() []mydb.SQLer {
+func (group *OrderGroup) InsertList() []mydb.SQLer {
 	list := make([]mydb.SQLer, 0, len(group.List))
 	for _, item := range group.List {
 		list = append(list, item)
@@ -38,23 +38,23 @@ func (group *ShipGroup) InsertList() []mydb.SQLer {
 	return list
 }
 
-func convertShips2DB(list ...overpower.Ship) ([]*Ship, error) {
-	mylist := make([]*Ship, 0, len(list))
+func convertOrders2DB(list ...overpower.Order) ([]*Order, error) {
+	mylist := make([]*Order, 0, len(list))
 	for _, test := range list {
 		if test == nil {
 			continue
 		}
-		if t, ok := test.(*Ship); ok {
+		if t, ok := test.(*Order); ok {
 			mylist = append(mylist, t)
 		} else {
-			return nil, errors.New("bad Ship struct type for op/db")
+			return nil, errors.New("bad Order struct type for op/db")
 		}
 	}
 	return mylist, nil
 }
 
-func convertShips2OP(list ...*Ship) []overpower.Ship {
-	converted := make([]overpower.Ship, len(list))
+func convertOrders2OP(list ...*Order) []overpower.Order {
+	converted := make([]overpower.Order, len(list))
 	for i, item := range list {
 		converted[i] = item
 	}

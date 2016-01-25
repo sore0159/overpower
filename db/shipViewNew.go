@@ -12,11 +12,9 @@ type ShipView struct {
 	turn       int
 	controller int
 	size       int
-	loc        hexagon.Coord
-	locValid   bool
-	dest       hexagon.Coord
-	destValid  bool
-	trail      []hexagon.Coord
+	loc        hexagon.NullCoord
+	dest       hexagon.NullCoord
+	trail      hexagon.CoordList
 }
 
 func NewShipView() *ShipView {
@@ -24,37 +22,6 @@ func NewShipView() *ShipView {
 	//
 	}
 }
-
-/*
-func MakeShipView(sh overpower.Ship, fid, turn int, loc hexagon.Coord, seen []hexagon.Coord) *ShipView {
-	shFid := sh.Fid()
-	sv := &ShipView{
-		gid:        sh.Gid(),
-		fid:        fid,
-		sid:        sh.Sid(),
-		turn:       turn,
-		controller: shFid,
-		size:       sh.Size(),
-		//
-	}
-	if shFid == fid {
-		sv.destValid = true
-		path := sh.Path()
-		sv.dest = path[len(path)-1]
-	}
-	trail := make([]hexagon.Coord, 0, len(seen))
-	for _, c := range seen {
-		if c == loc {
-			sv.locValid = true
-			sv.loc = c
-		} else {
-			trail = append(trail, c)
-		}
-	}
-	sv.trail = trail
-	return sv
-}
-*/
 
 func (s *ShipView) Gid() int {
 	return s.gid
@@ -75,17 +42,113 @@ func (s *ShipView) Controller() int {
 	return s.controller
 }
 func (s *ShipView) Loc() (hexagon.Coord, bool) {
-	if s.locValid {
-		return s.loc, true
+	if s.loc.Valid {
+		return s.loc.Coord, true
 	}
 	return hexagon.Coord{0, 0}, false
 }
-func (s *ShipView) Trail() []hexagon.Coord {
+func (s *ShipView) Trail() hexagon.CoordList {
 	return s.trail
 }
 func (s *ShipView) Dest() (hexagon.Coord, bool) {
-	if s.destValid {
-		return s.dest, true
+	if s.dest.Valid {
+		return s.dest.Coord, true
 	}
 	return hexagon.Coord{0, 0}, false
+}
+
+func (item *ShipView) SQLVal(name string) interface{} {
+	switch name {
+	case "gid":
+		return item.gid
+	case "fid":
+		return item.fid
+	case "sid":
+		return item.sid
+	case "turn":
+		return item.turn
+	case "size":
+		return item.size
+	case "controller":
+		return item.controller
+	case "loc":
+		return item.loc
+	case "dest":
+		return item.dest
+	case "trail":
+		return item.trail
+	}
+	return nil
+}
+
+func (item *ShipView) SQLPtr(name string) interface{} {
+	switch name {
+	case "gid":
+		return &item.gid
+	case "fid":
+		return &item.fid
+	case "sid":
+		return &item.sid
+	case "turn":
+		return &item.turn
+	case "size":
+		return &item.size
+	case "controller":
+		return &item.controller
+	case "loc":
+		return &item.loc
+	case "dest":
+		return &item.dest
+	case "trail":
+		return &item.trail
+	}
+	return nil
+}
+
+func (item *ShipView) SQLTable() string {
+	return "shipviews"
+}
+
+func (group *ShipViewGroup) SQLTable() string {
+	return "shipviews"
+}
+
+func (group *ShipViewGroup) SelectCols() []string {
+	return []string{
+		"gid",
+		"fid",
+		"sid",
+		"turn",
+		"controller",
+		"size",
+		"loc",
+		"dest",
+		"trail",
+	}
+}
+
+func (group *ShipViewGroup) UpdateCols() []string {
+	return nil
+}
+
+func (group *ShipViewGroup) PKCols() []string {
+	return []string{"gid", "fid", "turn", "sid"}
+}
+
+func (group *ShipViewGroup) InsertCols() []string {
+	return []string{
+		"gid",
+		"fid",
+		"sid",
+		"turn",
+		"controller",
+		"size",
+		"loc",
+		"dest",
+		"trail",
+	}
+}
+
+func (group *ShipViewGroup) InsertScanCols() []string {
+	return nil
 }

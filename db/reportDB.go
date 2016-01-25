@@ -1,57 +1,58 @@
 package db
 
 import (
-	"fmt"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
-	"strings"
 )
 
-func (d DB) GetReport(gid, fid, turn int) (overpower.Report, bool) {
-	query := fmt.Sprintf("SELECT contents FROM reports WHERE gid = %d AND fid = %d AND turn = %d", gid, fid, turn)
-	r := &Report{gid, fid, turn, []string{}}
-	return r, mydb.GetOneIf(d.db, query, r)
+type ReportGroup struct {
+	List []*Report
 }
 
-func (r *Report) Insert(db mydb.SQLer) (ok bool) {
-	if len(r.contents) == 0 {
-		return true
+func NewReportGroup() *ReportGroup {
+	return &ReportGroup{
+		List: []*Report{},
 	}
-	parts := make([]string, len(r.contents))
-	for i, x := range r.contents {
-		parts[i] = fmt.Sprintf("'%s'", strings.Replace(strings.Replace(x, "'", "''", -1), ",", "_", -1))
-	}
-	query := fmt.Sprintf("INSERT INTO reports (gid, fid, turn, contents) VALUES (%d, %d, %d, ARRAY[%s])", r.gid, r.fid, r.turn, strings.Join(parts, ", "))
-	return mydb.Exec(db, query)
 }
 
-func (r *Report) RowScan(row mydb.Scanner) error {
-	var conBytes []byte
-	err := row.Scan(&conBytes)
-	if err != nil {
-		return err
+func (group *ReportGroup) New() mydb.SQLer {
+	item := NewReport()
+	group.List = append(group.List, item)
+	return item
+}
+
+func (group *ReportGroup) UpdateList() []mydb.SQLer {
+	return nil
+}
+
+func (group *ReportGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
 	}
-	str := string(conBytes)
-	if len(str) < 2 {
-		r.contents = []string{}
-		return nil
-	}
-	parts := strings.Split(str, ",")
-	if len(parts) == 1 {
-		r.contents = []string{parts[0][1 : len(parts[0])-1]}
-		return nil
-	}
-	list := make([]string, len(parts))
-	for i, str := range parts {
-		switch i {
-		case 0:
-			list[i] = strings.Replace(str[1:], "_", ",", -1)
-		case len(parts) - 1:
-			list[i] = strings.Replace(str[:len(str)-1], "_", ",", -1)
-		default:
-			list[i] = strings.Replace(str, "_", ",", -1)
+	return list
+}
+
+func convertReports2DB(list ...overpower.Report) ([]*Report, error) {
+	mylist := make([]*Report, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*Report); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad Report struct type for op/db")
 		}
 	}
-	r.contents = list
-	return nil
+	return mylist, nil
+}
+
+func convertReports2OP(list ...*Report) []overpower.Report {
+	converted := make([]overpower.Report, len(list))
+	for i, item := range list {
+		converted[i] = item
+	}
+	return converted
 }

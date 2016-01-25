@@ -2,11 +2,11 @@ package db
 
 import (
 	"mule/hexagon"
-	"mule/mydb"
 )
 
 type MapView struct {
-	*mydb.SQLHandler
+	modified bool
+	//
 	gid     int
 	fid     int
 	center  hexagon.Coord
@@ -17,7 +17,7 @@ type MapView struct {
 
 func NewMapView() *MapView {
 	return &MapView{
-		SQLHandler: mydb.NewSQLHandler(),
+	//
 	}
 }
 
@@ -35,7 +35,7 @@ func (mv *MapView) SetCenter(x hexagon.Coord) {
 		return
 	}
 	mv.center = x
-	mv.SetEtc("center", x.SQLStr())
+	mv.modified = true
 }
 
 func (mv *MapView) Zoom() int {
@@ -46,7 +46,7 @@ func (mv *MapView) SetZoom(x int) {
 		return
 	}
 	mv.zoom = x
-	mv.SetInt("zoom", x)
+	mv.modified = true
 }
 
 func (mv *MapView) Target1() hexagon.NullCoord {
@@ -61,14 +61,14 @@ func (mv *MapView) SetTarget1(x hexagon.Coord) {
 		return
 	}
 	mv.target1 = hexagon.NullCoord{x, true}
-	mv.SetEtc("target1", x.SQLStr())
+	mv.modified = true
 }
 func (mv *MapView) DropTarget1() {
 	if !mv.target1.Valid {
 		return
 	}
 	mv.target1 = hexagon.NullCoord{}
-	mv.SetNull("target1")
+	mv.modified = true
 }
 
 func (mv *MapView) SetTarget2(x hexagon.Coord) {
@@ -76,12 +76,90 @@ func (mv *MapView) SetTarget2(x hexagon.Coord) {
 		return
 	}
 	mv.target2 = hexagon.NullCoord{x, true}
-	mv.SetEtc("target2", x.SQLStr())
+	mv.modified = true
 }
 func (mv *MapView) DropTarget2() {
 	if !mv.target2.Valid {
 		return
 	}
 	mv.target2 = hexagon.NullCoord{}
-	mv.SetNull("target2")
+	mv.modified = true
+}
+func (mv *MapView) SQLVal(name string) interface{} {
+	switch name {
+	case "gid":
+		return mv.gid
+	case "fid":
+		return mv.fid
+	case "center":
+		return mv.center
+	case "target1":
+		return mv.target1
+	case "target2":
+		return mv.target2
+	case "zoom":
+		return mv.zoom
+	}
+	return nil
+}
+func (mv *MapView) SQLPtr(name string) interface{} {
+	switch name {
+	case "gid":
+		return &mv.gid
+	case "fid":
+		return &mv.fid
+	case "center":
+		return &mv.center
+	case "target1":
+		return &mv.target1
+	case "target2":
+		return &mv.target2
+	case "zoom":
+		return &mv.zoom
+	}
+	return nil
+}
+
+func (mv *MapView) SQLTable() string {
+	return "mapviews"
+}
+
+func (group *MapViewGroup) SQLTable() string {
+	return "mapviews"
+}
+
+func (group *MapViewGroup) SelectCols() []string {
+	return []string{
+		"gid",
+		"fid",
+		"center",
+		"target1",
+		"target2",
+		"zoom",
+	}
+}
+
+func (group *MapViewGroup) UpdateCols() []string {
+	return []string{
+		"center",
+		"target1",
+		"target2",
+		"zoom",
+	}
+}
+
+func (group *MapViewGroup) PKCols() []string {
+	return []string{"gid", "fid"}
+}
+
+func (group *MapViewGroup) InsertCols() []string {
+	return []string{
+		"gid",
+		"fid",
+		"center",
+	}
+}
+
+func (group *MapViewGroup) InsertScanCols() []string {
+	return nil
 }

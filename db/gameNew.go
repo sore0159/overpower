@@ -1,21 +1,25 @@
 package db
 
+import (
+	"database/sql"
+)
+
 func NewGame() *Game {
 	return &Game{}
 }
 
 type Game struct {
-	turnMod bool
-	autoMod bool
-	freeMod bool
+	gid        int
+	owner      string
+	name       string
+	turn       int
+	autoturn   int
+	freeautos  int
+	password   sql.NullString
+	winpercent int
+	highscore  int
 	//
-	gid       int
-	owner     string
-	name      string
-	turn      int
-	autoturn  int
-	freeautos int
-	password  string
+	modified bool
 }
 
 func (g *Game) SetTurn(t int) {
@@ -23,11 +27,11 @@ func (g *Game) SetTurn(t int) {
 		return
 	}
 	g.turn = t
-	g.turnMod = true
+	g.modified = true
 }
 func (g *Game) IncTurn() {
 	g.turn++
-	g.turnMod = true
+	g.modified = true
 }
 
 func (g *Game) Turn() int {
@@ -43,10 +47,13 @@ func (g *Game) Name() string {
 	return g.name
 }
 func (g *Game) IsPwd(test string) bool {
-	return g.password == test
+	if !g.password.Valid {
+		return true
+	}
+	return g.password.String == test
 }
 func (g *Game) HasPW() bool {
-	return g.password != ""
+	return g.password.Valid
 }
 
 func (g *Game) AutoTurn() int {
@@ -57,7 +64,21 @@ func (g *Game) SetAutoTurn(x int) {
 		return
 	}
 	g.autoturn = x
-	g.autoMod = true
+	g.modified = true
+}
+
+func (g *Game) WinPercent() int {
+	return g.winpercent
+}
+func (g *Game) HighScore() int {
+	return g.highscore
+}
+func (g *Game) SetHighScore(x int) {
+	if x == g.highscore {
+		return
+	}
+	g.highscore = x
+	g.modified = true
 }
 
 func (g *Game) FreeAutos() int {
@@ -68,7 +89,7 @@ func (g *Game) SetFreeAutos(x int) {
 		return
 	}
 	g.freeautos = x
-	g.freeMod = true
+	g.modified = true
 }
 
 func (g *Game) AutoDays() (days [7]bool) {
@@ -90,4 +111,100 @@ func (g *Game) SetAutoDays(days [7]bool) {
 		}
 	}
 	g.SetAutoTurn(sum)
+}
+
+func (g *Game) SQLVal(name string) interface{} {
+	switch name {
+	case "gid":
+		return g.gid
+	case "owner":
+		return g.owner
+	case "name":
+		return g.name
+	case "turn":
+		return g.turn
+	case "autoturn":
+		return g.autoturn
+	case "freeautos":
+		return g.freeautos
+	case "password":
+		return g.password
+	case "winpercent":
+		return g.winpercent
+	case "highscore":
+		return g.highscore
+	}
+	return nil
+}
+
+func (g *Game) SQLPtr(name string) interface{} {
+	switch name {
+	case "gid":
+		return &g.gid
+	case "owner":
+		return &g.owner
+	case "name":
+		return &g.name
+	case "turn":
+		return &g.turn
+	case "autoturn":
+		return &g.autoturn
+	case "freeautos":
+		return &g.freeautos
+	case "password":
+		return &g.password
+	case "winpercent":
+		return &g.winpercent
+	case "highscore":
+		return &g.highscore
+	}
+	return nil
+}
+
+func (g *Game) SQLTable() string {
+	return "games"
+}
+
+func (group *GameGroup) SQLTable() string {
+	return "games"
+}
+
+func (group *GameGroup) SelectCols() []string {
+	return []string{
+		"gid",
+		"owner",
+		"name",
+		"turn",
+		"autoturn",
+		"freeautos",
+		"password",
+		"winpercent",
+		"highscore",
+	}
+}
+
+func (group *GameGroup) UpdateCols() []string {
+	return []string{
+		"turn",
+		"autoturn",
+		"freeautos",
+		"highscore",
+	}
+}
+
+func (group *GameGroup) PKCols() []string {
+	return []string{"gid"}
+}
+
+func (group *GameGroup) InsertCols() []string {
+	return []string{
+		"owner",
+		"name",
+		"password",
+		"winpercent",
+	}
+}
+
+func (group *GameGroup) InsertScanCols() []string {
+	return nil
 }

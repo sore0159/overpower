@@ -1,54 +1,118 @@
 package db
 
 import (
-	"fmt"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
 )
 
-func (d DB) UpdateGame(g overpower.Game) (ok bool) {
-	return mydb.Update(d.db, []mydb.Updater{g})
-}
-func (d DB) MakeGame(owner, name, password string) (ok bool) {
-	g := NewGame()
-	g.owner, g.name, g.password = owner, name, password
-	return g.Insert(d.db)
+type GameGroup struct {
+	List []*Game
 }
 
-func (d DB) GetGame(gid int) (g overpower.Game, ok bool) {
-	db := d.db
-	game := NewGame()
-	query := fmt.Sprintf("SELECT %s FROM games WHERE gid = %d", GAMESQLVAL, gid)
-	return game, mydb.GetOneIf(db, query, game)
-}
-
-func (d DB) GetGameFor(owner string) (g overpower.Game, ok bool) {
-	db := d.db
-	game := NewGame()
-	query := fmt.Sprintf("SELECT %s FROM games WHERE owner = '%s'", GAMESQLVAL, owner)
-	return game, mydb.GetOneIf(db, query, game)
-}
-
-func (d DB) DropGame(gid int) (ok bool) {
-	db := d.db
-	query := fmt.Sprintf("DELETE FROM games WHERE gid = %d", gid)
-	return mydb.Exec(db, query)
-}
-
-func (d DB) AllGames() (games []overpower.Game, ok bool) {
-	db := d.db
-	query := fmt.Sprintf("SELECT %s FROM games", GAMESQLVAL)
-	gamesL := []*Game{}
-	maker := func() mydb.Rower {
-		g := NewGame()
-		return g
+func NewGameGroup() *GameGroup {
+	return &GameGroup{
+		List: []*Game{},
 	}
-	if !mydb.Get(db, query, &gamesL, maker) {
-		return nil, false
-	}
-	games = make([]overpower.Game, len(gamesL))
-	for i, g := range gamesL {
-		games[i] = g
-	}
-	return games, true
 }
+
+func (group *GameGroup) New() mydb.SQLer {
+	item := NewGame()
+	group.List = append(group.List, item)
+	return item
+}
+
+func (group *GameGroup) UpdateList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		if item.modified {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func (group *GameGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
+	}
+	return list
+}
+
+func convertGames2DB(list ...overpower.Game) ([]*Game, error) {
+	mylist := make([]*Game, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*Game); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad Game struct type for op/db")
+		}
+	}
+	return mylist, nil
+}
+
+func convertGames2OP(list ...*Game) []overpower.Game {
+	converted := make([]overpower.Game, len(list))
+	for i, item := range list {
+		converted[i] = item
+	}
+	return converted
+}
+
+/*
+func (item *Game) SQLVal(name string) interface{} {
+	switch name {
+	case "gid":
+		return item.gid
+	}
+	return nil
+}
+
+func (item *Game) SQLPtr(name string) interface{} {
+	switch name {
+	case "gid":
+		return &item.gid
+	}
+	return nil
+}
+
+func (item *Game) SQLTable() string {
+	return "games"
+}
+
+func (group *GameGroup) SQLTable() string {
+	return "games"
+}
+
+func (group *GameGroup) SelectCols() []string {
+	return []string{
+		//
+	}
+}
+
+func (group *GameGroup) UpdateCols() []string {
+	return []string{
+		//
+	}
+}
+
+func (group *GameGroup) PKCols() []string {
+	return []string{
+		//
+	}
+}
+
+func (group *GameGroup) InsertCols() []string {
+	return []string{
+		//
+	}
+}
+
+func (group *GameGroup) InsertScanCols() []string {
+	return nil
+}
+*/

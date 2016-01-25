@@ -1,28 +1,58 @@
 package db
 
 import (
-	"fmt"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
 )
 
-func (d DB) GetFidTurnShipViews(gid, fid, turn int) (ships []overpower.ShipView, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM shipviews WHERE gid = %d AND fid = %d AND turn = %d", SVSQLVAL, gid, fid, turn)
-	return d.GetShipViewsQuery(query)
+type ShipViewGroup struct {
+	List []*ShipView
 }
 
-func (d DB) GetShipViewsQuery(query string) (ships []overpower.ShipView, ok bool) {
-	sList := []*ShipView{}
-	maker := func() mydb.Rower {
-		s := NewShipView()
-		return s
+func NewShipViewGroup() *ShipViewGroup {
+	return &ShipViewGroup{
+		List: []*ShipView{},
 	}
-	if !mydb.Get(d.db, query, &sList, maker) {
-		return nil, false
+}
+
+func (group *ShipViewGroup) New() mydb.SQLer {
+	item := NewShipView()
+	group.List = append(group.List, item)
+	return item
+}
+
+func (group *ShipViewGroup) UpdateList() []mydb.SQLer {
+	return nil
+}
+
+func (group *ShipViewGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
 	}
-	ships = make([]overpower.ShipView, len(sList))
-	for i, s := range sList {
-		ships[i] = s
+	return list
+}
+
+func convertShipViews2DB(list ...overpower.ShipView) ([]*ShipView, error) {
+	mylist := make([]*ShipView, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*ShipView); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad ShipView struct type for op/db")
+		}
 	}
-	return ships, true
+	return mylist, nil
+}
+
+func convertShipViews2OP(list ...*ShipView) []overpower.ShipView {
+	converted := make([]overpower.ShipView, len(list))
+	for i, item := range list {
+		converted[i] = item
+	}
+	return converted
 }

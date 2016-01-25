@@ -1,28 +1,64 @@
 package db
 
 import (
-	"fmt"
+	"errors"
 	"mule/mydb"
 	"mule/overpower"
 )
 
-func (d DB) GetAllFactionPlanetViews(gid, fid int) (planetviews []overpower.PlanetView, ok bool) {
-	query := fmt.Sprintf("SELECT %s FROM planetviews WHERE gid = %d AND fid = %d", PVSQLVAL, gid, fid)
-	return d.GetPlanetViewsQuery(query)
+type PlanetViewGroup struct {
+	List []*PlanetView
 }
 
-func (d DB) GetPlanetViewsQuery(query string) (planetviews []overpower.PlanetView, ok bool) {
-	pvs := []*PlanetView{}
-	maker := func() mydb.Rower {
-		pv := NewPlanetView()
-		return pv
+func NewPlanetViewGroup() *PlanetViewGroup {
+	return &PlanetViewGroup{
+		List: []*PlanetView{},
 	}
-	if !mydb.Get(d.db, query, &pvs, maker) {
-		return nil, false
+}
+
+func (group *PlanetViewGroup) New() mydb.SQLer {
+	item := NewPlanetView()
+	group.List = append(group.List, item)
+	return item
+}
+
+func (group *PlanetViewGroup) UpdateList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		if item.modified {
+			list = append(list, item)
+		}
 	}
-	planetviews = make([]overpower.PlanetView, len(pvs))
-	for i, pv := range pvs {
-		planetviews[i] = pv
+	return list
+}
+
+func (group *PlanetViewGroup) InsertList() []mydb.SQLer {
+	list := make([]mydb.SQLer, 0, len(group.List))
+	for _, item := range group.List {
+		list = append(list, item)
 	}
-	return planetviews, true
+	return list
+}
+
+func convertPlanetViews2DB(list ...overpower.PlanetView) ([]*PlanetView, error) {
+	mylist := make([]*PlanetView, 0, len(list))
+	for _, test := range list {
+		if test == nil {
+			continue
+		}
+		if t, ok := test.(*PlanetView); ok {
+			mylist = append(mylist, t)
+		} else {
+			return nil, errors.New("bad PlanetView struct type for op/db")
+		}
+	}
+	return mylist, nil
+}
+
+func convertPlanetViews2OP(list ...*PlanetView) []overpower.PlanetView {
+	converted := make([]overpower.PlanetView, len(list))
+	for i, item := range list {
+		converted[i] = item
+	}
+	return converted
 }
