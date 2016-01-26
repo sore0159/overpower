@@ -42,7 +42,10 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g, err := OPDB.GetGame("gid", gid)
-	if my, bad := Check(err, "resource aquisition error", "gid", gid); bad {
+	if err == ErrNoneFound {
+		http.Error(w, "GAMEID NOT FOUND", http.StatusNotFound)
+		return
+	} else if my, bad := Check(err, "resource aquisition error", "gid", gid); bad {
 		Bail(w, my)
 		return
 	}

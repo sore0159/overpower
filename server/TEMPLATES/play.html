@@ -33,6 +33,8 @@
 </form>
 {{ end }}
 <br>
+Score: {{ $f.Score }} ({{ $g.WinPercent }} to win {{ if ne $g.HighScore $f.Score }}(Current leader is at {{ $g.HighScore }}){{ else }}Currently in the lead!{{ end }})<br>
+<br>
 <b>Reports:</b>
 {{ if .reportlen }}
 [ <a href="/overpower/view/{{ $g.Gid }}/reports/{{ .prevturn }}">{{ .reportlen }} Report{{ if not (eq .reportlen 1) }}s{{end}} for turn {{ .prevturn }}</a> ]

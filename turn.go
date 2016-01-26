@@ -217,8 +217,9 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		if score > highScore {
 			highScore = score
 		}
-		f.SetScore(score)
-		if score >= winPercent {
+		scorePercent := int(math.Floor(100 * float64(score) / float64(len(planets))))
+		f.SetScore(scorePercent)
+		if scorePercent >= winPercent {
 			winners = append(winners, f)
 		}
 	}
