@@ -30,6 +30,10 @@ func (group *ShipGroup) UpdateList() []mydb.SQLer {
 	return list
 }
 
+func (group *ShipGroup) DeleteList() []mydb.SQLer {
+	return group.UpdateList()
+}
+
 func (group *ShipGroup) InsertList() []mydb.SQLer {
 	list := make([]mydb.SQLer, 0, len(group.List))
 	for _, item := range group.List {

@@ -41,9 +41,9 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "INVALID GAMEID", http.StatusBadRequest)
 		return
 	}
-	g, ok := OPDB.GetGame(gid)
-	if !ok {
-		http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
+	g, err := OPDB.GetGame("gid", gid)
+	if my, bad := Check(err, "resource aquisition error", "gid", gid); bad {
+		Bail(w, my)
 		return
 	}
 	if lastFull == 3 {
@@ -56,9 +56,9 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
 			return
 		}
-		facs, ok := OPDB.GetGidFactions(gid)
-		if !ok {
-			http.Error(w, "DATABASE ERROR LOADING FACTIONS", http.StatusInternalServerError)
+		facs, err := OPDB.GetFactions("gid", gid)
+		if my, bad := Check(err, "resource aquisition error", "gid", gid); bad {
+			Bail(w, my)
 			return
 		}
 		var f overpower.Faction
@@ -103,14 +103,22 @@ func muxCommand(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "BAD GID IN COMMAND PATH", http.StatusBadRequest)
 		return
 	}
-	g, ok := OPDB.GetGame(gid)
-	if !ok {
+	g, err := OPDB.GetGame("gid", gid)
+	if err == ErrNoneFound {
 		http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
 		return
 	}
-	f, ok := OPDB.GetOwnerFaction(gid, h.User.String())
-	if !ok {
-		http.Error(w, "NO FACTION FOUND FOR THIS USER FOR THIS GAME", http.StatusBadRequest)
+	if my, bad := Check(err, "resource aquisition error", "gid", gid); bad {
+		Bail(w, my)
+		return
+	}
+	f, err := OPDB.GetFaction("gid", gid, "owner", h.User.String())
+	if err == ErrNoneFound {
+		http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
+		return
+	}
+	if my, bad := Check(err, "resource aquisition error", "gid", gid); bad {
+		Bail(w, my)
 		return
 	}
 	turn, ok := h.IntAt(4)

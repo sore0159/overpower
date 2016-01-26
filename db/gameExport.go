@@ -14,7 +14,7 @@ func (d DB) MakeGame(owner, name, password string, winpercent int) (err error) {
 	return d.makeGroup(group)
 }
 
-func (d DB) DropGames(conditions []interface{}) error {
+func (d DB) DropGames(conditions ...interface{}) error {
 	return d.dropItems("games", conditions)
 }
 
@@ -26,8 +26,8 @@ func (d DB) UpdateGames(list ...overpower.Game) error {
 	return d.updateGroup(&GameGroup{mylist})
 }
 
-func (d DB) GetGame(conditions []interface{}) (overpower.Game, error) {
-	list, err := d.GetGames(conditions)
+func (d DB) GetGame(conditions ...interface{}) (overpower.Game, error) {
+	list, err := d.GetGames(conditions...)
 	if my, bad := Check(err, "get Game failure"); bad {
 		return nil, my
 	}
@@ -38,7 +38,7 @@ func (d DB) GetGame(conditions []interface{}) (overpower.Game, error) {
 }
 
 // Example conditions:  C{"gid",1} C{"owner","mule"}, nil
-func (d DB) GetGames(conditions []interface{}) ([]overpower.Game, error) {
+func (d DB) GetGames(conditions ...interface{}) ([]overpower.Game, error) {
 	group := NewGameGroup()
 	err := d.getGroup(group, conditions)
 	if my, bad := Check(err, "get Games failure", "conditions", conditions); bad {

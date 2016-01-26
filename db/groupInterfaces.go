@@ -4,6 +4,12 @@ import (
 	"mule/mydb"
 )
 
+type DeleteGroup interface {
+	PKCols() []string
+	SQLTable() string
+	DeleteList() []mydb.SQLer
+}
+
 type SelectGroup interface {
 	SQLTable() string
 	SelectCols() []string
@@ -75,4 +81,28 @@ func (d DB) dropItemsIf(table string, conditions []interface{}) error {
 	}
 	_, err = d.db().Exec(query, args...)
 	return err
+}
+
+func (d DB) dropGroup(group DeleteGroup) error {
+	table := group.SQLTable()
+	pkCols := group.PKCols()
+	return mydb.Delete(d.db(), table, pkCols, group.DeleteList()...)
+}
+
+func (d DB) updateItem(table string, set, conditions mydb.C) error {
+	setCols, setArgs, err := set.Split()
+	if my, bad := Check(err, "update item failure on set splic", "set", set, "conditions", conditions); bad {
+		return my
+	}
+	condCols, condArgs, err := conditions.Split()
+	if my, bad := Check(err, "update item failure on conditions split", "set", set, "conditions", conditions); bad {
+		return my
+	}
+	query := mydb.UpdateQ(table, setCols, condCols)
+	args := append(setArgs, condArgs...)
+	err = d.mustExec(query, args...)
+	if my, bad := Check(err, "update item failure", "table", table, "query", query, "args", args); bad {
+		return my
+	}
+	return nil
 }

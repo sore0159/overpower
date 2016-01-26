@@ -26,14 +26,17 @@ func pageMap(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "INVALID GAMEID", http.StatusBadRequest)
 		return
 	}
-	g, ok := OPDB.GetGame(gid)
-	if !ok {
+	g, err := OPDB.GetGame("gid", gid)
+	if err == ErrNoneFound {
 		http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
 		return
+	} else if my, bad := Check(err, "resource failure on map page", "gid", gid); bad {
+		Bail(w, my)
+		return
 	}
-	facs, ok := OPDB.GetGidFactions(gid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR RETRIEVING FACTIONS", http.StatusInternalServerError)
+	facs, err := OPDB.GetFactions("gid", gid)
+	if my, bad := Check(err, "resource failure on map page", "gid", gid); bad {
+		Bail(w, my)
 		return
 	}
 	var f overpower.Faction
@@ -48,24 +51,24 @@ func pageMap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fid := f.Fid()
-	mv, ok := OPDB.GetFidMapView(gid, fid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR RETRIEVING MAPVIEW", http.StatusInternalServerError)
+	mv, err := OPDB.GetMapView("gid", gid, "fid", fid)
+	if my, bad := Check(err, "resource failure on map page", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
 		return
 	}
-	pvList, ok := OPDB.GetAllFactionPlanetViews(gid, fid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING PLANETVIEWS", http.StatusInternalServerError)
+	pvList, err := OPDB.GetPlanetViews("gid", gid, "fid", fid)
+	if my, bad := Check(err, "resource failure on map page", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
 		return
 	}
-	orders, ok := OPDB.GetAllGidOrders(gid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING ORDERS", http.StatusInternalServerError)
+	orders, err := OPDB.GetOrders("gid", gid, "fid", fid)
+	if my, bad := Check(err, "resource failure on map page", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
 		return
 	}
-	shipViews, ok := OPDB.GetFidTurnShipViews(gid, fid, g.Turn()-1)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING SHIPVIEWS", http.StatusInternalServerError)
+	shipViews, err := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", g.Turn()-1)
+	if my, bad := Check(err, "resource failure on map page", "resource", "shipviews", "gid", gid, "fid", fid, "turn", g.Turn()-1); bad {
+		Bail(w, my)
 		return
 	}
 	mapping.ServeMap(w, mv, fid, facs, pvList, shipViews, orders)

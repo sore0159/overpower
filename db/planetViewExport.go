@@ -21,7 +21,7 @@ func (d DB) MakePlanetView(gid, pid, fid, turn, controller, inhabitants, resourc
 	return d.makeGroup(group)
 }
 
-func (d DB) DropPlanetViews(conditions []interface{}) error {
+func (d DB) DropPlanetViews(conditions ...interface{}) error {
 	return d.dropItems("planetviews", conditions)
 }
 
@@ -33,8 +33,8 @@ func (d DB) UpdatePlanetViews(list ...overpower.PlanetView) error {
 	return d.updateGroup(&PlanetViewGroup{mylist})
 }
 
-func (d DB) GetPlanetView(conditions []interface{}) (overpower.PlanetView, error) {
-	list, err := d.GetPlanetViews(conditions)
+func (d DB) GetPlanetView(conditions ...interface{}) (overpower.PlanetView, error) {
+	list, err := d.GetPlanetViews(conditions...)
 	if my, bad := Check(err, "get PlanetView failure"); bad {
 		return nil, my
 	}
@@ -45,7 +45,7 @@ func (d DB) GetPlanetView(conditions []interface{}) (overpower.PlanetView, error
 }
 
 // Example conditions:  C{"gid",1} C{"owner","mule"}, nil
-func (d DB) GetPlanetViews(conditions []interface{}) ([]overpower.PlanetView, error) {
+func (d DB) GetPlanetViews(conditions ...interface{}) ([]overpower.PlanetView, error) {
 	group := NewPlanetViewGroup()
 	err := d.getGroup(group, conditions)
 	if my, bad := Check(err, "get PlanetViews failure", "conditions", conditions); bad {

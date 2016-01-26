@@ -30,7 +30,11 @@ func pageAuthLogin(w http.ResponseWriter, r *http.Request) {
 	m := h.DefaultApp()
 	m["loggedin"] = h.LoggedIn
 	if r.Method == "POST" {
-		_, ok := USERREG.Login(w, r)
+		_, ok, err := USERREG.Login(w, r)
+		if my, bad := Check(err, "login failure"); bad {
+			Bail(w, my)
+			return
+		}
 		if ok {
 			http.Redirect(w, r, "/overpower/home", http.StatusFound)
 			return
@@ -59,12 +63,13 @@ func pageAuthCreate(w http.ResponseWriter, r *http.Request) {
 	m := h.DefaultApp()
 	m["loggedin"] = h.LoggedIn
 	if r.Method == "POST" {
-		nameOk, passOk, dbOk := USERREG.Create(w, r)
-		if nameOk && passOk && dbOk {
+		nameOk, passOk, err := USERREG.Create(w, r)
+		if nameOk && passOk && err == nil {
 			http.Redirect(w, r, "/overpower/home", http.StatusFound)
 			return
 		}
-		if !dbOk {
+		if my, bad := Check(err, "auth create failure"); bad {
+			Log(my)
 			h.SetError("DATABASE ERROR")
 			m["username"], m["password"] = r.FormValue("username"), r.FormValue("password")
 		} else {

@@ -10,7 +10,7 @@ func (d DB) MakeReport(gid, fid, turn int, contents []string) error {
 	return d.makeGroup(group)
 }
 
-func (d DB) DropReports(conditions []interface{}) error {
+func (d DB) DropReports(conditions ...interface{}) error {
 	return d.dropItems("reports", conditions)
 }
 
@@ -24,8 +24,8 @@ func (d DB) UpdateReports(list ...overpower.Report) error {
 }
 */
 
-func (d DB) GetReport(conditions []interface{}) (overpower.Report, error) {
-	list, err := d.GetReports(conditions)
+func (d DB) GetReport(conditions ...interface{}) (overpower.Report, error) {
+	list, err := d.GetReports(conditions...)
 	if my, bad := Check(err, "get Report failure"); bad {
 		return nil, my
 	}
@@ -36,7 +36,7 @@ func (d DB) GetReport(conditions []interface{}) (overpower.Report, error) {
 }
 
 // Example conditions:  C{"gid",1} C{"owner","mule"}, nil
-func (d DB) GetReports(conditions []interface{}) ([]overpower.Report, error) {
+func (d DB) GetReports(conditions ...interface{}) ([]overpower.Report, error) {
 	group := NewReportGroup()
 	err := d.getGroup(group, conditions)
 	if my, bad := Check(err, "get Reports failure", "conditions", conditions); bad {

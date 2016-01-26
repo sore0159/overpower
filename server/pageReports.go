@@ -19,7 +19,13 @@ func (h *Handler) pageOPReports(w http.ResponseWriter, r *http.Request, g overpo
 		http.Error(w, "GAME NOT YET IN PROGRESS", http.StatusBadRequest)
 		return
 	}
-	rp, ok := OPDB.GetReport(g.Gid(), f.Fid(), turn)
+	rp, err := OPDB.GetReport("gid", g.Gid(), "fid", f.Fid(), "turn", turn)
+
+	if err == ErrNoneFound {
+	} else if my, bad := Check(err, "resource error", "page", "opreports", "resource", "reports", "gid", g.Gid(), "fid", f.Fid(), "turn", turn); bad {
+		Bail(w, my)
+		return
+	}
 	m := h.DefaultApp()
 	m["game"] = g
 	m["f"] = f

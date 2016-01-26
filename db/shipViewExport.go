@@ -11,7 +11,7 @@ func (d DB) MakeShipView(gid, fid, turn, sid, size, controller int, loc, dest he
 	return d.makeGroup(group)
 }
 
-func (d DB) DropShipViews(conditions []interface{}) error {
+func (d DB) DropShipViews(conditions ...interface{}) error {
 	return d.dropItems("shipviews", conditions)
 }
 
@@ -25,8 +25,8 @@ func (d DB) UpdateShipViews(list ...overpower.ShipView) error {
 }
 */
 
-func (d DB) GetShipView(conditions []interface{}) (overpower.ShipView, error) {
-	list, err := d.GetShipViews(conditions)
+func (d DB) GetShipView(conditions ...interface{}) (overpower.ShipView, error) {
+	list, err := d.GetShipViews(conditions...)
 	if my, bad := Check(err, "get ShipView failure"); bad {
 		return nil, my
 	}
@@ -37,7 +37,7 @@ func (d DB) GetShipView(conditions []interface{}) (overpower.ShipView, error) {
 }
 
 // Example conditions:  C{"gid",1} C{"owner","mule"}, nil
-func (d DB) GetShipViews(conditions []interface{}) ([]overpower.ShipView, error) {
+func (d DB) GetShipViews(conditions ...interface{}) ([]overpower.ShipView, error) {
 	group := NewShipViewGroup()
 	err := d.getGroup(group, conditions)
 	if my, bad := Check(err, "get ShipViews failure", "conditions", conditions); bad {

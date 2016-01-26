@@ -5,13 +5,26 @@ import (
 )
 
 type Source interface {
-	NewPlanetView(int, int, Planet) (PlanetView, bool)
-	NewPlanet(string, int, int, int, int, int, int, hexagon.Coord) (Planet, bool)
-	NewShip(int, int, int, int, []hexagon.Coord) (Ship, bool)
-	DropShip(Ship) bool
-	NewShipView(int, int, int, int, int, int, hexagon.Coord, bool, hexagon.Coord, bool, []hexagon.Coord) (ShipView, bool)
-	NewMapView(int, int, hexagon.Coord) (MapView, bool)
-	NewReport(int, int, int) (Report, bool)
+	// -------- GET ------- //
+	Game() (Game, error)
+	Factions() ([]Faction, error)
+	Planets() ([]Planet, error)
+	Orders() ([]Order, error)
+	Ships() ([]Ship, error)
+	// ------- MAKE ------- //
+	NewPlanet(string, int, int, int, int, int, hexagon.Coord) Planet
+	NewPlanetView(int, Planet) PlanetView
+	NewMapView(int, hexagon.Coord) MapView
+	NewShip(int, int, int, hexagon.CoordList) Ship
+	NewShipView(Ship, int, int, hexagon.NullCoord, hexagon.NullCoord, hexagon.CoordList) ShipView
+	NewReport(int, int) Report
+	AddReportEvent(int, string) bool
+	// ------ CHANGE ----- //
+	UpdatePlanetView(int, int, Planet) PlanetView
+	// ------- DROP ------ //
+	DropShip(Ship)
+	DropOrders()
+	//	DropShipViews()
 }
 
 type Game interface {

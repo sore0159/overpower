@@ -46,30 +46,35 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		return
 	}
 	gid, fid := g.Gid(), f.Fid()
-	pvList, ok := OPDB.GetAllFactionPlanetViews(gid, fid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING PLANETVIEWS", http.StatusInternalServerError)
+	pvList, err := OPDB.GetPlanetViews("gid", gid, "fid", fid)
+	if my, bad := Check(err, "resource failure", "page", "op play game", "resource", "planetviews", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
 		return
 	}
-	orders, ok := OPDB.GetAllGidOrders(gid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING ORDERS", http.StatusInternalServerError)
+	orders, err := OPDB.GetOrders("gid", gid, "fid", fid)
+	if my, bad := Check(err, "resource failure", "page", "op play game", "resource", "orders", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
 		return
 	}
-	shipViews, ok := OPDB.GetFidTurnShipViews(gid, fid, turn-1)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING SHIPVIEWS", http.StatusInternalServerError)
+	shipViews, err := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", turn-1)
+	if my, bad := Check(err, "resource failure", "page", "op play game", "resource", "shipviews", "gid", gid, "fid", fid, "turn", turn); bad {
+		Bail(w, my)
 		return
 	}
-	mapView, ok := OPDB.GetFidMapView(gid, fid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR FETCHING MAPVIEW", http.StatusInternalServerError)
+	mapView, err := OPDB.GetMapView("gid", gid, "fid", fid)
+	if my, bad := Check(err, "resource failure", "page", "op play game", "resource", "mapview", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
+		return
+	}
+	rp, err := OPDB.GetReport("gid", gid, "fid", fid, "turn", turn-1)
+	if err == ErrNoneFound {
+	} else if my, bad := Check(err, "resource failure", "page", "op play game", "resource", "mapview", "gid", gid, "fid", fid); bad {
+		Bail(w, my)
 		return
 	}
 	m := h.DefaultApp()
-	rp, ok := OPDB.GetReport(gid, fid, turn-1)
 	m["prevturn"] = turn - 1
-	if ok {
+	if rp != nil {
 		m["reportlen"] = len(rp.Contents())
 	}
 	// ---------------- DATA PROCESSING --------------- //

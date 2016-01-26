@@ -15,52 +15,53 @@ func AutoTimer() {
 			then = then.Add(time.Hour * time.Duration(23-hour))
 		}
 		then = then.Add(time.Minute * time.Duration(2))
-		InfoLog("Starting autotimer:", now, "\n SLEEP TILL:", then)
+		Announce("Starting autotimer:", now, "\n SLEEP TILL:", then)
 		dur := then.Sub(now)
 		time.Sleep(dur)
 		now = time.Now()
 		if now.Hour() != 23 {
-			Log("AUTO RUN ERROR: SLEEP DID NOT REACH HOUR 23")
+			ErrLogger.Println("AUTO RUN ERROR: SLEEP DID NOT REACH HOUR 23")
 			continue
 		} else {
-			InfoLog("Autotimer woke:", now)
+			Announce("Autotimer woke:", now)
 		}
 		DBLOCK = true
 		time.Sleep(5 * time.Minute)
-		games, ok := OPDB.AllGames()
-		if !ok {
-			Log("AUTO RUN ERROR FETCHING GAMES")
+		games, err := OPDB.GetGames()
+		if my, bad := Check(err, "resource failure in autotimer", "resource", "games"); bad {
+			Log(my)
 			continue
 		}
 		var count int
 		countChan := make(chan byte)
 		wkDay := int(now.Weekday())
+		toUpdate := make([]overpower.Game, 0)
 		for _, g := range games {
 			if g.Turn() < 1 {
 				continue
 			}
 			days := g.AutoDays()
 			if days[wkDay] {
-				var run bool
 				if free := g.FreeAutos(); free > 0 {
 					g.SetFreeAutos(free - 1)
+					toUpdate = append(toUpdate, g)
 				} else {
-					run = true
+					count++
+					go func(g overpower.Game, done chan byte) {
+						Announce("AUTO RUNNING GAME", g.Gid())
+						err := RunGameTurn(g.Gid(), true)
+						if my, bad := Check(err, "autorun game turn failure", "game", g); bad {
+							Log(my)
+						}
+						done <- 0
+					}(g, countChan)
 				}
-				count++
-				go func(g overpower.Game, run bool, done chan byte) {
-					if run {
-						InfoLog("AUTO RUNNING GAME", g.Gid())
-						if !OPDB.AutoRunGameTurn(g) {
-							Log("ERROR AUTO RUNNING GAME", g.Gid())
-						}
-					} else {
-						if !OPDB.UpdateGame(g) {
-							Log("ERROR UPDATING FREEAUTOS FOR GAME", g.Gid())
-						}
-					}
-					done <- 0
-				}(g, run, countChan)
+			}
+		}
+		if len(toUpdate) > 0 {
+			err = OPDB.UpdateGames(toUpdate...)
+			if my, bad := Check(err, "autorun game freeturn inc failure", "games", toUpdate); bad {
+				Log(my)
 			}
 		}
 		for count > 0 {

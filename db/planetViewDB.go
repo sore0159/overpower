@@ -25,9 +25,7 @@ func (group *PlanetViewGroup) New() mydb.SQLer {
 func (group *PlanetViewGroup) UpdateList() []mydb.SQLer {
 	list := make([]mydb.SQLer, 0, len(group.List))
 	for _, item := range group.List {
-		if item.modified {
-			list = append(list, item)
-		}
+		list = append(list, item)
 	}
 	return list
 }

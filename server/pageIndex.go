@@ -35,8 +35,9 @@ func (h *Handler) pageOPViewIndex(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/overpower/view/", http.StatusFound)
 		return
 	}
-	games, ok := OPDB.AllGames()
-	if !ok {
+	games, err := OPDB.GetGames()
+	if my, bad := Check(err, "resource failure on view index"); bad {
+		Log(my)
 		h.SetError("DATABASE ERROR")
 	} else {
 		h.SetApp(games)

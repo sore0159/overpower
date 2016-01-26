@@ -10,7 +10,7 @@ func (d DB) MakeOrder(gid, fid, source, target, size int) (err error) {
 	return d.makeGroup(group)
 }
 
-func (d DB) DropOrders(conditions []interface{}) error {
+func (d DB) DropOrders(conditions ...interface{}) error {
 	return d.dropItems("orders", conditions)
 }
 
@@ -51,8 +51,8 @@ func (d DB) UpdateOrders(list ...overpower.Order) error {
 	return d.Transact(f)
 }
 
-func (d DB) GetOrder(conditions []interface{}) (overpower.Order, error) {
-	list, err := d.GetOrders(conditions)
+func (d DB) GetOrder(conditions ...interface{}) (overpower.Order, error) {
+	list, err := d.GetOrders(conditions...)
 	if my, bad := Check(err, "get Order failure"); bad {
 		return nil, my
 	}
@@ -63,7 +63,7 @@ func (d DB) GetOrder(conditions []interface{}) (overpower.Order, error) {
 }
 
 // Example conditions:  C{"gid",1} C{"owner","mule"}, nil
-func (d DB) GetOrders(conditions []interface{}) ([]overpower.Order, error) {
+func (d DB) GetOrders(conditions ...interface{}) ([]overpower.Order, error) {
 	group := NewOrderGroup()
 	err := d.getGroup(group, conditions)
 	if my, bad := Check(err, "get Orders failure", "conditions", conditions); bad {

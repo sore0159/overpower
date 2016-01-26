@@ -12,10 +12,12 @@ var (
 
 func (h *Handler) pageOPViewGame(w http.ResponseWriter, r *http.Request, g overpower.Game) {
 	m := h.DefaultApp()
-	facs, ok := OPDB.GetGidFactions(g.Gid())
-	if ok {
-		m["factions"] = facs
+	facs, err := OPDB.GetFactions("gid", g.Gid())
+	if my, bad := Check(err, "resource failure", "page", "opviewgame", "resource", "factions", "gid", g.Gid()); bad {
+		Bail(w, my)
+		return
 	}
+	m["factions"] = facs
 	m["active"] = g.Turn() > 0
 	var ownedF overpower.Faction
 	if h.LoggedIn {
@@ -53,8 +55,9 @@ func (h *Handler) pageOPViewGame(w http.ResponseWriter, r *http.Request, g overp
 				http.Error(w, "USER HAS NO FACTION FOR THIS GAME", http.StatusBadRequest)
 				return
 			}
-			if !OPDB.DropFaction(g.Gid(), ownedF.Fid()) {
-				http.Error(w, "DATABASE ERROR DELETING FACTION", http.StatusInternalServerError)
+			err = OPDB.DropFactions("gid", g.Gid(), "fid", ownedF.Fid())
+			if my, bad := Check(err, "data update failure", "data", ownedF, "page", "opviewgame"); bad {
+				Bail(w, my)
 				return
 			}
 		case "newfac":
@@ -85,8 +88,9 @@ func (h *Handler) pageOPViewGame(w http.ResponseWriter, r *http.Request, g overp
 					return
 				}
 			}
-			if !OPDB.MakeFaction(g.Gid(), h.User.String(), facName) {
-				http.Error(w, "DATABASE ERROR CREATING FACTION", http.StatusInternalServerError)
+			err = OPDB.MakeFaction(g.Gid(), h.User.String(), facName)
+			if my, bad := Check(err, "data creation error", "type", "faction", "gid", g.Gid(), "user", h.User, "facname", facName); bad {
+				Bail(w, my)
 				return
 			}
 		default:

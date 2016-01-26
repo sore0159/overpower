@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map[int]int, names map[int]string) (ok bool) {
+func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[int]int, names map[int]string) (logErr error) {
 	shFid := sh.Fid()
 	plFid := pl.Controller()
 	plid := pl.Pid()
@@ -13,15 +13,17 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 	aSum := atk
 	dSum := def + pl.Inhabitants()
 	if atk < 1 {
-		return true
+		return
 	}
 	if shFid == plFid {
 		rStr := fmt.Sprintf("Your ship landed at %s with %d colonists, reinforcing inhabitants to %d.", pl.Name(), aSum, dSum+aSum)
-		op.AddReport(shFid, rStr)
+		if !source.AddReportEvent(shFid, rStr) {
+			return ErrBadArgs
+		}
 		arrivals[plid] += atk
-		return true
+		return
 	}
-	defer op.BothSee(pl, pl.Controller(), sh.Fid(), turn, arrivals)
+	defer BothSee(source, pl, pl.Controller(), sh.Fid(), turn, arrivals)
 	if def >= atk {
 		if def == atk {
 			delete(arrivals, plid)
@@ -34,11 +36,15 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 		} else {
 			themStr = names[plFid] + " inhabitants"
 			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, but your inhabitants fought them off (%d inhabitants remaining)", pl.Name(), aSum, names[shFid], dSum-aSum)
-			op.AddReport(plFid, plStr)
+			if !source.AddReportEvent(plFid, plStr) {
+				return ErrBadArgs
+			}
 		}
 		shStr := fmt.Sprintf("Your ship landed at %s with %d colonists, but were all killed by %s (%d inhabitants remaining).", pl.Name(), aSum, themStr, dSum-aSum)
-		op.AddReport(shFid, shStr)
-		return true
+		if !source.AddReportEvent(shFid, shStr) {
+			return ErrBadArgs
+		}
+		return
 	}
 	delete(arrivals, plid)
 	atk -= def
@@ -51,11 +57,15 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 		} else {
 			themStr = names[plFid] + " inhabitants"
 			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, but your inhabitants fought them off (%d inhabitants remaining)", pl.Name(), aSum, names[shFid], dSum-aSum)
-			op.AddReport(plFid, plStr)
+			if !source.AddReportEvent(plFid, plStr) {
+				return ErrBadArgs
+			}
 		}
 		shStr := fmt.Sprintf("Your ship landed at %s with %d colonists, but were all killed by %s (%d inhabitants remaining).", pl.Name(), aSum, themStr, dSum-aSum)
-		op.AddReport(shFid, shStr)
-		return true
+		if !source.AddReportEvent(shFid, shStr) {
+			return ErrBadArgs
+		}
+		return
 	}
 	pl.SetController(sh.Fid())
 	pl.SetInhabitants(0)
@@ -68,9 +78,13 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 		} else {
 			shStr = fmt.Sprintf("Your ship landed at %s with %d colonists and found no remaining %s inhabitants left to defend it", pl.Name(), aSum, names[plFid])
 			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, and you had no inhabitants present to retain control of the planet.", pl.Name(), aSum, names[shFid])
-			op.AddReport(plFid, plStr)
+			if !source.AddReportEvent(plFid, plStr) {
+				return ErrBadArgs
+			}
 		}
-		op.AddReport(shFid, shStr)
+		if !source.AddReportEvent(shFid, shStr) {
+			return ErrBadArgs
+		}
 	} else {
 		var themStr string
 		if plFid == 0 {
@@ -78,28 +92,27 @@ func (op *TotallyOP) PlanetaryLanding(pl Planet, sh Ship, turn int, arrivals map
 		} else {
 			themStr = names[plFid] + " inhabitants"
 			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, who killed your %d inhabitants there and took control (%d invaders remaining)", pl.Name(), aSum, names[shFid], dSum, aSum-dSum)
-			op.AddReport(plFid, plStr)
+			if !source.AddReportEvent(plFid, plStr) {
+				return ErrBadArgs
+			}
 		}
 		shStr := fmt.Sprintf("Your ship landed at %s with %d colonists and were attacked by %d %s, but your colonists managed to defend themselves and take the planet (%d colonists survived).", pl.Name(), aSum, dSum, themStr, aSum-dSum)
-		op.AddReport(shFid, shStr)
+		if !source.AddReportEvent(shFid, shStr) {
+			return ErrBadArgs
+		}
 	}
-	return true
+	return
 }
 
-func (op *TotallyOP) BothSee(pl Planet, fid1, fid2, turn int, arrivals map[int]int) (ok bool) {
+func BothSee(source Source, pl Planet, fid1, fid2, turn int, arrivals map[int]int) {
 	for _, fid := range []int{fid1, fid2} {
 		if fid == 0 || fid == pl.Controller() {
 			continue
 		}
-		pv, ok := op.Source.NewPlanetView(fid, turn, pl)
-		if !ok {
-			return false
-		}
+		pv := source.UpdatePlanetView(fid, turn, pl)
 		arv := arrivals[pl.Pid()]
 		if arv > 0 {
 			pv.SetInhabitants(pv.Inhabitants() + arv)
 		}
-		op.SetPV(pv)
 	}
-	return true
 }

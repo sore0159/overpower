@@ -4,6 +4,7 @@ import (
 	"mule/hexagon"
 	"mule/myweb"
 	"mule/overpower"
+	"mule/overpower/db"
 	"mule/overpower/mapping"
 	"net/http"
 )
@@ -16,9 +17,12 @@ func (h *Handler) Recenter(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "BAD COORD ARGS IN RECENTER PATH", http.StatusBadRequest)
 		return
 	}
-	if !OPDB.UpdateMapViewCenter(g.Gid(), f.Fid(), hexagon.Coord{x, y}) {
-		http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-		return
+	err := OPDB.UpdateMapView("center", hexagon.Coord{x, y}, "WHERE", "gid", g.Gid(), "fid", f.Fid())
+	if my, bad := Check(err, "recenter failure", "coord", hexagon.Coord{x, y}, "gid", g.Gid(), "fid", f.Fid()); bad {
+		Log(my)
+		http.Error(w, my.Error(), http.StatusInternalServerError)
+		return false
+
 	}
 	return true
 }
@@ -43,10 +47,9 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 		return
 	}
 	gid, fid := f.Gid(), f.Fid()
-	mv, ok := OPDB.GetFidMapView(gid, fid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR RETRIEVING MAPVIEW", http.StatusInternalServerError)
-		return
+	mv, err := OPDB.GetMapView("gid", gid, "fid", fid)
+	if my, bad := Check(err, "mapclick failure", "gid", gid, "fid", fid); bad {
+		return Bail(w, my)
 	}
 	shift := r.FormValue("shift") == "true"
 	if button == 3 { // wheelspin
@@ -65,9 +68,10 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 				} else {
 					amount = zoom + 1
 				}
-				if !OPDB.UpdateMapViewZoom(gid, fid, amount) {
-					http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-					return false
+				mv.SetZoom(amount)
+				err = OPDB.UpdateMapViews(mv)
+				if my, bad := Check(err, "mapclick update failure", "mv", mv); bad {
+					return Bail(w, my)
 				}
 				return true
 			} else {
@@ -85,10 +89,10 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 				} else {
 					amount = zoom - 1
 				}
-
-				if !OPDB.UpdateMapViewZoom(gid, fid, amount) {
-					http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-					return false
+				mv.SetZoom(amount)
+				err = OPDB.UpdateMapViews(mv)
+				if my, bad := Check(err, "mapclick update failure", "mv", mv); bad {
+					return Bail(w, my)
 				}
 				return true
 			} else {
@@ -101,10 +105,9 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 	c := vp.HexContaining(hexagon.Pixel{float64(clickx), float64(clicky)})
 	var pvList []overpower.PlanetView
 	var found bool
-	pvList, ok = OPDB.GetAllFactionPlanetViews(gid, fid)
-	if !ok {
-		http.Error(w, "DATABASE ERROR RETRIEVING PLANETVIEWS", http.StatusInternalServerError)
-		return
+	pvList, err = OPDB.GetPlanetViews("gid", gid, "fid", fid)
+	if my, bad := Check(err, "mapclick getplanets failure", "gid", gid, "fid", fid); bad {
+		return Bail(w, my)
 	}
 	var foundNear bool
 	var near hexagon.Coord
@@ -133,17 +136,17 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 	switch button {
 	case 0: // left
 		if shift {
-			isOk = OPDB.UpdateMapViewCenter(gid, fid, c)
+			mv.SetCenter(c)
 		} else {
-			isOk = OPDB.UpdateMapViewTarget(gid, fid, true, hexagon.NullCoord{c, true})
+			mv.SetTarget1(c)
 		}
 	case 1: // wheelclick
-		isOk = OPDB.UpdateMapViewCenter(gid, fid, c)
+		mv.SetCenter(c)
 	case 2: // right
 		if shift {
-			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{})
+			mv.DropTarget2()
 		} else {
-			isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{c, true})
+			mv.SetTarget2(c)
 		}
 	case 3: // wheelspin
 	// SEE ABOVE
@@ -151,9 +154,9 @@ func (h *Handler) MapClick(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "UNKNOWN BUTTON VALUE", http.StatusBadRequest)
 		return
 	}
-	if !isOk {
-		http.Error(w, "DATABASE ERROR UPDATING MAPVIEW", http.StatusInternalServerError)
-		return false
+	err = OPDB.UpdateMapViews(mv)
+	if my, bad := Check(err, "mapclick update failure", "mv", mv); bad {
+		return Bail(w, my)
 	}
 	return true
 }
@@ -170,17 +173,22 @@ func (h *Handler) SetMapView(w http.ResponseWriter, r *http.Request, g overpower
 	hexX, xOk := mp["hexx"]
 	hexY, yOk := mp["hexy"]
 	isOk = true
+	mv, err := OPDB.GetMapView("gid", gid, "fid", fid)
+	if my, bad := Check(err, "set mapview get item failure", "gid", gid, "fid", fid); bad {
+		return Bail(w, my)
+	}
 	switch subtype {
 	case "swap":
-		mv, ok := OPDB.GetFidMapView(gid, fid)
-		if !ok {
-			http.Error(w, "DATABASE ERROR GETTING MAPVIEW", http.StatusInternalServerError)
-			return false
-		}
 		tar1, tar2 := mv.Target1(), mv.Target2()
-		if !OPDB.UpdateMapViewBothTargets(gid, fid, tar2, tar1) {
-			http.Error(w, "DATABASE ERROR SETTING MAPVIEW", http.StatusInternalServerError)
-			return false
+		if !tar1.Valid {
+			mv.DropTarget2()
+		} else {
+			mv.SetTarget2(tar1.Coord)
+		}
+		if !tar2.Valid {
+			mv.DropTarget1()
+		} else {
+			mv.SetTarget1(tar2.Coord)
 		}
 	case "zoom":
 		if !zOk {
@@ -192,32 +200,37 @@ func (h *Handler) SetMapView(w http.ResponseWriter, r *http.Request, g overpower
 		} else if zoom > 50 {
 			zoom = 50
 		}
-		isOk = OPDB.UpdateMapViewZoom(gid, fid, zoom)
+		mv.SetZoom(zoom)
 	case "target1":
 		if !xOk || !yOk {
 			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
 			return false
 		}
-		isOk = OPDB.UpdateMapViewTarget(gid, fid, true, hexagon.NullCoord{hexagon.Coord{hexX, hexY}, true})
+		mv.SetTarget1(hexagon.Coord{hexX, hexY})
 	case "target2":
 		if !xOk || !yOk {
 			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
 			return false
 		}
-		isOk = OPDB.UpdateMapViewTarget(gid, fid, false, hexagon.NullCoord{hexagon.Coord{hexX, hexY}, true})
+		mv.SetTarget2(hexagon.Coord{hexX, hexY})
 	case "center":
 		if !xOk || !yOk {
 			http.Error(w, "BAD DATA GIVEN FOR MAPVIEW CHANGE", http.StatusBadRequest)
 			return false
 		}
-		isOk = OPDB.UpdateMapViewCenter(gid, fid, hexagon.Coord{hexX, hexY})
+		mv.SetCenter(hexagon.Coord{hexX, hexY})
 	default:
 		http.Error(w, "UNKNOWN ACTION TYPE", http.StatusBadRequest)
 		return false
 	}
+
 	if !isOk {
 		http.Error(w, "DATABASE ERROR EXECUTING COMMAND", http.StatusInternalServerError)
 		return false
+	}
+	err = OPDB.UpdateMapViews(mv)
+	if my, bad := Check(err, "mapview change update failure", "mv", mv); bad {
+		return Bail(w, my)
 	}
 	return true
 }
@@ -241,11 +254,9 @@ func (h *Handler) SetOrder(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "FORM TURN DOES NOT MATCH GAME TURN", http.StatusBadRequest)
 		return
 	}
-	planets, ok := OPDB.GetPidPlanets(g.Gid(), source, target)
-	if !ok {
-
-		http.Error(w, "DATABASE ERROR FETCHING PLANETS", http.StatusInternalServerError)
-		return
+	planets, err := OPDB.GetPlanetsByPlid(g.Gid(), source, target)
+	if my, bad := Check(err, "setorder resource get failure", "gid", g.Gid(), "source", source, "target", target); bad {
+		return Bail(w, my)
 	}
 	if len(planets) != 2 {
 		http.Error(w, "SOURCE/TARGET PLANETS NOT FOUND", http.StatusBadRequest)
@@ -268,31 +279,35 @@ func (h *Handler) SetOrder(w http.ResponseWriter, r *http.Request, g overpower.G
 		http.Error(w, "SOURCE PLANET NOT OWNED BY FACTION", http.StatusBadRequest)
 		return
 	}
+
+	orders, err := OPDB.GetOrders("gid", g.Gid(), "source", source)
+	if my, bad := Check(err, "setorder resource get failure", "gid", g.Gid(), "source", source); bad {
+		return Bail(w, my)
+	}
+	var using int
+	var curOrder overpower.Order
+	for _, o := range orders {
+		if o.Target() == target {
+			curOrder = o
+		} else {
+			using += o.Size()
+		}
+	}
 	if size > 0 {
 		have := sPl.Parts()
-		if size > have {
-			http.Error(w, "PLANET HAS INSUFFICIENT PARTS FOR ORDER", http.StatusBadRequest)
-			return
-		}
-		orders, ok := OPDB.GetAllSourceOrders(g.Gid(), source)
-		if !ok {
-			http.Error(w, "DATABASE ERROR FETCHING SOURCE ORDERS", http.StatusInternalServerError)
-			return
-		}
-		want := size
-		for _, o := range orders {
-			if o.Target() != target {
-				want += o.Size()
-			}
-		}
-		if want > have {
+		if using+size > have {
 			http.Error(w, "PLANET HAS INSUFFICIENT PARTS FOR ORDER", http.StatusBadRequest)
 			return
 		}
 	}
-	if !OPDB.SetOrder(g.Gid(), f.Fid(), source, target, size) {
-		http.Error(w, "DATABASE ERROR SETTING ORDER", http.StatusInternalServerError)
-		return
+	if curOrder == nil {
+		err = OPDB.MakeOrder(g.Gid(), f.Fid(), source, target, size)
+	} else {
+		curOrder.SetSize(size)
+		err = OPDB.UpdateOrders(curOrder)
+	}
+	if my, bad := Check(err, "setorder update fail", "source", source, "target", target, "size", size); bad {
+		return Bail(w, my)
 	}
 	return true
 }
@@ -306,10 +321,9 @@ func (h *Handler) SetTurnDone(w http.ResponseWriter, r *http.Request, g overpowe
 		http.Error(w, "GAME NOT IN PROGRESS", http.StatusBadRequest)
 		return
 	}
-	facs, ok := OPDB.GetGidFactions(g.Gid())
-	if !ok {
-		http.Error(w, "DATABASE ERROR RETRIEVING FACTIONS", http.StatusInternalServerError)
-		return false
+	facs, err := OPDB.GetFactions("gid", g.Gid())
+	if my, bad := Check(err, "set turn done resource failure", "gid", g.Gid()); bad {
+		return Bail(w, my)
 	}
 	ints, ok := GetInts(r, "turn")
 	if !ok {
@@ -334,15 +348,52 @@ func (h *Handler) SetTurnDone(w http.ResponseWriter, r *http.Request, g overpowe
 		}
 	}
 	if allDone {
-		if !OPDB.RunGameTurn(g) {
-			http.Error(w, "DATABASE ERROR RUNNING GAME TURN", http.StatusInternalServerError)
-			return
+		err = RunGameTurn(g.Gid(), false)
+		if my, bad := Check(err, "update problem in faction set done (run turn)", "faction", f); bad {
+			return Bail(w, my)
 		}
+		return true
 	} else {
-		if !OPDB.SetTurnDone(f, done) {
-			http.Error(w, "DATABASE ERROR SETTING FACTION TURN DONE", http.StatusInternalServerError)
-			return
+		f.SetDone(done)
+		err = OPDB.UpdateFactions(f)
+		if my, bad := Check(err, "update problem in faction set done", "faction", f); bad {
+			return Bail(w, my)
 		}
+		return true
 	}
-	return true
+}
+
+func RunGameTurn(gid int, auto bool) error {
+	f := func(d db.DB) error {
+		source := d.NewSource(gid)
+		breakE, logE := overpower.RunGameTurn(source, auto)
+		if logE != nil {
+			Log(logE)
+		}
+		if my, bad := Check(breakE, "rungameturn failed", "gid", gid); bad {
+			return my
+		}
+		err := source.Commit()
+		if my, bad := Check(err, "rungame turn commit failed", "gid", gid); bad {
+			return my
+		}
+		return nil
+	}
+	return OPDB.Transact(f)
+}
+
+func StartGame(gid int) error {
+	f := func(d db.DB) error {
+		source := d.NewSource(gid)
+		err := overpower.MakeGalaxy(source)
+		if my, bad := Check(err, "Start game failure", "gid", gid); bad {
+			return my
+		}
+		err = source.Commit()
+		if my, bad := Check(err, "Start game source commit failure", "gid", gid); bad {
+			return my
+		}
+		return nil
+	}
+	return OPDB.Transact(f)
 }

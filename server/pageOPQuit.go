@@ -29,25 +29,29 @@ func pageOPQuit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "BAD GID IN URL", http.StatusBadRequest)
 		return
 	}
-	g, ok := OPDB.GetGame(gid)
-	if !ok {
-		http.Error(w, "GAME NOT FOUND", http.StatusNotFound)
+	g, err := OPDB.GetGame("gid", gid)
+	if my, bad := Check(err, "resource failure", "page", "opquit", "resource", "game", "gid", gid); bad {
+		Bail(w, my)
 		return
 	}
 	if g.Turn() < 1 {
 		http.Error(w, "GAME NOT IN PROGRESS", http.StatusNotFound)
 		return
 	}
-	f, ok := OPDB.GetOwnerFaction(gid, h.User.String())
-	if !ok {
+	f, err := OPDB.GetFaction("gid", gid, "owner", h.User.String())
+	if err == ErrNoneFound {
 		http.Error(w, "NO FACTION FOUND FOR THIS USER FOR THIS GAME", http.StatusBadRequest)
+		return
+	} else if my, bad := Check(err, "resource failure", "page", "opquit", "resource", "faction", "gid", gid, "user", h.User); bad {
+		Bail(w, my)
 		return
 	}
 	if r.Method == "POST" {
 		confirm := r.FormValue("confirm")
 		if confirm == "true" {
-			if !OPDB.DropInProgressFaction(g.Gid(), f.Fid()) {
-				http.Error(w, "DATABASE ERROR DROPPING FACTION", http.StatusInternalServerError)
+			err := OPDB.DropFactions("gid", g.Gid(), "fid", f.Fid())
+			if my, bad := Check(err, "data update failure", "data", f); bad {
+				Bail(w, my)
 				return
 			}
 		}

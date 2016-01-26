@@ -20,8 +20,10 @@ type Handler struct {
 
 func MakeHandler(w http.ResponseWriter, r *http.Request) *Handler {
 	var user users.User
-	test, ok := USERREG.IsLoggedIn(w, r)
-	if ok {
+	test, ok, err := USERREG.IsLoggedIn(w, r)
+	if my, bad := Check(err, "handler creation problem", "path", r.URL.Path); bad {
+		Log(my)
+	} else if ok {
 		user = test
 	}
 	return &Handler{TitleBar: true, User: user, LoggedIn: ok, Handler: myweb.MakeHandler(r)}

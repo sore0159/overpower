@@ -2,9 +2,29 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"mule/mydb"
 	"mule/overpower"
+	"strings"
 )
+
+func (d DB) getPlanetsByPlid(gid int, plids ...int) ([]*Planet, error) {
+	parts := make([]string, len(plids))
+	args := make([]interface{}, len(plids)+1)
+	args[0] = gid
+	for i, item := range plids {
+		parts[i] = fmt.Sprintf("$%d", i+2)
+		args[i+1] = item
+	}
+	pidStr := strings.Join(parts, ",")
+	group := NewPlanetGroup()
+	query := fmt.Sprintf("SELECT %s FROM planets WHERE gid = $1 and pid IN (%s)", strings.Join(group.SelectCols(), ","), pidStr)
+	err := mydb.Get(d.db(), group, query, args...)
+	if my, bad := Check(err, "getplanets failure", "query", query, "args", args); bad {
+		return nil, my
+	}
+	return group.List, nil
+}
 
 type PlanetGroup struct {
 	List []*Planet

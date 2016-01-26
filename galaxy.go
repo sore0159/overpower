@@ -6,26 +6,30 @@ import (
 	"mule/hexagon"
 )
 
-func (op *TotallyOP) MakeGalaxy() (ok bool) {
-	fids := make([]int, len(op.Factions))
-	for i, f := range op.Factions {
-		fids[i] = f.Fid()
+func MakeGalaxy(source Source) error {
+	factions, err := source.Factions()
+	if my, bad := Check(err, "make galaxy resource failure"); bad {
+		return my
 	}
-	if len(fids) < 1 {
-		return true
+	if len(factions) < 1 {
+		return ErrBadArgs
+	}
+	fids := make([]int, len(factions))
+	for i, f := range factions {
+		fids[i] = f.Fid()
+		f.SetDone(false)
 	}
 	// TESTING //
 	//fids = []int{fids[0], 0, 0, 0, 0,
 	//0, 0, 0, 0, 0}
 	// TESTING //
-	gid := op.Game.Gid()
 	fids = shuffleInts(fids)
-	s := op.Source
 	// -------- GAME ---------- //
-	op.Game.SetTurn(1)
-	for _, f := range op.Factions {
-		f.SetDone(false)
+	game, err := source.Game()
+	if my, bad := Check(err, "make galaxy resource failure"); bad {
+		return my
 	}
+	game.SetTurn(1)
 	// -------- PLANETS -------- //
 	homes := len(fids)
 	bigPerPlayer := 3
@@ -35,10 +39,7 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 	names := GetNames(bigN + littleN + homes)
 	// ------- //
 	// ---- BORION ---- //
-	borion, ok := s.NewPlanet("Planet Borion", gid, 9999, 0, 10, 30, 0, hexagon.Coord{0, 0})
-	if !ok {
-		return false
-	}
+	borion := source.NewPlanet("Planet Borion", 9999, 0, 10, 30, 0, hexagon.Coord{0, 0})
 	planets := []Planet{borion}
 	places := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
 	for _, pt := range borion.Loc().Ring(1) {
@@ -77,10 +78,7 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 		for _, pt := range spot.Ring(1) {
 			places[pt] = true
 		}
-		p, ok := s.NewPlanet(name, gid, pid, 0, inhab, res, 0, spot)
-		if !ok {
-			return false
-		}
+		p := source.NewPlanet(name, pid, 0, inhab, res, 0, spot)
 		planets = append(planets, p)
 	}
 	// ---- OUTER ---- //
@@ -117,10 +115,7 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 			for _, pt := range spot.Ring(1) {
 				places[pt] = true
 			}
-			p, ok := s.NewPlanet(name, gid, pid, 0, inhab, res, 0, spot)
-			if !ok {
-				return false
-			}
+			p := source.NewPlanet(name, pid, 0, inhab, res, 0, spot)
 			planets = append(planets, p)
 		}
 	}
@@ -152,19 +147,15 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 		for _, pt := range spot.Ring(1) {
 			places[pt] = true
 		}
-		p, ok := s.NewPlanet(name, gid, pid, fid, 5, 15, 5, spot)
-		if !ok {
-			return false
-		}
+		p := source.NewPlanet(name, pid, fid, 5, 15, 5, spot)
 		planets = append(planets, p)
 		// TESTING //
 		if fid == 0 {
 			continue
 		}
 		// TESTING //
-		s.NewMapView(gid, fid, spot)
+		source.NewMapView(fid, spot)
 	}
-	op.Planets = planets
 	// -------- VIEWS --------- //
 	for _, fid := range fids {
 		// TESTING //
@@ -173,18 +164,8 @@ func (op *TotallyOP) MakeGalaxy() (ok bool) {
 		}
 		// TESTING //
 		for _, p := range planets {
-			var pv PlanetView
-			var ok bool
-			if fid == p.Controller() {
-				pv, ok = s.NewPlanetView(fid, 1, p)
-			} else {
-				pv, ok = s.NewPlanetView(fid, 0, p)
-			}
-			if !ok {
-				return false
-			}
-			op.SetPV(pv)
+			source.NewPlanetView(fid, p)
 		}
 	}
-	return true
+	return nil
 }

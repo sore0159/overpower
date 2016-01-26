@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
 	"mule/overpower/db"
 	"mule/users"
 	"net/http"
 )
 
 const (
+	DATADIR  = "DATA/"
 	SERVPORT = ":8080"
 )
 
@@ -18,22 +18,25 @@ var (
 )
 
 func main() {
-	var ok bool
-	USERREG, ok = users.GetRegistry()
-	if !ok {
-		log.Fatal("Can't load userdata")
+	var err error
+	USERREG, err = users.GetRegistry()
+	if my, bad := Check(err, "failed to get registry"); bad {
+		Log(my)
+		panic(my)
 	}
 	defer USERREG.Close()
-	if OPDB, ok = db.LoadDB(); !ok {
-		log.Fatal("Can't load planet data")
+	OPDB, err = db.LoadDB()
+	if my, bad := Check(err, "failed to get op database"); bad {
+		Log(my)
+		panic(my)
 	}
 	defer OPDB.Close()
 	go AutoTimer()
 	SetupMux()
-	InfoLog("STARTING SERVER AT", SERVPORT)
-	err := http.ListenAndServe(SERVPORT, nil)
-	if err != nil {
-		log.Println(err)
+	Announce("STARTING SERVER AT", SERVPORT)
+	err = http.ListenAndServe(SERVPORT, nil)
+	if my, bad := Check(err, "server failure"); bad {
+		Log(my)
 	}
-	InfoLog("STOPPING SERVER")
+	Announce("STOPPING SERVER")
 }
