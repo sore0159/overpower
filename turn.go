@@ -2,6 +2,7 @@ package overpower
 
 import (
 	"fmt"
+	"math"
 	"mule/hexagon"
 )
 
@@ -180,12 +181,14 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 	// ---- TURN STARTS ---- //
 	game.IncTurn()
 	turn = game.Turn()
+	facScores := make(map[int]int, len(factions))
 	// ---- PLANETS PRODUCE ---- //
 	for _, pl := range planets {
 		cont := pl.Controller()
 		if cont == 0 {
 			continue
 		}
+		facScores[cont] += 1
 		if inh, res := pl.Inhabitants(), pl.Resources(); inh > 0 && res > 0 {
 			var prod int
 			switch {
@@ -205,6 +208,24 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		}
 		// ---- PLANETS ARE SEEN ---- //
 		source.UpdatePlanetView(cont, turn, pl)
+	}
+	var highScore int
+	winPercent := game.WinPercent()
+	winners := make([]Faction, 0)
+	for _, f := range factions {
+		score := facScores[f.Fid()]
+		if score > highScore {
+			highScore = score
+		}
+		f.SetScore(score)
+		if score >= winPercent {
+			winners = append(winners, f)
+		}
+	}
+	percent := 100 * float64(highScore) / float64(len(planets))
+	game.SetHighScore(int(math.Floor(percent)))
+	if len(winners) > 0 {
+		Ping("TODO: WINNING!", winners)
 	}
 	if errOccured {
 		return nil, loggerM

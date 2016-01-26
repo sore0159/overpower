@@ -27,6 +27,7 @@ func (d DB) MakeTables() (err error) {
 	owner varchar(20) NOT NULL,
 	name varchar(20) NOT NULL,
 	done bool NOT NULL DEFAULT false,
+	score int NOT NULL DEFAULT 0,
 	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
 );`)

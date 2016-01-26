@@ -12,6 +12,7 @@ type Faction struct {
 	owner string
 	name  string
 	done  bool
+	score int
 }
 
 func (f *Faction) Gid() int {
@@ -37,6 +38,17 @@ func (f *Faction) SetDone(x bool) {
 	f.modified = true
 }
 
+func (f *Faction) Score() int {
+	return f.score
+}
+func (f *Faction) SetScore(x int) {
+	if f.score == x {
+		return
+	}
+	f.score = x
+	f.modified = true
+}
+
 func (f *Faction) SQLVal(name string) interface{} {
 	switch name {
 	case "gid":
@@ -49,6 +61,8 @@ func (f *Faction) SQLVal(name string) interface{} {
 		return f.name
 	case "done":
 		return f.done
+	case "score":
+		return f.score
 	}
 	return nil
 }
@@ -65,6 +79,8 @@ func (f *Faction) SQLPtr(name string) interface{} {
 		return &f.name
 	case "done":
 		return &f.done
+	case "score":
+		return &f.score
 	}
 	return nil
 }
@@ -84,12 +100,14 @@ func (group *FactionGroup) SelectCols() []string {
 		"owner",
 		"name",
 		"done",
+		"score",
 	}
 }
 
 func (group *FactionGroup) UpdateCols() []string {
 	return []string{
 		"done",
+		"score",
 	}
 }
 

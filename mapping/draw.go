@@ -41,7 +41,7 @@ func DrawPlanet(gc draw2d.GraphicContext, vp *hexagon.Viewport, fid int, avail i
 		gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0xFF})
 	}
 	// ------------- SHOW PLANET NAME ------------ //
-	if rad > 5 {
+	if rad > 3 {
 		var nameStr string
 		if avail > 0 {
 			nameStr = fmt.Sprintf("(%d)%s", avail, pv.Name())

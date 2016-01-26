@@ -1,7 +1,6 @@
 DB:
     * Switch to psx?
     * Jasonb it up?
-    * Revamp query construction: use $N and mass inserts
 
 API:
     * JSON?  Bytes?
@@ -27,6 +26,9 @@ UI:
     * favicon.ico - stock and "New turn avail" versions
 
 // ========================= DONE ========================= //
+DB:
+    * Revamp query construction: use $N and mass inserts
+
 Reports: 
     * Generation/Display
     * Ship launches

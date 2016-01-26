@@ -57,8 +57,9 @@ func MakeGalaxy(source Source) error {
 	for i := 0; i < bigN; i++ {
 		name := names[nameCount]
 		nameCount += 1
-		res := pick(6) + 4
-		inhab := pick(4)
+		extra := pick(5)
+		res := 4 + extra
+		inhab := pick(extra)
 		var pid int
 		for pids[pid] {
 			pid = 1000 + pick(8998)
@@ -91,7 +92,7 @@ func MakeGalaxy(source Source) error {
 		for j := 0; j < littlePerPlayer; j++ {
 			name := names[nameCount]
 			nameCount += 1
-			res := pick(10)
+			res := 1 + pick(5)
 			inhab := 0
 			var pid int
 			for pids[pid] {

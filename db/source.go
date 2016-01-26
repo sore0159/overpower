@@ -295,7 +295,9 @@ func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.
 	pv.fid = fid
 	pv.pid = pl.Pid()
 	pv.turn = turn
-	pv.controller = sql.NullInt64{int64(pl.Controller()), true}
+	if pl.Controller() != 0 {
+		pv.controller = sql.NullInt64{int64(pl.Controller()), true}
+	}
 	pv.resources = sql.NullInt64{int64(pl.Resources()), true}
 	pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
 	pv.parts = sql.NullInt64{int64(pl.Parts()), true}

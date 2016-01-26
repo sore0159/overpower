@@ -52,6 +52,8 @@ type Faction interface {
 	Name() string
 	Done() bool
 	SetDone(bool)
+	Score() int
+	SetScore(int)
 }
 
 type Planet interface {
@@ -85,13 +87,6 @@ type PlanetView interface {
 	SetResources(int)
 	Parts() int
 	SetParts(int)
-}
-
-type FactionView interface {
-	Gid() int
-	Fid() int
-	Center() hexagon.Pixel
-	Zoom() int
 }
 
 type Order interface {

@@ -98,7 +98,7 @@ func Test4(t *testing.T) {
 
 		f := func(d DB) error {
 			source := d.NewSource(gid)
-			breakE, logE := overpower.RunGameTurn(source)
+			breakE, logE := overpower.RunGameTurn(source, true)
 			if logE != nil {
 				log.Println(logE.(*mybad.MuleError).MuleError())
 			}
