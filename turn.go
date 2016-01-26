@@ -28,7 +28,6 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		return my, nil
 	}
 	// -------------------------------- //
-	//source.DropShipViews()
 	var errOccured bool
 	loggerM, _ := Check(ErrIgnorable, "run turn problem")
 	planetGrid := make(map[hexagon.Coord]Planet, len(planets))
@@ -54,6 +53,9 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		fid := f.Fid()
 		names[fid] = "faction " + f.Name()
 		reports[fid] = source.NewReport(fid, turn)
+	}
+	if game.HighScore() >= game.WinPercent() {
+		return nil, nil
 	}
 	// ------ AUTO TURN ------- //
 	if !auto {
