@@ -65,7 +65,8 @@ func ServeMap(w http.ResponseWriter, mv overpower.MapView, fid int, facList []ov
 		gc.SetLineWidth(.25)
 	}
 	//
-	showGrid := zoom > 14
+	showGrid := zoom > 25
+	//showGrid := zoom > 14
 	vp := GetVP(mv)
 	target1, target2 := mv.Target1(), mv.Target2()
 	visList := vp.VisList()
