@@ -54,6 +54,7 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		names[fid] = "faction " + f.Name()
 		reports[fid] = source.NewReport(fid, turn)
 	}
+	// --------- GAME ALREADY OVER -------- //
 	if game.HighScore() >= game.WinPercent() {
 		return nil, nil
 	}

@@ -382,11 +382,11 @@ func RunGameTurn(gid int, auto bool) error {
 	return OPDB.Transact(f)
 }
 
-func StartGame(gid int) error {
+func StartGame(gid int, exodus bool) error {
 	f := func(d db.DB) error {
 		source := d.NewSource(gid)
-		err := overpower.MakeGalaxy(source)
-		if my, bad := Check(err, "Start game failure", "gid", gid); bad {
+		err := overpower.MakeGalaxy(source, exodus)
+		if my, bad := Check(err, "Start game failure", "gid", gid, "exodus", exodus); bad {
 			return my
 		}
 		err = source.Commit()

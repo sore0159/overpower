@@ -33,7 +33,7 @@
 </form>
 {{ end }}
 <br>
-<b>Score:</b> {{ $f.Score }}% &bull; {{ if ne $g.HighScore $f.Score }}Current leader is at {{ $g.HighScore }}{{ else }}{{ if $f.Score }}You are currently in the lead!{{ end }}{{ end }} &bull; {{ $g.WinPercent }}% to win<br>
+<b>Score:</b> {{ $f.Score }}% {{ if ne $g.HighScore $f.Score }} &bull; Current leader is at {{ $g.HighScore }}{{ else }}{{ if $f.Score }} &bull; You are currently in the lead!{{ end }}{{ end }} &bull; {{ $g.WinPercent }}% to win<br>
 <br>
 <b>Reports:</b>
 {{ if .reportlen }}

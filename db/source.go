@@ -247,6 +247,7 @@ func (s *Source) NewShip(fid, size, turn int, path hexagon.CoordList) (ship over
 	sh := NewShip()
 	sh.gid, sh.fid, sh.size, sh.launched, sh.path = s.Gid, fid, size, turn, path
 	s.MadeShips = append(s.MadeShips, sh)
+	sh.justmade = true
 	return sh
 }
 
@@ -270,7 +271,7 @@ func (s *Source) NewPlanet(name string, pid, controller, inhab, res, parts int, 
 	return p
 }
 
-func (s *Source) NewPlanetView(fid int, pl overpower.Planet) (planetview overpower.PlanetView) {
+func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (planetview overpower.PlanetView) {
 	pv := NewPlanetView()
 	pv.fid = fid
 	pv.turn = 0
@@ -278,9 +279,9 @@ func (s *Source) NewPlanetView(fid int, pl overpower.Planet) (planetview overpow
 	pv.name = pl.Name()
 	pv.pid = pl.Pid()
 	pv.loc = pl.Loc()
-	if fid == pl.Controller() {
+	if cont := pl.Controller(); cont == fid || (exodus && cont != 0) {
 		pv.turn = 1
-		pv.controller = sql.NullInt64{int64(fid), true}
+		pv.controller = sql.NullInt64{int64(cont), true}
 		pv.resources = sql.NullInt64{int64(pl.Resources()), true}
 		pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
 		pv.parts = sql.NullInt64{int64(pl.Parts()), true}
@@ -295,8 +296,8 @@ func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.
 	pv.fid = fid
 	pv.pid = pl.Pid()
 	pv.turn = turn
-	if pl.Controller() != 0 {
-		pv.controller = sql.NullInt64{int64(pl.Controller()), true}
+	if cont := pl.Controller(); cont != 0 {
+		pv.controller = sql.NullInt64{int64(cont), true}
 	}
 	pv.resources = sql.NullInt64{int64(pl.Resources()), true}
 	pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}

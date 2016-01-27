@@ -13,7 +13,7 @@ type Source interface {
 	Ships() ([]Ship, error)
 	// ------- MAKE ------- //
 	NewPlanet(string, int, int, int, int, int, hexagon.Coord) Planet
-	NewPlanetView(int, Planet) PlanetView
+	NewPlanetView(int, Planet, bool) PlanetView
 	NewMapView(int, hexagon.Coord) MapView
 	NewShip(int, int, int, hexagon.CoordList) Ship
 	NewShipView(Ship, int, int, hexagon.NullCoord, hexagon.NullCoord, hexagon.CoordList) ShipView

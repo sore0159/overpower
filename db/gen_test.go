@@ -41,10 +41,31 @@ func Test4(t *testing.T) {
 	}
 	log.Println("Looking at game:", game)
 	gid := game.Gid()
+	if 0 == 0 {
+		err = db.DropGames("gid", gid)
+		if my, bad := Check(err, "test2 failed dropgame", "gid", gid); bad {
+			log.Println(my.MuleError())
+			return
+		}
+		log.Println("Dropped game", gid)
+		err = db.MakeGame("AutoTest", "Automade", "", 40)
+		if my, bad := Check(err, "test2 automake game fail"); bad {
+			log.Println(my.MuleError())
+			return
+		}
+		log.Println("Made auto-test game")
+		game, err = db.GetGame("owner", "AutoTest")
+		if my, bad := Check(err, "test2 getgame fail two", "owner", "AutoTest"); bad {
+			log.Println(my.MuleError())
+			return
+		}
+		gid = game.Gid()
+	}
 	for _, name := range []string{
 		"test1", "test2", "test3",
 		"test4", "test5", "test6",
 		"test7", "test8", "test9",
+		"mule",
 	} {
 		fac, err := db.GetFaction("gid", gid, "owner", name)
 		if my, bad := Check(err, "test2 getfaction failure"); bad {
@@ -52,19 +73,20 @@ func Test4(t *testing.T) {
 				log.Println(my.MuleError())
 				return
 			}
-			log.Println("fac not found")
+			log.Println("fac", name, "not found")
 			err = db.MakeFaction(gid, name, name)
 			if my, bad := Check(err, "test2 faction make failure"); bad {
 				log.Println(my.MuleError())
 				return
 			}
-			log.Println("Made faction!")
+			log.Println("Made faction", name)
 			fac, err = db.GetFaction("gid", gid, "owner", name)
 			if my, bad := Check(err, "test2 getfaction failure"); bad {
 				log.Println(my.MuleError())
 				return
 			}
 		}
+		_ = fac
 		log.Println("Got faction:", fac)
 	}
 	planetViews, err := db.GetPlanetViews("gid", gid)

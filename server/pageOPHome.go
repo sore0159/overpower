@@ -99,7 +99,9 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 				h.SetError("GAME HAS NO PLAYERS")
 				break
 			}
-			err := StartGame(g.Gid())
+			exodus := r.FormValue("exodus") == "on"
+			Ping("exodus", exodus, r.FormValue("exodus"))
+			err := StartGame(g.Gid(), exodus)
 			if my, bad := Check(err, "startgame failure", "gid", g.Gid()); bad {
 				Log(my)
 				h.SetError("DATABASE ERROR STARTING GAME")

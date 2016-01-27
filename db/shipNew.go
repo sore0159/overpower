@@ -5,6 +5,8 @@ import (
 )
 
 type Ship struct {
+	justmade bool
+
 	gid      int
 	fid      int
 	sid      int
