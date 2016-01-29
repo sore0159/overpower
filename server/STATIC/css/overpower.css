@@ -2,6 +2,11 @@ body {
         padding-bottom:200px;
         min-width: 1100px;
 }
+
+div.indexbody {
+        margin-left:5%;
+        margin-right: 5%;
+}
 ul {
         margin-top: 0px;
         margin-bottom: 0px;

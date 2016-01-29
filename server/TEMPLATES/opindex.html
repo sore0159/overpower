@@ -1,6 +1,7 @@
 {{ define "title"}}Overpower Index Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
+<div class="indexbody">
 <h3>Overpower</h3>
 {{ if index . "loggedin" }}
 Go to [ <a href="/overpower/home">your home base</a> ].
@@ -8,8 +9,28 @@ Go to [ <a href="/overpower/home">your home base</a> ].
 Go [ <a href="/auth/login">log in</a> ].
 {{ end }}<br>
 Go to the [ <a href="/overpower/view/">Games List</a> ].
+<hr>
+Jump To: 
+<br><b>Rules:</b>
+[ <a href="#game">Games</a> ] &bull;
+[ <a href="#turns">Turns</a> ] &bull;
+[ <a href="#planets">Planets</a> ] &bull;
+[ <a href="#galaxy">The Galaxy</a> ] &bull;
+[ <a href="#spaceships">Spaceships</a> ] &bull;
+[ <a href="#landings">Planetary Landings</a> ]
+<br>
+<b>How-To:</b>
+[ <a href="#layout">Website Layout</a> ] &bull;
+[ <a href="#map">Game Map</a> ] &bull;
+[ <a href="#json">JSON API</a> ] &bull;
+[ <a href="#availableapi">Available API Resources</a> ]
+<br><b>Codestuff:</b>
+[ <a href="#code">Source Code</a> ] &bull;
+[ <a href="#attrib">Attributions</a> ]
+<br>
+
 <h3>Rules of the Game</h3>
-<b>Games:</b><ul>
+<a name="games"></a><b>Games:</b><ul>
         <li>You must be logged in to play, view, or manage games.</li>
         <li>Each account can be the manager of one game of Overpower.</li>
         <li>Managers do not need to play the game that they are managing, but they can.</li>
@@ -23,8 +44,11 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <li>Players can join or leave a game at any time before the first turn begins, but cannot join or leave after.</li>
         <li>A game's manager can delete that game at any time, even after the first turn has begun.</li>
         <li>A game's manager can set at what rate the game's turns will automatically progress, and change this setting at any time.</li>
+        <li>When a game is created the manager must pick an amount of planets that a player must control to win the game.  This cannot be changed after a game has been made.</li>
+        <li>When a turn ends and any players control more than the set amount of planets, the game is over, and players are ranked by how many planets they control.</li>
+        <li>It is possible to get enough planets to end the game but still loose if another player gets even more planets during the same turn.</li>
 </ul>
-<b>Turns:</b><ul>
+<a name="turns"></a><b>Turns:</b><ul>
         <li>Overpower takes places over several turns.  The players begin the game on turn one.</li>
         <li>As the players play the game, they give orders to their game faction to take certain actions but no orders are executed as they are given.</li>
         <li>All players can give and change orders to their game faction until all players indicate that they are done giving orders, or the time limit on giving orders runs out.</li>
@@ -32,7 +56,7 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <li>When orders are done, all orders are simultaniously executed and the consequences determined, and then the next turn begins.</li>
         <li>At the beginning of each turn, all factions have their turn progress set as "In Progress".</li>
 </ul>
-<b>Planets:</b><ul>
+<a name="planets"></a><b>Planets:</b><ul>
         <li>Each game of Overpower has a galaxy of planets spread throughout a grid in space.</li>
         <li>Each planet will have a coordinate (x, y) and a name, and all players will start the game knowing the coordinate and name of all planets in the galaxy.</li>
         <li>Planets are either controlled by one of the player factions or are neutral and inactive.  The game begins with each faction controlling one planet at the outskirts of the galaxy.</li>
@@ -46,9 +70,9 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <br>
         <li>Planets have a stock of ship parts.  Planets all begin the game with no ship parts, and neutral planets will not produce more.  </li>
         <li>Planets controlled by player factions will produce ship parts and consume resources at the end of every turn.</li>
-        <li>Ship parts are used to build spaceships.  Spaceships take a number of parts to build equal to their size.  
+        <li>Ship parts are used to build spaceships.  Spaceships take a number of parts to build equal to their size.  </li>
         <li>Parts used to build spaceships are consumed completely and cannot be regained even when a spaceship lands on a planet.</li>
-        <li>Parts are produced at a rate equal to the number of inhabitants on the planet that have not just arrived that turn.
+        <li>Parts are produced at a rate equal to the number of inhabitants on the planet that have not just arrived that turn.</li>
         <li>Planets can produce a maximum of five resources each turn.  Production consumes resources and will stop when resources run out.</li>
         <br>
         <li>Factions start the game with no information about the inhabitants, resources, or ship parts of any planet other than the one they control.</li>
@@ -56,7 +80,13 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <li>Planetary landings that are repulsed reveal to the spaceship controller full information about the planet's owner, remaining inhabitants, and all other planetary information at the time of the landing.  This information is not updated as it later changes.</li>
         <li>There is no other in-game source of information about planetary data.</li>
 </ul>
-<b>Spaceships:</b><ul>
+<a name="galaxy"></a><b>Galaxy:</b><ul>
+        <li>Each player starts a game of overpower controlling one planet on the edge of a large galaxy of planets with 5 inhabitants and 20 resources.</li>
+        <li>At the center of the galaxy is the Planet Borion with 10 inhabitants and 30 resources.</li>
+        <li>Planets on the outer edge of the galaxy have no inhabitants and 2-6 resources.</li>
+        <li>Planets near the inner core of the galaxy have 5-9 resources and 1-5 inhabitants.</li>
+</ul>
+<a name="spaceships"></a><b>Spaceships:</b><ul>
         <li>Players may create launch orders for planets they control.  Launch orders specify the source planet, spaceship size, and target planet for a space ship launch.</li>
         <li>Launch orders cannot have the same source and target.</li>
         <li>Each spaceship launch will consume ship parts on the source planet equal to the ship size.  You cannot launch more or larger ships than a planet's parts stock will supply.</li>
@@ -72,7 +102,7 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <li>A faction that spots an enemy spaceship will know which areas within 20 of its planets the spaceship travelled through, but not any other information about the ship's travels or destination.</li>
 </ul>
 
-<b>Planetary landings:</b><ul>
+<a name="landings"></a><b>Planetary landings:</b><ul>
         <li>Planetary landings happen when a spaceship reaches its target planet.</li>
         <li>A spaceship deposits a number of colonists on a planet equal to the spaceship's size.</li>
         <li>If there are no hostile inhabitants of the planet, the colonists all become inhabitants and the spaceship's faction takes control of the planet if it did not already control it.</li>
@@ -86,15 +116,17 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
 
 <br>
 <h3>Operating the Game</h3>
-<b>Webpage layout</b><ul>
+<a name="layout"></a><b>Website layout</b><ul>
         <li>Login page</li>
         <li>User homebase Page</li>
         <li>Game List Page</li>
         <li>Game Overview Page</li>
+        <li>Game Quit Confirmation Page</li>
         <li>Game Play Page</li>
+        <li>Game Play Reports Page</li>
 </ul>
 
-<b>Game Map</b><ul>
+<a name="map"></a><b>Game Map</b><ul>
         <li>The game play page has a 800x600 .png file that is an interactive map of the game.</li>
         <li>You can interact with this map by clicking on it with your mouse or by scrolling your mousewheel while your cursor is over it.</li>
         <li>Holding shift while clicking or scrolling can change some interactions.</li>
@@ -107,12 +139,59 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <li>You control the "main target" with the left mousebutton.  Your main target will appear in bright yellow if it is on the map.</li>
         <li>You control the "secondary target" with the right mousebutton.  Your secondary target will appear as a dull yellow if it is on the map.</li>
         <br>
-        <li>If you have different planets as your main and secondary targets then if either of them are under your control and can launch spaceships, the information windows will have a shortcut to launch a ship at the other planet.</li>
+        <li>If your main target is a planet you control that can launch spaceships and your secondary target is a different planet, the information windows will have a shortcut to launch a ship from your main target at  your secondary target.</li>
         <li>Launch orders will appear as bright blue lines between the source planet and the target planet.</li>
-        <li>You will have the ability to cancel or modify a launch order from the information window after setting the order's source as either your main or secondary target.</li>
+        <li>You will have the ability to cancel or modify a launch order from the information window after setting the order's source as your main target.</li>
 </ul>
+<a name="json"></a><b>JSON API:</b>
+<ul>
+        <li>This server provides a JSON api for viewing game data.</li>
+        <li>All JSON objects are formatted according to the JSEND spec found at 
+                 [ <a href="http://labs.omniti.com/labs/jsend">
+                         http://labs.omniti.com/labs/jsend</a> ]</li>
+        <li>Game and Faction data can be accessed without authorization (though faction scores are only visible to the owners of those factions</li>
+        <li>All other objects can only by the user who controls the faction they are associated with.</li>
+        <li>All objects have a tiered ID specification, and you may access lists of objects by omitting specification data.</li>
+        <li>For example, /factions/ will list all factions, /factions/4 will list all factions with GID of 4, and /factions/4/15 will provide the exact faction with GID of 4 and FID of 15</li>
+        <li>All resources that require authorization to view must have their game and faction ID elements provided</li>
+        <li>If you provide an exact specification (all optional path arguments provided), then if an object is not found your request will result in a Jsend 404 failure.</li>
+        <li>If you provide an inexact specification that has no results, you will recieve an empty list.</li>
+</ul>
+<a name="availableapi"></a><b>Available API resources:</b>
+<ul>
+        <li>Brackets [] indicate an optional argument, CAPITOL LETTERS indicate a numeric ID key </li>
+        <li> <a href="./json/games">
+                        /overpower/json/games[/GID] </a></li>
+        <li> <a href="./json/factions">
+                        /overpower/json/factions[/GID[/FID]] </a></li>
+        <li> /overpower/json/planetviews/GID/FID[/PID] </a></li>
+        <li> /overpower/json/shipviews/GID/FID[/TURN[/PID]] </a></li>
+        <li> /overpower/json/orders/GID/FID[/SOURCE_PID[/TARGET_PID]] </a></li>
+        <li> /overpower/json/reports/GID/FID[/TURN] </a></li>
+</ul>
+<h3>Code Stuff</h3>
+<a name="code"></a><b>Source Code:</b>
+<ul>
+Source code for this game is at: <a href="https://github.com/sore0159/overpower">
+https://github.com/sore0159/overpower</a>
+        <li>/overpower/ contains the game logic for running a turn or creating a galaxy.</li>
+        <li>/overpower/db contains the code for interacting with the database</li>
+        <li>/overpower/server contains the code for the http server, with some game logic in how user input is parsed before passing it inward.</li>
+        <li>/overpower/mapping contains the code for the interactive map</li>
+        <b>Helper libraries:</b><br>
+<a href="https://github.com/sore0159/golang-helpers">
+https://github.com/sore0159/golang-helpers</a>
+        has several important parts of the code that have been split off into separate libraries.
+        <li>/golang-helpers/myweb /golang-helpers/mydb and golang-helpers/mylog all contain code for central abstractions dealing with these tasks.  mydb is the bulkiest of these packages: myweb and mylog are pretty lightweight.</li>
+        <li>/golang-helpers/mybad is my error library: basically a lightweight context-collection tool for passing information along with errors.</li>
+        <li>/golang-helpers/users is my super-insecure user authentication system.</li>
+        <li>/golang-helpers/jsend is a simple shell to assist in keeping my JSON serving in compliance with an external specification, namely the JSEND spec.</li>
+        <li><a href="https://github.com/sore0159/hexagon">
+https://github.com/sore0159/hexagon</a>
+                has my hexagon math: the pathfinding used for ships, the "polar" coordinates used to help random galaxy creation, the tools for loading hexagon coords and lists into and out of databases, and the "viewport" tool for contstructing pixel images of a hexagon grid.</li>
 
-<h3>Attributions</h3>
+</ul>
+<a name="attrib"></a><b>Attributions</b>
 <ul>
         <li>Planets Nu (major inspiration for this game):<br>
                 <a href="http://planets.nu/#/start">
@@ -132,4 +211,5 @@ Go to the [ <a href="/overpower/view/">Games List</a> ].
         <li>Map Image Font: Droid Sans Mono <br>
 <a href="http://www.fontsquirrel.com/fonts/droid-sans-mono">
         http://www.fontsquirrel.com/fonts/droid-sans-mono</a></li>
+</div>
 {{ end }}

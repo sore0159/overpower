@@ -6,7 +6,7 @@ import (
 )
 
 func GetVP(mv overpower.MapView) *hexagon.Viewport {
-	vp := hexagon.MakeViewport(.5*float64(mv.Zoom()), false, true)
+	vp := hexagon.MakeViewport(.25+.5*float64(mv.Zoom()), false, true)
 	//vp := hexagon.MakeViewport(float64(mv.Zoom()), false, true)
 	center := mv.Center()
 	vp.SetAnchor(center[0], center[1], float64(MAPW)/2, float64(MAPH)/2)
