@@ -9,15 +9,15 @@ func NewGame() *Game {
 }
 
 type Game struct {
-	gid        int
-	owner      string
-	name       string
-	turn       int
-	autoturn   int
-	freeautos  int
-	password   sql.NullString
-	winpercent int
-	highscore  int
+	gid       int
+	owner     string
+	name      string
+	turn      int
+	autoturn  int
+	freeautos int
+	password  sql.NullString
+	towin     int
+	highscore int
 	//
 	modified bool
 }
@@ -67,8 +67,8 @@ func (g *Game) SetAutoTurn(x int) {
 	g.modified = true
 }
 
-func (g *Game) WinPercent() int {
-	return g.winpercent
+func (g *Game) ToWin() int {
+	return g.towin
 }
 func (g *Game) HighScore() int {
 	return g.highscore
@@ -129,8 +129,8 @@ func (g *Game) SQLVal(name string) interface{} {
 		return g.freeautos
 	case "password":
 		return g.password
-	case "winpercent":
-		return g.winpercent
+	case "towin":
+		return g.towin
 	case "highscore":
 		return g.highscore
 	}
@@ -153,8 +153,8 @@ func (g *Game) SQLPtr(name string) interface{} {
 		return &g.freeautos
 	case "password":
 		return &g.password
-	case "winpercent":
-		return &g.winpercent
+	case "towin":
+		return &g.towin
 	case "highscore":
 		return &g.highscore
 	}
@@ -178,7 +178,7 @@ func (group *GameGroup) SelectCols() []string {
 		"autoturn",
 		"freeautos",
 		"password",
-		"winpercent",
+		"towin",
 		"highscore",
 	}
 }
@@ -189,6 +189,7 @@ func (group *GameGroup) UpdateCols() []string {
 		"autoturn",
 		"freeautos",
 		"highscore",
+		"towin",
 	}
 }
 
@@ -201,7 +202,7 @@ func (group *GameGroup) InsertCols() []string {
 		"owner",
 		"name",
 		"password",
-		"winpercent",
+		"towin",
 	}
 }
 

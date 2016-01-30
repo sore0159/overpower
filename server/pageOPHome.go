@@ -126,18 +126,18 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 				h.SetError("INVALID FACTION NAME")
 				break
 			}
-			ints, ok := GetInts(r, "winpercent")
+			ints, ok := GetInts(r, "towin")
 			if !ok {
 				h.SetError("INVALID GAME WINPERCENT")
 				break
 			}
-			winpercent := ints[0]
-			if winpercent > 90 || winpercent < 10 {
+			towin := ints[0]
+			if towin < 2 {
 				h.SetError("INVALID GAME WINPERCENT")
 				break
 			}
-			err = OPDB.MakeGame(h.User.String(), name, password, winpercent)
-			if my, bad := Check(err, "make game failure", "user", h.User, "name", name, "password", password, "winpercent", winpercent); bad {
+			err = OPDB.MakeGame(h.User.String(), name, password, towin)
+			if my, bad := Check(err, "make game failure", "user", h.User, "name", name, "password", password, "towin", towin); bad {
 				Log(my)
 				h.SetError("DATABASE ERROR IN GAME CREATION")
 				break

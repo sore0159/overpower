@@ -6,7 +6,7 @@
 {{ $ownedf := index . "ownedf" }}
 GAME:  {{ $g.Name }} &bull; OWNER: {{ $g.Owner }} &bull; {{ if $active }}TURN: {{ $g.Turn }}{{ else }}NOT STARTED{{ end }}<br>
 
-Percent Galaxy to win: {{ $g.WinPercent }}<br>
+Planets to win: {{ $g.ToWin }}<br>
 {{ if $g.HighScore }} Current leading percentage: {{ $g.HighScore }}<br>{{ end }}
 {{ $autodays := $g.AutoDays }}
 Auto Run Days: &bull;

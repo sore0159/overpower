@@ -17,7 +17,7 @@ func (d DB) MakeTables() (err error) {
 	turn int NOT NULL DEFAULT 0,
 	autoturn int NOT NULL DEFAULT 0,
 	freeautos int NOT NULL DEFAULT 0,
-	winpercent int NOT NULL,
+	towin int NOT NULL,
 	highscore int NOT NULL DEFAULT 0,
 	password varchar(20) DEFAULT NULL
 );`)

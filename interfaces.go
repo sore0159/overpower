@@ -40,7 +40,7 @@ type Game interface {
 	SetAutoDays([7]bool)
 	FreeAutos() int
 	SetFreeAutos(int)
-	WinPercent() int
+	ToWin() int
 	HighScore() int
 	SetHighScore(int)
 }

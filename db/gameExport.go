@@ -4,8 +4,8 @@ import (
 	"mule/overpower"
 )
 
-func (d DB) MakeGame(owner, name, password string, winpercent int) (err error) {
-	item := &Game{owner: owner, name: name, winpercent: winpercent}
+func (d DB) MakeGame(owner, name, password string, towin int) (err error) {
+	item := &Game{owner: owner, name: name, towin: towin}
 	if password != "" {
 		item.password.Valid = true
 		item.password.String = password

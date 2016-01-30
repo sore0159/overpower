@@ -2,7 +2,6 @@ package overpower
 
 import (
 	"fmt"
-	"math"
 	"mule/hexagon"
 )
 
@@ -55,7 +54,7 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		reports[fid] = source.NewReport(fid, turn)
 	}
 	// --------- GAME ALREADY OVER -------- //
-	if game.HighScore() >= game.WinPercent() {
+	if game.HighScore() >= game.ToWin() {
 		return nil, nil
 	}
 	// ------ AUTO TURN ------- //
@@ -192,18 +191,16 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 			continue
 		}
 		facScores[cont] += 1
-		if inh, res := pl.Inhabitants(), pl.Resources(); inh > 0 && res > 0 {
-			var prod int
-			switch {
-			case inh > 5 && res > 5:
-				prod = 5
-			case inh > res:
+		if parts, inh, res := pl.Parts(), pl.Inhabitants(), pl.Resources(); inh > 0 && res > 0 && parts < inh {
+			prod := inh - parts
+			if prod > res {
 				prod = res
-			default:
-				prod = inh
+			}
+			if prod > 5 {
+				prod = 5
 			}
 			pl.SetResources(res - prod)
-			pl.SetParts(pl.Parts() + prod)
+			pl.SetParts(parts + prod)
 		}
 		// ---- ARRIVALS ARRIVE ---- //
 		if x := arrivals[pl.Pid()]; x > 0 {
@@ -213,21 +210,19 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 		source.UpdatePlanetView(cont, turn, pl)
 	}
 	var highScore int
-	winPercent := game.WinPercent()
+	toWin := game.ToWin()
 	winners := make([]Faction, 0)
 	for _, f := range factions {
 		score := facScores[f.Fid()]
 		if score > highScore {
 			highScore = score
 		}
-		scorePercent := int(math.Floor(100 * float64(score) / float64(len(planets))))
-		f.SetScore(scorePercent)
-		if scorePercent >= winPercent {
+		f.SetScore(score)
+		if score >= toWin {
 			winners = append(winners, f)
 		}
 	}
-	percent := 100 * float64(highScore) / float64(len(planets))
-	game.SetHighScore(int(math.Floor(percent)))
+	game.SetHighScore(highScore)
 	if len(winners) > 0 {
 		Ping("TODO: WINNING!", winners)
 	}

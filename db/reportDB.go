@@ -29,7 +29,9 @@ func (group *ReportGroup) UpdateList() []mydb.SQLer {
 func (group *ReportGroup) InsertList() []mydb.SQLer {
 	list := make([]mydb.SQLer, 0, len(group.List))
 	for _, item := range group.List {
-		list = append(list, item)
+		if len(item.contents) > 0 {
+			list = append(list, item)
+		}
 	}
 	return list
 }

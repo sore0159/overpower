@@ -25,7 +25,7 @@ GAME HAS NO USERS SIGNED UP TO PLAY<br>
 
 {{ $autodays := $g.AutoDays }}
 <br>
-Percent Galaxy to win: {{ $g.WinPercent }}<br>
+Planets to win: {{ $g.ToWin }}<br>
 {{ if $g.HighScore }} Current leading percentage: {{ $g.HighScore }}<br>{{ end }}
 Auto Run Days: &bull;
 {{ if .noauto }}
@@ -76,7 +76,7 @@ You currently are running no game.
 <form action="" method="post">
 <input type="hidden" name="action" value="newgame">
 Game Name: <input name="gamename" type="text"><br>
-Percent of planets to win (10-90): <input name="winpercent" type="text" size=3><br>
+Number of planets to win (galaxies generate 16 planets per player): <input name="towin" type="text" size=3><br>
 Your faction name (leave blank if you don't wish to play): <input name="facname" type="text"><br>
 Password (leave blank for open game): <input name="password" type="text"><br>
 <input type="submit" value="CREATE GAME">
