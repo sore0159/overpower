@@ -18,6 +18,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 	for i, f := range factions {
 		fids[i] = f.Fid()
 		f.SetDone(false)
+		f.SetScore(1)
 	}
 	// TESTING //
 	//fids = []int{fids[0], 0, 0, 0, 0,

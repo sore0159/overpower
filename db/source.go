@@ -3,10 +3,9 @@ package db
 import (
 	"database/sql"
 	"mule/hexagon"
+	"mule/mydb"
 	"mule/overpower"
 )
-
-var sourceTest overpower.Source = &Source{}
 
 // Usage Example:
 // f := func(d DB) error {
@@ -151,7 +150,7 @@ func (s *Source) Commit() error {
 	for _, item := range s.planetViews {
 		plVs = append(plVs, item)
 	}
-	for _, group := range []UpdateGroup{
+	for _, group := range []mydb.UpdateGrouper{
 		&GameGroup{[]*Game{s.game}},
 		&PlanetGroup{s.planets},
 		&FactionGroup{s.factions},

@@ -100,7 +100,6 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			exodus := r.FormValue("exodus") == "on"
-			Ping("exodus", exodus, r.FormValue("exodus"))
 			err := StartGame(g.Gid(), exodus)
 			if my, bad := Check(err, "startgame failure", "gid", g.Gid()); bad {
 				Log(my)
