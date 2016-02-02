@@ -1,6 +1,7 @@
 {{ define "title"}}Overpower Game Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
+<div class="blocker"><div class="blockertext">There is a new turn available:<br> <a href="" class="blocker">Click here to refresh</a>.</div></div>
 {{ $g := index . "game" }}
 {{ $active := index . "active" }}
 {{ $ownedf := index . "ownedf" }}
@@ -84,4 +85,9 @@ OTHER FACTIONS:
 NO OTHER FACTIONS
 {{ end }}
 
+<script type="text/javascript">
+var curTurn = {{ $g.Turn }};
+var curGame = {{ $g.Gid }};
+</script>
+<script src="/static/js/turncheck.js"></script>
 {{ end }}

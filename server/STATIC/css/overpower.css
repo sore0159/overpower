@@ -130,3 +130,7 @@ div.targetcenter {
         padding-top:10px;
         padding-bottom:5px;
 }
+
+canvas.screen {
+        border: 1px solid black;
+}

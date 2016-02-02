@@ -1,6 +1,3 @@
-console.log("CUR GAME IS", curGame);
-console.log("CUR TURN IS", curTurn);
-
 (function() {
 var newTurn = false;
 var blink = false;
@@ -58,7 +55,9 @@ function turnCheck(isNew) {
 function whenNew(newCheck) {
     if (newCheck) {
         var blocker = document.querySelector("div.blocker");
-        blocker.style.display = 'block';
+        if (blocker) {
+            blocker.style.display = 'block';
+        }
         blinkIco();
     } else {
         window.setTimeout(cycle, 15000);
