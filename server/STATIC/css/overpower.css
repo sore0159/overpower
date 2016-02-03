@@ -133,4 +133,11 @@ div.targetcenter {
 
 canvas.screen {
         border: 1px solid black;
+        position: absolute;
+}
+canvas.starscreen {
+        z-index:1;
+}
+canvas.mainscreen {
+        z-index:2;
 }
