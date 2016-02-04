@@ -5,10 +5,8 @@ var data = canvas.overpowerData;
 
 data.setTargetOne = function(hex, help) {
     var grid = canvas.muleGrid;
-    if (!help) {
-        this.targetOne = hex;
-        return;
-    }
+    var targetPt;
+    var targetInfo = {ships:[], trails:[]};
     var tolerance;
     if (grid.scale > 2.5) {
         tolerance = 2;
@@ -17,51 +15,78 @@ data.setTargetOne = function(hex, help) {
     } else {
         tolerance = 4;
     }
-    var exact, closest, dist;
+    if (!help) {
+        targetPt = hex;
+    }
+    var closestPl, dist;
     data.planetviews.forEach(function(planet) {
-        if (exact) {
-            return;
-        }
-        if (grid.ptsEq(planet.loc, hex)) {
-            exact = hex;
+        if (dist === 0) {
             return;
         }
         var steps = grid.stepsBetween(planet.loc, hex);
-        if (!dist || steps < dist) {
-            closest = planet.loc;
+        if (steps === 0) {
+            targetPt = hex;
+            targetInfo.planet = planet;
+        } else if (!dist || steps < dist) {
+            closestPl = planet;
             dist = steps;
         }
     });
-    if (exact) {
-        this.targetOne = exact;
-        return;
-    }
+
+    var closestShLoc;
     data.shipviews.forEach(function(ship) {
-        if (exact) {
-            return;
-        }
         if (ship.loc) {
-            if (grid.ptsEq(ship.loc, hex)) {
-                exact = hex;
-                return;
+            if (targetPt && grid.ptsEq(targetPt, ship.loc)) {
+                targetInfo.ships.push(ship);
+            } else {
+                var steps = grid.stepsBetween(ship.loc, hex);
+                if (!dist || steps < dist) {
+                    closestPl = null;
+                    closestShLoc = hex;
+                    dist = steps;
+                }
             }
-            var steps = grid.stepsBetween(ship.loc, hex);
-            if (!dist || steps < dist) {
-                closest = ship.loc;
-                dist = steps;
-            }
+        }
+        if (targetPt) {
+            ship.trail.forEach(function(pt) {
+                if (grid.ptsEq(pt, targetPt)) {
+                    targetInfo.trails.push(ship);
+                }
+            });
         }
     });
-    if (exact) {
-        this.targetOne = exact;
-        return;
+    if (!targetPt) {
+        if (closestPl && dist < tolerance) {
+            targetPt = closestPl.loc;
+            targetInfo.planet = closestPl;
+        } else if (closestShLoc && dist < tolerance) {
+            targetPt = closestShLoc;
+        } else {
+            targetPt = hex;
+        }
+        data.shipviews.forEach(function(ship) {
+            if (ship.loc) {
+                if (targetPt && grid.ptsEq(targetPt, ship.loc)) {
+                    targetInfo.ships.push(ship);
+                } 
+            }
+            ship.trail.forEach(function(pt) {
+                if (grid.ptsEq(pt, targetPt)) {
+                    targetInfo.trails.push(ship);
+                }
+            });
+        });
     }
-
-    if (dist < tolerance) {
-        this.targetOne = closest;
-        return;
+    if (targetInfo.planet && this.orders) {
+        targetInfo.orders = [];
+        this.orders.forEach(function(order) {
+            if (order.source === targetInfo.planet.pid) {
+                targetInfo.orders.push(order);
+            }
+        });
     }
-    this.targetOne = hex;
+    this.targetOne = targetPt;
+    this.targetOneInfo = targetInfo;
 };
 
 data.setTargetTwo = function(hex, help, drop) {
@@ -74,31 +99,25 @@ data.setTargetTwo = function(hex, help, drop) {
     } else {
         tolerance = 4;
     }
-    var exact, closest, dist;
+    var closestPl, dist;
     data.planetviews.forEach(function(planet) {
-        if (exact) {
-            return;
-        }
-        if (grid.ptsEq(planet.loc, hex)) {
-            exact = hex;
+        if (dist === 0) {
             return;
         }
         var steps = grid.stepsBetween(planet.loc, hex);
         if (!dist || steps < dist) {
-            closest = planet.loc;
+            closestPl = planet;
             dist = steps;
         }
     });
-    if (exact) {
-        this.targetTwo = exact;
-        return;
-    }
-    if (help && dist < tolerance) {
-        this.targetTwo = closest;
+    if (dist === 0 || help && dist < tolerance) {
+        this.targetTwo = closestPl.loc;
+        this.targetTwoInfo = {planet: closestPl};
         return;
     }
     if (drop) {
         this.targetTwo = null;
+        this.targetTwoInfo = null;
         return;
     }
 };

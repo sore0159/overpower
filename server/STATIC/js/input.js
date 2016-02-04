@@ -45,6 +45,8 @@ canvas.muleClicked = function(pt, button, shift) {
         this.centerHex(hex);
     }
     this.drawMap();
+    console.log("ONE:", canvas.overpowerData.targetOneInfo);
+    console.log("TWO:", canvas.overpowerData.targetTwoInfo);
 };
 
 canvas.muleWheeled = function(up, shift) {

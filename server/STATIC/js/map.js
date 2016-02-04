@@ -65,13 +65,17 @@ canvas.drawMap = function() {
         ctx.strokeStyle = "#000000";
         var path = new Path2D();
         var center = grid.h2Center(planet.loc);
-        var radius = scale *0.45;
         if (scale >= 15) {
             center[1] = center[1]-scale*0.25;
         }
-        if (scale < 11 && scale > 4) {
+        var radius;
+        if (scale > 10) {
+            radius = scale * 0.45;
+        } else if (scale > 4) {
             radius = 5;
-        }  else if (scale < 5) {
+        }  else if (scale > 2) {
+            radius = 4;
+        } else {
             radius = 3;
         }
         path.moveTo(center[0]+radius, center[1]);
