@@ -10,6 +10,15 @@
 */
 
 (function() {
+function hexSteps(hex1, hex2) {
+    var z1  = -hex1[0] - hex1[1];
+    var z2  = -hex2[0] - hex2[1];
+    var dx = Math.abs(hex2[0] - hex1[0]);
+    var dy = Math.abs(hex2[1] - hex1[1]);
+    var dz = Math.abs(z2 - z1);
+    return (dx + dy + dz)/2;
+}
+
 function h2Center(hex) {
     var px = 1.5 * hex[0];
     // 1^2 = (.5)^2 + (dy^2)
@@ -63,21 +72,21 @@ function p2Hex(pt) {
     return [hx, hy];
 }
 
-function Grid(scale, centerX, centerY, theta, squashY, noMirrorY) {
+function Grid(scale, originX, originY, theta, squashY, noMirrorY) {
     if (scale) {
         this.scale = scale;
     } else {
         this.scale = 1;
     }
-    if (centerX) {
-        this.centerX = centerX;
+    if (originX) {
+        this.originX = originX;
     } else {
-        this.centerX = 0;
+        this.originX = 0;
     }
-    if (centerY) {
-        this.centerY = centerY;
+    if (originY) {
+        this.originY = originY;
     } else {
-        this.centerY = 0;
+        this.originY = 0;
     }
     if (theta) {
         this.theta = theta;
@@ -97,9 +106,8 @@ function Grid(scale, centerX, centerY, theta, squashY, noMirrorY) {
 }
 
 Grid.prototype.out2in = function(pt) {
-    var x = pt[0]-this.centerX;
-    var y = pt[1];
-    y -= this.centerY;
+    var x = pt[0] - this.originX;
+    var y = pt[1] - this.originY;
     if (this.mirrorY) {
         y = -y;
     }
@@ -121,9 +129,20 @@ Grid.prototype.in2out = function(pt) {
     }
     rotatedX = rotatedX*this.scale;
     rotatedY = rotatedY*this.scale*this.squashY;
-    rotatedX += this.centerX;
-    rotatedY += this.centerY;
+    rotatedX += this.originX;
+    rotatedY += this.originY;
     return [rotatedX, rotatedY];
+};
+Grid.prototype.setHexAt = function(hex, setPt) {
+    var curPt = this.h2Center(hex);
+    this.shift(setPt[0]-curPt[0], setPt[1]-curPt[1]);
+};
+Grid.prototype.setInPtAt = function(inPt, setPt) {
+    var curPt = this.in2out(inPt);
+    this.shift(setPt[0]-curPt[0], setPt[1]-curPt[1]);
+};
+Grid.prototype.setOutPtAt = function(outPt, setPt) {
+    this.shift(setPt[0]-outPt[0], setPt[1]-outPt[1]);
 };
 Grid.prototype.p2Hex = function(pt) {
     var inPt = this.out2in(pt);
@@ -145,10 +164,36 @@ Grid.prototype.h2Corners = function(hex) {
 };
 Grid.prototype.shift = function(dx, dy) {
     if (dx) {
-        this.centerX += dx;
+        this.originX += dx;
     }
     if (dy) {
-        this.centerY += dy;
+        this.originY += dy;
+    }
+};
+Grid.prototype.rotateAround = function(theta, aboutPt) {
+    if (!theta) {
+        return;
+    }
+    var curIn;
+    if (aboutPt) {
+        curIn = this.out2in(aboutPt);
+    }
+    this.theta += theta;
+    if (curIn) {
+        this.setInPtAt(curIn, aboutPt);
+    }
+};
+Grid.prototype.scaleAround = function(dScale, aboutPt) {
+    if (!dScale || this.scale+dScale < 0) {
+        return;
+    }
+    var curIn;
+    if (aboutPt) {
+        curIn = this.out2in(aboutPt);
+    }
+    this.scale += dScale;
+    if (curIn) {
+        this.setInPtAt(curIn, aboutPt);
     }
 };
 Grid.prototype.visibleHexList = function(minX, minY, maxX, maxY) {
@@ -193,33 +238,30 @@ Grid.prototype.visibleHexList = function(minX, minY, maxX, maxY) {
     });
     return hexList;
 };
-
+Grid.prototype.stepsBetween = hexSteps;
+Grid.prototype.ptsEq = function(pt1, pt2) {
+    if (!pt1 || !pt2) {
+        return false;
+    }
+    return (pt1[0] === pt2[0] && pt1[1] === pt2[1]);
+};
 
 var canvas = document.getElementById('mainscreen');
-var grid = new Grid(100, canvas.width/2, canvas.height/2, 0.25, 0.55);
+var grid = new Grid(40, canvas.width/2, canvas.height/2, 0.25, 0.55);
 canvas.muleGrid = grid;
 
-canvas.drawGrid = function() {
-    var scale = this.muleGrid.scale;
+canvas.drawGrid = function(hexList) {
     var ctx = this.getContext('2d');
     ctx.clearRect(0,0,this.width, this.height);
-    if (scale < 15) {
-        return;
-    } else if (scale < 25) {
+    var scale = this.muleGrid.scale;
+    if (scale < 25) {
         ctx.lineWidth = 0.5;
-    } else if (scale < 30) {
-        ctx.lineWidth = 1;
     } else if (scale < 35) {
-        ctx.lineWidth = 1.5;
-    } else if (scale < 40) {
-        ctx.lineWidth = 2;
-    } else if (scale < 45) {
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 1;
     } else {
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 1.5;
     }
     var grid = this.muleGrid;
-    var hexList = grid.visibleHexList(0,0,this.width,this.height);
     var path = new Path2D();
     function drawHex(hex) {
         var corners = grid.h2Corners(hex);
@@ -230,32 +272,25 @@ canvas.drawGrid = function() {
     }
     hexList.forEach(drawHex);
 
-    ctx.strokeStyle = "rgb(255,255,255)";
+    ctx.strokeStyle = "#2f2f8f";
     ctx.stroke(path);
 };
-canvas.drawGrid();
 
-canvas.muleClicked = function(pt, button, shift) {
-    var grid = this.muleGrid;
-    var inPt = grid.out2in(pt);
-    console.log("Hex clicked:", grid.p2Hex(pt), button, shift);
+canvas.hexPath = function(hex) {
+    var path = new Path2D();
+    var corners = this.muleGrid.h2Corners(hex);
+    path.moveTo(corners[5][0], corners[5][1]);
+    corners.forEach(function(pt) {
+        path.lineTo(pt[0], pt[1]);
+    });
+    return path;
 };
-canvas.muleWheeled = function(up, shift) {
-    if (shift) {
-        if (up > 0) {
-            this.muleGrid.theta += 0.01;
-        } else {
-            this.muleGrid.theta -= 0.01;
-        }
-        this.drawGrid();
-        return;
-    }
-    if (up > 0) {
-        this.muleGrid.scale += 1;
-    } else if (this.muleGrid.scale > 1) {
-        this.muleGrid.scale -= 1;
-    }
-    this.drawGrid();
+
+canvas.centerHex = function(hex) {
+    canvas.muleGrid.setHexAt(hex, [this.width/2, this.height/2]);
+};
+canvas.centerPt = function(pt) {
+    canvas.muleGrid.setOutPtAt(pt, [this.width/2, this.height/2]);
 };
 
 
