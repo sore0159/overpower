@@ -60,10 +60,14 @@ type CanvasData struct {
 
 func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
 	gid, fid := f.Gid(), f.Fid()
+	var turn int
 	g, err1 := OPDB.GetGame("gid", gid)
+	if g != nil {
+		turn = g.Turn() - 1
+	}
 	facs, err2 := OPDB.GetFactions("gid", gid)
 	plVs, err3 := OPDB.GetPlanetViews("gid", gid, "fid", fid)
-	shVs, err4 := OPDB.GetShipViews("gid", gid, "fid", fid)
+	shVs, err4 := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", turn)
 	orders, err5 := OPDB.GetOrders("gid", gid, "fid", fid)
 	for i, err := range []error{err1, err2, err3, err4, err5} {
 		if my, bad := Check(err, "fillcanvas failure", "index", i, "gid", gid, "fid", fid); bad {

@@ -196,7 +196,7 @@ Grid.prototype.scaleAround = function(dScale, aboutPt) {
         this.setInPtAt(curIn, aboutPt);
     }
 };
-Grid.prototype.visibleHexList = function(minX, minY, maxX, maxY) {
+Grid.prototype.visibleHexes = function(minX, minY, maxX, maxY) {
     var minObj = {};
     var maxObj = {};
     var grid = this;
@@ -228,15 +228,30 @@ Grid.prototype.visibleHexList = function(minX, minY, maxX, maxY) {
         xChecker(x,y);
     }
     var hexList = [];
+    var hexMap = new Map();
+    hexMap.hasHex = function(hex) {
+        var hexSet = this.get(hex[0]);
+        if (!hexSet) {
+            return false;
+        }
+        return hexSet.has(hex[1]);
+    };
     Object.keys(minObj).forEach(function(key) {
         var minHex = minObj[key];
         var maxHex = maxObj[key];
+        var hexSet = hexMap.get(minHex[0]);
+        if (!hexSet) {
+            hexSet = new Set();
+            hexMap.set(minHex[0], hexSet);
+        }
         for (i = minHex[1]; i<=maxHex[1];i++) {
             var hex = [minHex[0], i];
             hexList.push(hex);
+            hexSet.add(i);
         }
     });
-    return hexList;
+    hexMap.list = hexList;
+    return hexMap;
 };
 Grid.prototype.stepsBetween = hexSteps;
 Grid.prototype.ptsEq = function(pt1, pt2) {
@@ -247,7 +262,7 @@ Grid.prototype.ptsEq = function(pt1, pt2) {
 };
 
 var canvas = document.getElementById('mainscreen');
-var grid = new Grid(40, canvas.width/2, canvas.height/2, 0.25, 0.55);
+var grid = new Grid(5, canvas.width/2, canvas.height/2, 0.25, 0.55);
 canvas.muleGrid = grid;
 
 canvas.drawGrid = function(hexList) {
