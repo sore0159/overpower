@@ -36,7 +36,7 @@ type ShipView struct {
 	Sid        int               `json:"sid"`
 	Controller int               `json:"controller"`
 	Size       int               `json:"size"`
-	Loc        hexagon.NullCoord `json:"loc,omitempty"`
-	Dest       hexagon.NullCoord `json:"dest,omitempty"`
+	Loc        hexagon.NullCoord `json:"loc"`
+	Dest       hexagon.NullCoord `json:"dest"`
 	Trail      hexagon.CoordList `json:"trail"`
 }

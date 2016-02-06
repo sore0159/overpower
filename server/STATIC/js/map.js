@@ -68,7 +68,7 @@ canvas.drawMap = function(timestamp) {
     actualShips = new Map();
     destShips = [];
     function shipCheck(ship) {
-        if (ship.loc && (!visHexes || visHexes.hasHex(ship.loc.coord))) {
+        if (ship.loc.valid && (!visHexes || visHexes.hasHex(ship.loc.coord))) {
             var hex = ship.loc.coord;
             var shipList = actualShips.get(hex);
             if (shipList) {
@@ -79,7 +79,7 @@ canvas.drawMap = function(timestamp) {
             if (ship.dest) {
                 destShips.push(ship);
             }
-        } else if (ship.dest && ship.loc && (!visHexes ||visHexes.hasHex(ship.dest.coord))) {
+        } else if (ship.dest.valid && ship.loc.valid && (!visHexes ||visHexes.hasHex(ship.dest.coord))) {
             destShips.push(ship);
         }
     }
