@@ -99,7 +99,7 @@ func Test4(t *testing.T) {
 
 		f := func(d DB) error {
 			source := d.NewSource(gid)
-			err := overpower.MakeGalaxy(source)
+			err := overpower.MakeGalaxy(source, false)
 			if my, bad := Check(err, "make galaxy failed", "gid", gid); bad {
 				return my
 			}

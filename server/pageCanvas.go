@@ -45,7 +45,9 @@ func pageCanvas(w http.ResponseWriter, r *http.Request) {
 		Bail(w, my)
 		return
 	}
-	h.SetApp(string(dataJson))
+	m := h.DefaultApp()
+	m["json"] = string(dataJson)
+	m["data"] = cvData
 	h.Apply(TPCANVAS, w)
 }
 
@@ -56,6 +58,7 @@ type CanvasData struct {
 	PlanetViews []*json.PlanetView `json:"planetviews"`
 	ShipViews   []*json.ShipView   `json:"shipviews"`
 	Orders      []*json.Order      `json:"orders"`
+	MapView     *json.MapView      `json:"mapview"`
 }
 
 func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
@@ -69,7 +72,8 @@ func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
 	plVs, err3 := OPDB.GetPlanetViews("gid", gid, "fid", fid)
 	shVs, err4 := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", turn)
 	orders, err5 := OPDB.GetOrders("gid", gid, "fid", fid)
-	for i, err := range []error{err1, err2, err3, err4, err5} {
+	mapview, err6 := OPDB.GetMapView("gid", gid, "fid", fid)
+	for i, err := range []error{err1, err2, err3, err4, err5, err6} {
 		if my, bad := Check(err, "fillcanvas failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
 		}
@@ -81,6 +85,7 @@ func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
 		PlanetViews: json.LoadPlanetViews(plVs),
 		ShipViews:   json.LoadShipViews(shVs),
 		Orders:      json.LoadOrders(orders),
+		MapView:     json.LoadMapView(mapview),
 	}
 	return c, nil
 }

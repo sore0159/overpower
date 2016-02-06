@@ -43,7 +43,6 @@ canvas.muleClicked = function(pt, button, shift) {
         this.overpowerData.setTargetTwo(hex, help, shift);
     } else if (button === 1 || button === 0) {
         this.setCenterDest(hex);
-        //this.centerHex(hex);
     }
     this.drawMap();
 };
@@ -61,6 +60,24 @@ canvas.muleWheeled = function(up, shift, control) {
         return;
     }
     if (shift) {
+        var targetOrder = this.overpowerData.targetOrder;
+        if (targetOrder) {
+            var curSize = targetOrder.size;
+            if ((up > 0) && targetOrder.sourcePl.avail) {
+                targetOrder.sourcePl.avail -= 1;
+                targetOrder.size += 1;
+            } else if ((up < 0) && targetOrder.size) {
+                targetOrder.sourcePl.avail += 1;
+                targetOrder.size -= 1;
+            } else {
+                return;
+            }
+            if (!targetOrder.originSize && targetOrder.originSize !== 0) {
+                targetOrder.originSize = curSize;
+            }
+            this.refreshTargetOrderInfo();
+            this.drawMap();
+        }
         return;
     }
     var cur = this.muleGrid.scale;

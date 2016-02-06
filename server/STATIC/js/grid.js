@@ -196,6 +196,7 @@ Grid.prototype.scaleAround = function(dScale, aboutPt) {
         this.setInPtAt(curIn, aboutPt);
     }
 };
+// visibleHexes fails if grid.scale < 1
 Grid.prototype.visibleHexes = function(minX, minY, maxX, maxY) {
     var minObj = {};
     var maxObj = {};
@@ -308,5 +309,6 @@ canvas.centerPt = function(pt) {
     canvas.muleGrid.setOutPtAt(pt, [this.width/2, this.height/2]);
 };
 
+canvas.centerHex(canvas.overpowerData.map.center);
 
 })();

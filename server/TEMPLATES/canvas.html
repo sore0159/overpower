@@ -1,12 +1,25 @@
 {{ define "title"}}Overpower Canvas Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
+{{ $g := .data.Game }}
+{{ $f := .data.Faction }}
+
+<div class="screenblock">
 <canvas class="screen" id="starscreen" width=800 height=600></canvas>
 <canvas class="screen" id="mainscreen" width=800 height=600></canvas>
+</div>
+<b>Game:</b> [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; <b>Faction:</b> {{ $f.Name }}<br>
+<div id="scorebox">Scorebox</div>
+<div id="turnbox">TURN</div>
+<div id="reportbox">Reports</div>
+<div id="targetonebox">Target One</div>
+<div id="targettwobox">Target Two</div>
+<div id="targetorderbox">Target Order</div>
+
 <script type="text/javascript"> (function() {
 
 var canvas = document.getElementById('mainscreen');
-canvas.overpowerData = JSON.parse({{.}});
+canvas.overpowerData = JSON.parse({{.json}});
 
 })(); </script>
 
@@ -14,5 +27,6 @@ canvas.overpowerData = JSON.parse({{.}});
 <script src="/static/js/stars.js" type="text/javascript"></script>
 <script src="/static/js/grid.js" type="text/javascript"></script>
 <script src="/static/js/map.js" type="text/javascript"></script>
+<script src="/static/js/infobox.js" type="text/javascript"></script>
 <script src="/static/js/input.js" type="text/javascript"></script>
 {{ end }}

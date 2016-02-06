@@ -352,7 +352,6 @@ canvas.setCenterDest = function(hex) {
 };
 
 canvas.moveTowardCenter = function(pt) {
-    console.log("PING");
     if (!this.aniInfoCenter) {
         this.aniInfoCenter = 0;
     }
@@ -361,9 +360,6 @@ canvas.moveTowardCenter = function(pt) {
     var shiftY = this.height/2 - pt[1];
     var scale = this.aniInfoCenter/15;
     this.muleGrid.shift(shiftX*scale, shiftY*scale);
-    if (this.mapCentered()) {
-        this.aniInfoCenter = 0;
-    }
 };
 
 
