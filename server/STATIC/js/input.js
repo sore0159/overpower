@@ -22,7 +22,7 @@ function mapWheel(event) {
     } else if (up === 0) {
         return true;
     }
-    this.muleWheeled(up, event.shiftKey);
+    this.muleWheeled(up, event.shiftKey, event.ctrlKey);
     return false;
 }
 canvas.onmousedown = mapClick;
@@ -42,15 +42,14 @@ canvas.muleClicked = function(pt, button, shift) {
     } else if (button === 2) {
         this.overpowerData.setTargetTwo(hex, help, shift);
     } else if (button === 1 || button === 0) {
-        this.centerHex(hex);
+        this.setCenterDest(hex);
+        //this.centerHex(hex);
     }
     this.drawMap();
-    console.log("ONE:", canvas.overpowerData.targetOneInfo);
-    console.log("TWO:", canvas.overpowerData.targetTwoInfo);
 };
 
-canvas.muleWheeled = function(up, shift) {
-    if (shift) {
+canvas.muleWheeled = function(up, shift, control) {
+    if (control) {
         var theta;
         if (up > 0) {
             dTheta = 0.01;
@@ -59,6 +58,9 @@ canvas.muleWheeled = function(up, shift) {
         }
         this.muleGrid.rotateAround(dTheta, [this.width/2, this.height/2]);
         this.drawMap();
+        return;
+    }
+    if (shift) {
         return;
     }
     var cur = this.muleGrid.scale;
