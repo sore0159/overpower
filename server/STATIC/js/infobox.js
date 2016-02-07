@@ -84,7 +84,7 @@
                 if (infoT1.ships.length > 0) {
                     htmlStr += "<hr class='target'><b>Ship";
                     if (infoT1.ships.length > 1) {
-                        htmlStl += "s";
+                        htmlStr += "s";
                     }
                     htmlStr += " detected:</b><br><ul>";
                     infoT1.ships.forEach(function(ship) {
@@ -103,7 +103,7 @@
                 if (infoT1.trails.length > 0) {
                     htmlStr += "<hr class='target'><b>Ship passage";
                     if (infoT1.trails.length > 1) {
-                        htmlStl += "s";
+                        htmlStr += "s";
                     }
                     htmlStr += " detected:</b><br><ul>";
                     infoT1.trails.forEach(function(ship) {

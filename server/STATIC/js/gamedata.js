@@ -75,7 +75,7 @@ canvas.parseOPData = function() {
 
             var closestShLoc;
             this.shipviews.forEach(function(ship) {
-                if (ship.loc) {
+                if (ship.loc.valid) {
                     if (targetPt && grid.ptsEq(targetPt, ship.loc.coord)) {
                         targetInfo.ships.push(ship);
                     } else {
@@ -105,7 +105,7 @@ canvas.parseOPData = function() {
                     targetPt = hex;
                 }
                 this.shipviews.forEach(function(ship) {
-                    if (ship.loc) {
+                    if (ship.loc.valid) {
                         if (targetPt && grid.ptsEq(targetPt, ship.loc.coord)) {
                             targetInfo.ships.push(ship);
                         } 
