@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"mule/overpower"
 	"net/http"
 )
@@ -11,7 +12,12 @@ var (
 
 func (h *Handler) pageOPReports(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction, facs []overpower.Faction) {
 	turn, ok := h.IntAt(5)
-	if !ok || turn < 1 || turn >= g.Turn() {
+	if !ok {
+		var pathStr = fmt.Sprintf("%s/%d", h.NewPath(5), g.Turn()-1)
+		http.Redirect(w, r, pathStr, http.StatusFound)
+		return
+	}
+	if turn < 1 || turn >= g.Turn() {
 		http.Error(w, "BAD TURN FOR REPORTS", http.StatusBadRequest)
 		return
 	}

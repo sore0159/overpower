@@ -11,28 +11,10 @@ var (
 	TPCANVAS = MixTemp("frame", "titlebar", "canvas")
 )
 
-// /overpower/canvas/GID
-func pageCanvas(w http.ResponseWriter, r *http.Request) {
-	h := MakeHandler(w, r)
-	if len(h.Path) > 4 {
-		http.Redirect(w, r, h.NewPath(3), http.StatusFound)
-		return
-	}
-	if !h.LoggedIn {
-		http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
-		return
-	}
-	gid, ok := h.IntAt(3)
-	if !ok {
-		http.Error(w, "BAD GID PROVIDED", http.StatusBadRequest)
-		return
-	}
-	f, err := OPDB.GetFaction("gid", gid, "owner", h.User.String())
-	if err == ErrNoneFound {
-		http.Error(w, "NO GAME FOUND", http.StatusNotFound)
-		return
-	} else if my, bad := Check(err, "canvas page failure", "gid", gid, "owner", h.User.String()); bad {
-		Bail(w, my)
+// /overpower/view/GID/play
+func (h *Handler) pageCanvas(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction, facs []overpower.Faction) {
+	if len(h.Path) > 5 {
+		http.Redirect(w, r, h.NewPath(4), http.StatusFound)
 		return
 	}
 	cvData, err := FillCanvasData(f)
@@ -59,6 +41,7 @@ type CanvasData struct {
 	ShipViews   []*json.ShipView   `json:"shipviews"`
 	Orders      []*json.Order      `json:"orders"`
 	MapView     *json.MapView      `json:"mapview"`
+	Reports     []*json.Report     `json:"reports"`
 }
 
 func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
@@ -73,7 +56,8 @@ func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
 	shVs, err4 := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", turn)
 	orders, err5 := OPDB.GetOrders("gid", gid, "fid", fid)
 	mapview, err6 := OPDB.GetMapView("gid", gid, "fid", fid)
-	for i, err := range []error{err1, err2, err3, err4, err5, err6} {
+	reports, err7 := OPDB.GetReports("gid", gid, "fid", fid)
+	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7} {
 		if my, bad := Check(err, "fillcanvas failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
 		}
@@ -86,6 +70,7 @@ func FillCanvasData(f overpower.Faction) (*CanvasData, error) {
 		ShipViews:   json.LoadShipViews(shVs),
 		Orders:      json.LoadOrders(orders),
 		MapView:     json.LoadMapView(mapview),
+		Reports:     json.LoadReports(reports),
 	}
 	return c, nil
 }

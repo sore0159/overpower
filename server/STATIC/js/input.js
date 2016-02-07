@@ -2,6 +2,8 @@
 
 
 var canvas = document.getElementById('mainscreen');
+var boxConfirm = document.getElementById('orderconfirm');
+
 function mapClick(event) {
     var clickx = event.pageX - canvas.offsetLeft;
     var clicky = event.pageY - canvas.offsetTop;
@@ -31,7 +33,75 @@ canvas.onmousewheel = mapWheel;
 canvas.onDOMMouseScroll = mapWheel;
 canvas.addEventListener("DOMMouseScroll", mapWheel);
 
+boxConfirm.onclick = confirmOrder;
+
 // ----------- GAME COMMANDS ------------- //
+
+function putJSON(url, obj, onFail) {
+    var req = new XMLHttpRequest();
+    function handlePUT() {
+        var err;
+        if (req.status == 200) {
+            var resp = JSON.parse(req.responseText);
+            if (resp.status === "fail") {
+                err = "json fail response from server:"+'\n'+resp.data;
+            } else if (resp.status === "error") {
+                err = "json error response from server:"+'\n'+resp.message;
+            } else if (resp.status !== "success") {
+                err = "unknown json response from server:"+resp.status;
+            }
+        } else {
+            err = req.status +'\n'+req.statusText;
+        }
+        if (err) {
+            onFail(err);
+        }
+    }
+    req.addEventListener("load", handlePUT);
+    req.addEventListener("error", function() {
+        onFail("an error occured with the request");
+    });
+    req.open("PUT", url, true);
+    req.setRequestHeader('Content-Type', 'application/json');
+    req.send(JSON.stringify(obj));
+}
+
+function putErr(err) {
+    var blocker = document.querySelector("div.blocker");
+    if (blocker) {
+        blocker.style.display = 'block';
+    }
+    var blockerText = document.getElementById('blockertext');
+    if (blockerText) {
+        blockerText.innerHTML = "There was a server error:<br> <a href=\"\" class=\"blocker\">Click here to reload</a>.";
+    }
+}
+
+function confirmOrder() {
+    var order = canvas.overpowerData.targetOrder;
+    if (order && order.brandnew && order.size > 0) {
+        order.brandnew = null;
+        order.originSize = order.size;
+        canvas.overpowerData.orders.push(order);
+        canvas.overpowerData.targetOneInfo.orders.push(order);
+        putJSON("/overpower/json/orders", order, putErr);
+        canvas.drawMap();
+        canvas.refreshTargetBoxes();
+    } else if (order && !order.brandnew && order.originSize != order.size) {
+        order.oldSize = order.originSize;
+        order.originSize = order.size;
+        if (order.size < 1) {
+            canvas.overpowerData.orders = canvas.overpowerData.orders.filter(function(testOrder) {
+                return testOrder !== order;
+            });
+        }
+        canvas.overpowerData.targetOrder = null;
+        putJSON("/overpower/json/orders", order, putErr);
+        canvas.overpowerData.setTargetOne(canvas.overpowerData.targetOne);
+    } else {
+        console.log("ERROR: CONFIRATION FOR BAD ORDER", order);
+    }
+}
 
 canvas.muleClicked = function(pt, button, shift) {
     var grid = this.muleGrid;
@@ -75,7 +145,7 @@ canvas.muleWheeled = function(up, shift, control) {
             if (!targetOrder.originSize && targetOrder.originSize !== 0) {
                 targetOrder.originSize = curSize;
             }
-            this.refreshTargetOrderInfo();
+            this.refreshTargetBoxes();
             this.drawMap();
         }
         return;

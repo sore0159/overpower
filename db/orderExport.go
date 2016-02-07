@@ -5,6 +5,9 @@ import (
 )
 
 func (d DB) MakeOrder(gid, fid, source, target, size int) (err error) {
+	if size < 1 {
+		return nil
+	}
 	item := &Order{gid: gid, fid: fid, size: size, source: source, target: target}
 	group := &OrderGroup{[]*Order{item}}
 	return d.makeGroup(group)

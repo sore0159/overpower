@@ -20,7 +20,6 @@ func SetupMux() {
 	http.HandleFunc("/overpower/command/", muxCommand)
 	http.HandleFunc("/overpower/img/", pageMap)
 	http.HandleFunc("/overpower/json/", apiJson)
-	http.HandleFunc("/overpower/canvas/", pageCanvas)
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("STATIC/"))))
 }
@@ -55,7 +54,7 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch h.Path[4] {
-	case "play", "reports":
+	case "oldplay", "play", "reports":
 		if !h.LoggedIn {
 			http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
 			return
@@ -76,9 +75,12 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "USER HAS NO FACTION IN THIS GAME", http.StatusBadRequest)
 			return
 		}
-		if h.Path[4] == "play" {
+		switch h.Path[4] {
+		case "play":
+			h.pageCanvas(w, r, g, f, facs)
+		case "oldplay":
 			h.pageOPPlayGame(w, r, g, f, facs)
-		} else {
+		case "reports":
 			h.pageOPReports(w, r, g, f, facs)
 		}
 		return

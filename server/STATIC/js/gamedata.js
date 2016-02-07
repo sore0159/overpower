@@ -15,6 +15,11 @@ canvas.parseOPData = function() {
         if (planet.controller === data.faction.fid) {
             planet.avail = planet.parts;
         }
+        data.shipviews.forEach(function(ship) {
+            if (ship.dest.valid && ship.dest.coord[0] === planet.loc[0] && ship.dest.coord[1] === planet.loc[1]) {
+                ship.dest.planet = planet;
+            }
+        });
     });
     data.plidMap = plidMap;
     data.orders.forEach(function(order) {
@@ -23,6 +28,19 @@ canvas.parseOPData = function() {
         order.targetPl = plidMap.get(order.target);
     });
     data.map = {"center":data.mapview.center};
+
+    data.swapTargets = function() {
+        var t1 = this.targetOne;
+        var t2 = this.targetTwo;
+        if (this.targetOneInfo && this.targetOneInfo.planet) {
+            this.targetTwo = t1;
+            this.targetTwoInfo = {planet: this.targetOneInfo.planet};
+        } else {
+            this.targetTwo = null;
+            this.targetTwoInfo = null;
+        }
+        this.setTargetOne(t2);
+    };
 
     data.setTargetOne = function(hex, help) {
         var grid = canvas.muleGrid;
@@ -39,74 +57,75 @@ canvas.parseOPData = function() {
         if (!help) {
             targetPt = hex;
         }
-        var closestPl, dist;
-        this.planetviews.forEach(function(planet) {
-            if (dist === 0) {
-                return;
-            }
-            var steps = grid.stepsBetween(planet.loc, hex);
-            if (steps === 0) {
-                targetPt = hex;
-                targetInfo.planet = planet;
-            } else if (!dist || steps < dist) {
-                closestPl = planet;
-                dist = steps;
-            }
-        });
-
-        var closestShLoc;
-        this.shipviews.forEach(function(ship) {
-            if (ship.loc) {
-                if (targetPt && grid.ptsEq(targetPt, ship.loc.coord)) {
-                    targetInfo.ships.push(ship);
-                } else {
-                    var steps = grid.stepsBetween(ship.loc.coord, hex);
-                    if (!dist || steps < dist) {
-                        closestPl = null;
-                        closestShLoc = hex;
-                        dist = steps;
-                    }
+        if (hex) {
+            var closestPl, dist;
+            this.planetviews.forEach(function(planet) {
+                if (dist === 0) {
+                    return;
                 }
-            }
-            if (targetPt) {
-                ship.trail.forEach(function(pt) {
-                    if (grid.ptsEq(pt, targetPt)) {
-                        targetInfo.trails.push(ship);
-                    }
-                });
-            }
-        });
-        if (!targetPt) {
-            if (closestPl && dist < tolerance) {
-                targetPt = closestPl.loc;
-                targetInfo.planet = closestPl;
-            } else if (closestShLoc && dist < tolerance) {
-                targetPt = closestShLoc;
-            } else {
-                targetPt = hex;
-            }
+                var steps = grid.stepsBetween(planet.loc, hex);
+                if (steps === 0) {
+                    targetPt = hex;
+                    targetInfo.planet = planet;
+                } else if (!dist || steps < dist) {
+                    closestPl = planet;
+                    dist = steps;
+                }
+            });
+
+            var closestShLoc;
             this.shipviews.forEach(function(ship) {
                 if (ship.loc) {
                     if (targetPt && grid.ptsEq(targetPt, ship.loc.coord)) {
                         targetInfo.ships.push(ship);
-                    } 
+                    } else {
+                        var steps = grid.stepsBetween(ship.loc.coord, hex);
+                        if (!dist || steps < dist) {
+                            closestPl = null;
+                            closestShLoc = hex;
+                            dist = steps;
+                        }
+                    }
                 }
-                ship.trail.forEach(function(pt) {
-                    if (grid.ptsEq(pt, targetPt)) {
-                        targetInfo.trails.push(ship);
+                if (targetPt) {
+                    ship.trail.forEach(function(pt) {
+                        if (grid.ptsEq(pt, targetPt)) {
+                            targetInfo.trails.push(ship);
+                        }
+                    });
+                }
+            });
+            if (!targetPt) {
+                if (closestPl && dist < tolerance) {
+                    targetPt = closestPl.loc;
+                    targetInfo.planet = closestPl;
+                } else if (closestShLoc && dist < tolerance) {
+                    targetPt = closestShLoc;
+                } else {
+                    targetPt = hex;
+                }
+                this.shipviews.forEach(function(ship) {
+                    if (ship.loc) {
+                        if (targetPt && grid.ptsEq(targetPt, ship.loc.coord)) {
+                            targetInfo.ships.push(ship);
+                        } 
+                    }
+                    ship.trail.forEach(function(pt) {
+                        if (grid.ptsEq(pt, targetPt)) {
+                            targetInfo.trails.push(ship);
+                        }
+                    });
+                });
+            }
+            if (targetInfo.planet && this.orders) {
+                targetInfo.orders = [];
+                this.orders.forEach(function(order) {
+                    if (order.source === targetInfo.planet.pid) {
+                        targetInfo.orders.push(order);
                     }
                 });
-            });
+            }
         }
-        if (targetInfo.planet && this.orders) {
-            targetInfo.orders = [];
-            this.orders.forEach(function(order) {
-                if (order.source === targetInfo.planet.pid) {
-                    targetInfo.orders.push(order);
-                }
-            });
-        }
-        targetInfo.hex = targetPt;
         this.targetOne = targetPt;
         this.targetOneInfo = targetInfo;
         if (targetInfo.planet && this.targetTwoInfo && this.targetTwoInfo.planet) {
@@ -114,7 +133,7 @@ canvas.parseOPData = function() {
         } else {
             this.setTargetOrder();
         }
-        canvas.refreshTargetOneInfo();
+        canvas.refreshTargetBoxes();
     };
 
     data.setTargetTwo = function(hex, help, drop) {
@@ -150,7 +169,7 @@ canvas.parseOPData = function() {
         } else {
             this.setTargetOrder();
         }
-        canvas.refreshTargetTwoInfo();
+        canvas.refreshTargetBoxes();
     };
 
     data.setTargetOrder = function(pl1, pl2) {
@@ -165,7 +184,7 @@ canvas.parseOPData = function() {
                 this.targetOrder.sourcePl.avail -= diff;
             }
         }
-        if (!pl1) {
+        if (!pl1 || !pl2 || pl1.name === pl2.name) {
             this.targetOrder = null;
         } else {
             var order = null;
@@ -173,15 +192,18 @@ canvas.parseOPData = function() {
                 var o = this.orders[i];
                 if (o.source === pl1.pid && o.target === pl2.pid) {
                     order = o;
+                    if (!o.originSize) {
+                        o.originSize = o.size;
+                    }
                     break;
                 }
             }
             if (!order && pl1.avail) {
-                order = {"new": true, "gid": this.game.gid, "fid": this.faction.fid, "source":pl1.pid, "target": pl2.pid, "size":0, "targetPl": pl2, "sourcePl": pl1};
+                order = {"brandnew": true, "gid": this.game.gid, "fid": this.faction.fid, "source":pl1.pid, "target": pl2.pid, "size":0, "targetPl": pl2, "sourcePl": pl1};
             }
             this.targetOrder = order;
         }
-        canvas.refreshTargetOrderInfo();
+        canvas.refreshTargetBoxes();
     };
 
 };

@@ -10,6 +10,7 @@ var (
 	TPOPPLAY = MixTemp("frame", "titlebar", "play")
 )
 
+// /overpower/view/GID/oldplay
 func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overpower.Game, f overpower.Faction, facs []overpower.Faction) {
 	if h.LastFull() > 4 {
 		http.Redirect(w, r, h.NewPath(5), http.StatusFound)
