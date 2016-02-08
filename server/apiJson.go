@@ -69,10 +69,58 @@ func apiJsonPUT(w http.ResponseWriter, r *http.Request) {
 	switch h.Path[3] {
 	case "orders":
 		h.apiJsonPUTOrders(w, r)
+	case "factions":
+		h.apiJsonPUTFactions(w, r)
 	default:
 		jFail(w, 404, "url", "unsupported object type given")
 		return
 	}
+}
+
+func (h *Handler) apiJsonPUTFactions(w http.ResponseWriter, r *http.Request) {
+	jF := &json.Faction{}
+	err := jsend.Read(r, jF)
+	if my, bad := Check(err, "API PUT failure on data read"); bad {
+		Kirk(my, w)
+		return
+	}
+	facs, err := OPDB.GetFactions("gid", jF.Gid)
+	if my, bad := Check(err, "Json PUT failure on faction validation check", "resource", "faction", "faction", jF); bad {
+		Kirk(my, w)
+		return
+	}
+	var f overpower.Faction
+	allDone := true
+	for _, test := range facs {
+		if test.Fid() == jF.Fid {
+			f = test
+		} else if !test.Done() {
+			allDone = false
+		}
+	}
+	if f == nil {
+		jFail(w, 400, "bad specification", "no faction found matching given faction data")
+		return
+	}
+	if f.Owner() != h.User.String() {
+		jFail(w, 400, "authorization", "you are not authorized for that resource")
+		return
+	}
+	if jF.Done && allDone {
+		err = RunGameTurn(jF.Gid, false)
+		if my, bad := Check(err, "update problem in faction set done (run turn)", "faction", f); bad {
+			Kirk(my, w)
+			return
+		}
+	} else {
+		f.SetDone(jF.Done)
+		err = OPDB.UpdateFactions(f)
+		if my, bad := Check(err, "update problem in faction set done", "faction", f); bad {
+			Kirk(my, w)
+			return
+		}
+	}
+	jSuccess(w, nil)
 }
 
 func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {

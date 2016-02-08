@@ -3,6 +3,8 @@
 
 var canvas = document.getElementById('mainscreen');
 var boxConfirm = document.getElementById('orderconfirm');
+var boxTurn = document.getElementById('turnbox');
+var boxTurnButton = document.getElementById('turnchange');
 
 function mapClick(event) {
     var clickx = event.pageX - canvas.offsetLeft;
@@ -34,6 +36,7 @@ canvas.onDOMMouseScroll = mapWheel;
 canvas.addEventListener("DOMMouseScroll", mapWheel);
 
 boxConfirm.onclick = confirmOrder;
+boxTurnButton.onclick = turnChange;
 
 // ----------- GAME COMMANDS ------------- //
 
@@ -75,6 +78,28 @@ function putErr(err) {
     if (blockerText) {
         blockerText.innerHTML = "There was a server error:<br> <a href=\"\" class=\"blocker\">Click here to reload</a>.";
     }
+}
+
+function turnChange() {
+    var faction = canvas.overpowerData.faction;
+    faction.done = !faction.done;
+    var htmlStr = "<div id=\"turnbox\"><b>Turn:</b> "+canvas.overpowerData.game.turn+ " &bull; Turn ";
+    if (faction.done) {
+        htmlStr += "Complete";
+    } else {
+        htmlStr += "In Progress";
+    }
+    htmlStr += " &bull; <button class=\"clicker\" id=\"turnchange\"><b>";
+    if (faction.done) {
+        htmlStr += "Cancel";
+    } else {
+        htmlStr += "Set";
+    }
+    htmlStr += " Turn Complete</b></button>";
+    boxTurn.innerHTML = htmlStr;
+    var boxTurnButton = document.getElementById('turnchange');
+    boxTurnButton.onclick = turnChange;
+    putJSON("/overpower/json/factions", faction, putErr);
 }
 
 function confirmOrder() {

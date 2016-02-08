@@ -1,4 +1,4 @@
-{{ define "title"}}Overpower Canvas Page{{end}}
+{{ define "title"}}Overpower Play Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
 {{ $g := .data.Game }}
@@ -11,7 +11,11 @@
 <b>Game:</b> [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; <b>Faction:</b> {{ $f.Name }}<br>
 <div id="scorebox"><b>Score:</b> {{ $f.Score }} &bull; <b>To win:</b> {{ $g.ToWin }} &bull;  <b>Leader:</b> {{ $g.HighScore }} </div>
 <div id="turnbox"><b>Turn:</b> {{ $g.Turn }} &bull;
-        {{ if $f.Done }}Turn Complete{{ else }}Turn in progress{{end}}
+        {{ if $f.Done }}Turn Complete &bull;
+        <button class="clicker" id="turnchange"><b>Cancel Turn Complete</b></button>
+        {{ else }}Turn in progress &bull;
+        <button class="clicker" id="turnchange"><b>Set Turn Complete</b></button>
+        {{end}}
 </div>
 <div id="reportbox">
 [ <a href="/overpower/view/{{ $g.Gid }}/reports/">Reports Page</a> ]
@@ -25,7 +29,7 @@
 <div id="targetonebox">
 <div class="center"> <b>Main Target:</b> None</div> </div>
 <div id="targetorderbox"></div>
-<button class="clicker" id="orderconfirm"><b>Confirm Order</b></button>
+<button class="redclicker" id="orderconfirm"><b>Confirm Order</b></button>
 </div>
 <div class="clearer"></div>
 </div>

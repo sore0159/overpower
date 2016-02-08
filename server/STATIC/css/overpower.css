@@ -2,7 +2,7 @@ body {
         padding-bottom:200px;
         min-width: 1100px;
 }
-button.clicker {
+button.redclicker {
         display: none;
         margin: 3px; padding: 5px;
         border: 2px solid #000000;
@@ -10,6 +10,14 @@ button.clicker {
         background: #991111;
         color: #ffffff;
 }
+button.clicker {
+        display: inline-block;
+        margin: 0px; padding: 3px;
+        border: 0px solid #000000;
+        border-radius: 5px;
+        background: #aaccff;
+}
+
 div.screenblock {
         padding: 0px; margin: 0px;
         margin-top: -5px;
