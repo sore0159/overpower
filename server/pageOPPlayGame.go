@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	TPOPPLAY = MixTemp("frame", "titlebar", "play")
+	TPOPOLDPLAY = MixTemp("frame", "titlebar", "oldplay")
 )
 
 // /overpower/view/GID/oldplay
@@ -244,5 +244,5 @@ func (h *Handler) pageOPPlayGame(w http.ResponseWriter, r *http.Request, g overp
 		m["bigzoomin"] = zoom + 10
 	}
 	h.SetCommand(g)
-	h.Apply(TPOPPLAY, w)
+	h.Apply(TPOPOLDPLAY, w)
 }

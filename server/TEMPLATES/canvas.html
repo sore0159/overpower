@@ -11,7 +11,7 @@
 <b>Game:</b> [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; <b>Faction:</b> {{ $f.Name }}<br>
 <div id="scorebox"><b>Score:</b> {{ $f.Score }} &bull; <b>To win:</b> {{ $g.ToWin }} &bull;  <b>Leader:</b> {{ $g.HighScore }} </div>
 <div id="turnbox"><b>Turn:</b> {{ $g.Turn }} &bull;
-        {{ if $f.Done }}Turn Complete &bull;
+        {{ if $f.Done }}Turn complete &bull;
         <button class="clicker" id="turnchange"><b>Cancel Turn Complete</b></button>
         {{ else }}Turn in progress &bull;
         <button class="clicker" id="turnchange"><b>Set Turn Complete</b></button>

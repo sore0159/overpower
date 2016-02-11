@@ -109,14 +109,16 @@ canvas.drawMap = function(timestamp) {
         ship.trail.forEach(drawDot);
     }
     function drawTrail(ship) {
-        shipCheck(ship);
-        if (ship.trail.length < 2) {
-            if (!ship.trail.length) {
-                return;
-            }
+        if (!ship.trail.length) {
+            shipCheck(ship);
+            return;
+        }
+        if (ship.trail.length < 2 && !ship.loc.valid) {
+            ctx.strokeStyle = "#000000";
             drawTrailDots(ship);
             return;
         }
+        shipCheck(ship);
         if (ship.controller === data.faction.fid)  {
             ctx.strokeStyle = "#0fff0f";
         } else {
@@ -331,17 +333,19 @@ canvas.drawMap = function(timestamp) {
 
 
 function animateMap(timestamp) {
-    if (canvas.animating) {
-        canvas.animating = false;
-        canvas.drawMap(timestamp);
-    }
-    if (canvas.overpowerData.targetOrder) {
-        canvas.animating = true;
-    }
-    var curLoc = canvas.muleGrid.h2Center(canvas.overpowerData.map.center);
-    if (!canvas.mapCentered()) {
-        canvas.moveTowardCenter(curLoc);
-        canvas.animating = true;
+    if (canvas.overpowerData) {
+        if (canvas.animating) {
+            canvas.animating = false;
+            canvas.drawMap(timestamp);
+        }
+        if (canvas.overpowerData.targetOrder) {
+            canvas.animating = true;
+        }
+        var curLoc = canvas.muleGrid.h2Center(canvas.overpowerData.map.center);
+        if (!canvas.mapCentered()) {
+            canvas.moveTowardCenter(curLoc);
+            canvas.animating = true;
+        }
     }
     window.requestAnimationFrame(animateMap);
 }
@@ -369,7 +373,7 @@ canvas.mapCentered = function() {
 };
 
 
-canvas.drawMap(0);
+//canvas.drawMap(0);
 window.requestAnimationFrame(animateMap);
 
 })();

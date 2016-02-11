@@ -5,11 +5,20 @@ var canvas = document.getElementById('mainscreen');
 var boxConfirm = document.getElementById('orderconfirm');
 var boxTurn = document.getElementById('turnbox');
 var boxTurnButton = document.getElementById('turnchange');
+var swapTargetsButton = document.getElementById('swapbutton');
+var blockButton = document.getElementById('blockbutton');
 
 function mapClick(event) {
     var clickx = event.pageX - canvas.offsetLeft;
     var clicky = event.pageY - canvas.offsetTop;
     this.muleClicked([clickx, clicky], event.button, event.shiftKey);
+}
+function mapDown(event) {
+    if (event.button !== 0) {
+        var clickx = event.pageX - canvas.offsetLeft;
+        var clicky = event.pageY - canvas.offsetTop;
+        this.muleClicked([clickx, clicky], event.button, event.shiftKey);
+    }
 }
 function mapWheel(event) {
     event.preventDefault();
@@ -29,7 +38,8 @@ function mapWheel(event) {
     this.muleWheeled(up, event.shiftKey, event.ctrlKey);
     return false;
 }
-canvas.onmousedown = mapClick;
+canvas.onmousedown = mapDown;
+canvas.onclick = mapClick;
 canvas.oncontextmenu= function() { return false; };
 canvas.onmousewheel = mapWheel;
 canvas.onDOMMouseScroll = mapWheel;
@@ -37,14 +47,21 @@ canvas.addEventListener("DOMMouseScroll", mapWheel);
 
 boxConfirm.onclick = confirmOrder;
 boxTurnButton.onclick = turnChange;
+blockButton.onclick = function() {
+    canvas.refetchFullView();
+};
+swapTargetsButton.onclick = function() {
+    canvas.overpowerData.swapTargets();
+    canvas.redrawPage();
+};
 
 // ----------- GAME COMMANDS ------------- //
 
-function putJSON(url, obj, onFail) {
+function putJSON(url, obj, onFail, onPass) {
     var req = new XMLHttpRequest();
     function handlePUT() {
         var err;
-        if (req.status == 200) {
+        if (req.status === 200) {
             var resp = JSON.parse(req.responseText);
             if (resp.status === "fail") {
                 err = "json fail response from server:"+'\n'+resp.data;
@@ -58,6 +75,8 @@ function putJSON(url, obj, onFail) {
         }
         if (err) {
             onFail(err);
+        } else if (onPass) {
+            onPass();
         }
     }
     req.addEventListener("load", handlePUT);
@@ -70,36 +89,18 @@ function putJSON(url, obj, onFail) {
 }
 
 function putErr(err) {
-    var blocker = document.querySelector("div.blocker");
-    if (blocker) {
-        blocker.style.display = 'block';
-    }
-    var blockerText = document.getElementById('blockertext');
-    if (blockerText) {
-        blockerText.innerHTML = "There was a server error:<br> <a href=\"\" class=\"blocker\">Click here to reload</a>.";
-    }
+    console.log("OVERPOWER SERVER ERROR:", err);
+    canvas.blockScreen("There was a server error!", "Click here to reload");
 }
 
 function turnChange() {
     var faction = canvas.overpowerData.faction;
     faction.done = !faction.done;
-    var htmlStr = "<div id=\"turnbox\"><b>Turn:</b> "+canvas.overpowerData.game.turn+ " &bull; Turn ";
-    if (faction.done) {
-        htmlStr += "Complete";
-    } else {
-        htmlStr += "In Progress";
-    }
-    htmlStr += " &bull; <button class=\"clicker\" id=\"turnchange\"><b>";
-    if (faction.done) {
-        htmlStr += "Cancel";
-    } else {
-        htmlStr += "Set";
-    }
-    htmlStr += " Turn Complete</b></button>";
-    boxTurn.innerHTML = htmlStr;
-    var boxTurnButton = document.getElementById('turnchange');
-    boxTurnButton.onclick = turnChange;
-    putJSON("/overpower/json/factions", faction, putErr);
+    canvas.setupText();
+    canvas.blockScreen("Checking for new turn...");
+    putJSON("/overpower/json/factions", faction, putErr, function() {
+        canvas.turnCheck();
+    });
 }
 
 function confirmOrder() {
@@ -110,8 +111,7 @@ function confirmOrder() {
         canvas.overpowerData.orders.push(order);
         canvas.overpowerData.targetOneInfo.orders.push(order);
         putJSON("/overpower/json/orders", order, putErr);
-        canvas.drawMap();
-        canvas.refreshTargetBoxes();
+        canvas.redrawPage();
     } else if (order && !order.brandnew && order.originSize != order.size) {
         order.oldSize = order.originSize;
         order.originSize = order.size;
@@ -126,6 +126,7 @@ function confirmOrder() {
     } else {
         console.log("ERROR: CONFIRATION FOR BAD ORDER", order);
     }
+    canvas.redrawPage();
 }
 
 canvas.muleClicked = function(pt, button, shift) {
@@ -134,12 +135,13 @@ canvas.muleClicked = function(pt, button, shift) {
     var help = !this.gridShowing();
     if (button === 0 && !shift) {
         this.overpowerData.setTargetOne(hex, help);
+        this.redrawPage();
     } else if (button === 2) {
         this.overpowerData.setTargetTwo(hex, help, shift);
+        this.redrawPage();
     } else if (button === 1 || button === 0) {
         this.setCenterDest(hex);
     }
-    this.drawMap();
 };
 
 canvas.muleWheeled = function(up, shift, control) {
@@ -170,8 +172,7 @@ canvas.muleWheeled = function(up, shift, control) {
             if (!targetOrder.originSize && targetOrder.originSize !== 0) {
                 targetOrder.originSize = curSize;
             }
-            this.refreshTargetBoxes();
-            this.drawMap();
+            this.redrawPage();
         }
         return;
     }
@@ -203,14 +204,6 @@ canvas.muleWheeled = function(up, shift, control) {
     this.muleGrid.scaleAround(dScale, [this.width/2, this.height/2]);
     this.drawMap();
 };
-
-
-/*
-canvas.muleWheeled = function(up, shiftKey) {
-    console.log("wheel", up, shiftKey);
-};
-*/
-
 
 
 })();

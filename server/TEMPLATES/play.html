@@ -1,319 +1,57 @@
-{{ define "title"}}Overpower Play Game Page{{end}}
+{{ define "title"}}Overpower Play Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
-{{ $g := .game }}
-{{ $f := .fac }}
-{{ $fNames := .fNames }}
-{{ $center := .mapview.Center }}
-{{ $pidPV := .pidPV }}
-{{ $svDest := .svDest }}
-{{ $svLoc := .svLoc }}
-<div class="blocker"><div class="blockertext">There is a new turn available:<br> <a href="" class="blocker">Click here to refresh</a>.</div></div>
-<div class="mapbox">
-<form id="mapform" action="" method="post" class="noblock">
-<input type="hidden" name="turn" value="{{ $g.Turn }}">
-<input type="hidden" name="action" value="mapclick">
-</form>
-<img id="map" class="map" src="/overpower/img/{{ $g.Gid }}" width=800 height=600 />
+<div class="blocker" id="fullscreenblock"><div class="blockertext"><span id="blockertext">Loading game...</span><br> 
+                <button id="blockbutton"></button>
+        </div></div>
+<div class="canvasspacer">
+<canvas class="screen" id="starscreen" width=800 height=600></canvas>
+<canvas class="screen" id="mainscreen" width=800 height=600></canvas>
+</div>
+<b>Game:</b> [ <a href="/overpower/view/{{ .game.Gid }}">{{ .game.Name }}</a> ] &bull; <b>Faction:</b> {{ .faction.Name }}<br>
 
-<b>Game:</b> [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] &bull; <b>Faction:</b> {{ $f.Name }} &bull; <b>Turn:</b> {{ $g.Turn }} 
-{{ if not $f.Done }}
-(In Progress) <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setdone">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="done" value="true">
-        <input type="submit" value="Set Turn Complete" class="noblock">
-</form>
-{{ else }}
-(Complete) <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setdone">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="done" value="false">
-        <input type="submit" value="Cancel Turn Complete" class="noblock">
-</form>
-{{ end }}
+<b>Score:</b> <span id="scoretext"></span> &bull; <b>To win:</b> {{ .game.ToWin }} &bull;  <b>Leader:</b> <span id="highscoretext"></span>
+
 <br>
-<b>Planet Count:</b> {{ $f.Score }} {{ if ne $g.HighScore $f.Score }} &bull; Current leader is at {{ $g.HighScore }}{{ else }}{{ if $f.Score }} &bull; You are currently in the lead!{{ end }}{{ end }} &bull; {{ $g.ToWin }} to win<br>
-<b>Reports:</b>
-{{ if .reportlen }}
-[ <a href="/overpower/view/{{ $g.Gid }}/reports/{{ .prevturn }}">{{ .reportlen }} Report{{ if not (eq .reportlen 1) }}s{{end}} for turn {{ .prevturn }}</a> ]
-{{ else }}
-{{ if .prevturn }}
-[ <a href="/overpower/view/{{ $g.Gid }}/reports/{{ .prevturn }}">No reports for turn {{ .prevturn }}</a> ]
-{{ else }}
-[ No reports yet generated ]
-{{ end }}
-{{ end }}
-{{ if ge $g.HighScore $g.ToWin }}<h3>The game is over!</h3> {{ end }}
-<hr>
-Map Centered on ({{ index $center 0}}, {{ index $center 1 }}):
-{{  if .centerpv }}{{ .centerpv.Name }}{{ else }}The Great Void{{ end }}<br>
-Zoom {{ .mapview.Zoom }} {{ if .zoomin }}
-<form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="subtype" value="zoom">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="zoom" value="{{ .zoomin }}">
-        <input type="submit" value="Zoom In" class="noblock">
-</form>
-{{ end }}
+<b>Turn:</b> <span id="turntext"></span> &bull;
+        <span id="turncompletetext"></span> &bull;
+        <button class="clicker" id="turnchange"></button>
 
-{{ if .zoomout }}
-<form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="subtype" value="zoom">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="zoom" value="{{ .zoomout }}">
-        <input type="submit" value="Zoom Out" class="noblock">
-</form>
-{{ end }}
- {{ if .bigzoomin }}
-<form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="subtype" value="zoom">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="zoom" value="{{ .bigzoomin }}">
-        <input type="submit" value="Big Zoom In" class="noblock">
-</form>
-{{ end }}
-{{ if .bigzoomout }}
-<form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setmap">
-        <input type="hidden" name="subtype" value="zoom">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="zoom" value="{{ .bigzoomout }}">
-        <input type="submit" value="Big Zoom Out" class="noblock">
-</form>
-{{ end }}
-<hr>
+<br>
+[ <a href="/overpower/view/{{ .game.Gid }}/reports/">Reports Page</a> ]
 
+<hr>
 <div class="targetframe">
 <div class="rightframe">
-<b>Secondary Target:</b> 
-{{ if not .target2.Valid }} 
-  None<br>
-{{ else }}
-    ({{ index .target2.Coord 0 }}, {{ index .target2.Coord 1 }})
-  {{ if .targetsSame }} 
-    <br> (Same as main target)
-  {{ else }}
-    {{ if .tar2pv }}
-      <br>{{ .tar2pv.Name }}
-    {{ end }}
-    {{ if .cancenter2 }}
-      <br>[ <a href="{{ command "recenter"}}/{{ index .target2.Coord 0 }}/{{ index .target2.Coord 1 }}">Center map here</a> ]
-    {{ end }}
-        {{ if .tarDist }}
-        <br>Distance between targets: {{ .tarDist }}
-        {{ end }}
-        {{ if .canswap }}
-        <form action="" method="post">
-                <input type="hidden" name="action" value="setmap">
-                <input type="hidden" name="subtype" value="swap">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="submit" value="Swap main/secondary targets" class="noblock">
-        </form>
-        {{ end }}
-  {{ end }}
-{{ end }}
+        <b>Secondary Target: </b><span id="secondtargettext"></span>
+        <div id="secondtargetbox"></div>
+        <button class="clicker" id="swapbutton">Swap Main/Secondary Targets</button>
 </div>
-
-<div class="leftframe">
-        <div class="center"><b>Main Target:</b> {{ if .target1.Valid }}
-        ({{ index .target1.Coord 0 }}, {{ index .target1.Coord 1 }})<br>
-{{ if .cancenter1 }}
-[ <a href="{{ command "recenter"}}/{{ index .target1.Coord 0 }}/{{ index .target1.Coord 1 }}">Center map here</a> ]<br>
-{{ end }}
+<div class="leftframe"> <div class="center"> <b>Main Target: </b> <span id="maintargettext"></span>
+        <div id="maintargetbox">
+                <div id="planetinfobox"> </div>
+                <div id="orderinfobox"></div>
+                <div id="shipinfobox"></div>
+                <div id="trailinfobox"></div>
         </div>
-        {{ if .tar1pv }}
-        {{ $pl := .tar1pv }}
-        {{ $other := .tar2pv }}
-        {{ $yours := eq $pl.Controller $f.Fid }}
-        <hr class="target">
-        {{ $pl.Name }}<br>
-        {{ if not $pl.Turn }} No planetary information available.<br> {{ else }}
-        {{ if not $yours }}
-        Hostile planet: {{ index $fNames $pl.Controller }}<br>
-        Last seen on turn {{ $pl.Turn }}<br>
-        Inhabitants: {{ $pl.Inhabitants }} &bull; Resources: {{ $pl.Resources }}<br>
-        Ship parts: {{ $pl.Parts }}<br>
-
-
-        {{ else }}
-        {{ $avail := index .availMap $pl.Pid }}
-        Your planet<br>
-        Inhabitants: {{ $pl.Inhabitants }} &bull; Resources: {{ $pl.Resources }}<br>
-        Ship parts: {{ $pl.Parts }} ({{ $avail }} available)<br>
-
-        {{ if $other }} {{ if .t1t2ord }}
-        <hr class="target">
-        You have {{ $other.Name }} as your secondary target and are launching a ship sized {{ .t1t2ord.Size }} at it.  Change this launch order?<br>
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ $pl.Pid }}">
-        <input type="hidden" name="target" value="{{ $other.Pid }}">
-        &bull; <input type="text" size=2 name="size">
-        <input type="submit" value="Change size" class="noblock"> (0 to cancel)
-        </form><br>
-       
-        {{ else if $avail }}
-        <hr class="target">
-        You have {{ $other.Name }} as your secondary target (distance {{ .tarDist }}) and have {{ $avail }} ship parts available to launch a ship at it.  <br>
-        Order a launch? &bull;
-        <form action="" method="post" class="noblock">
-        <input type="hidden" name="action" value="setorder">
-        <input type="hidden" name="turn" value="{{ $g.Turn }}">
-        <input type="hidden" name="source" value="{{ $pl.Pid }}">
-        <input type="hidden" name="target" value="{{ $other.Pid }}">
-        Ship size: <input type="text" size=2 name="size"><br>
-        <input type="submit" value="Order launch at {{ $other.Name }}" class="noblock">
-        </form>
-        {{ end }} {{ end }}
-        
-        {{ if .t1ords }}
-        <hr class="target">
-        {{ if .t1t2ord }}Other {{end}}Planetary launch orders:<br>
-        {{ range .t1ords }}
-        {{ $pv := index $pidPV .Target }}
-        {{ $loc := $pv.Loc }}
-        {{ if ne $loc.String $center.String }}
-        Ship size {{ .Size }} at [ <a href="{{ command "recenter" }}/{{ index $loc 0}}/{{ index $loc 1 }}">{{ $pv.Name }}</a> ] <br>
-        {{ else }}
-        Ship size {{ .Size }} at [ {{ $pv.Name }} ] <br>
-        {{ end }}
-        &bull;  <form action="" method="post" class="noblock">
-                <input type="hidden" name="action" value="setorder">
-                <input type="hidden" name="turn" value="{{ $g.Turn }}">
-                <input type="hidden" name="source" value="{{ .Source }}">
-                <input type="hidden" name="target" value="{{ .Target }}">
-                <input type="text" size=2 name="size">
-                <input type="submit" value="Change size" class="noblock"> (0 to cancel)
-                <br>
-                </form>
-       
-        {{ end }}
-        {{ else }}
-        <hr class="target">
-        You have no {{ if .t1t2ord }}other {{ end }}launch orders from {{ $pl.Name }}.<br>
-        {{ end }}
-        
-        {{ end }} {{ end }}{{ end }}
-        
-
-
-
-
-
-        {{ else }} 
-        None<br>
-        </div>
-        {{ end }}
-
-{{ if .svAt1 }}
-<hr class="target">
-  {{ if eq .lAt1 1 }}
-          One Ship Detected:<br>
-  {{ else }}
-          {{ .lAt1 }} Ships Detected:<br>
-  {{ end }}
-
-  {{ range .svAt1 }}
-  {{ if eq $f.Fid .Controller }}
-        {{ $dest := (index $svDest .) }}
-        {{ $loc := $dest.Loc }}
-        &bull; Your faction, size {{ .Size }}<br>
-        {{ if eq $loc.String $center.String }}
-        Destination: [ {{ $dest.Name }} ]<br>
-        {{ else }}
-        Destination: [ <a href="{{ command "recenter" }}/{{ index $loc 0 }}/{{ index $loc 1}}">{{ $dest.Name }}</a> ]<br>
-        {{ end }}
-
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-        {{ end }}<br> {{ end }}
-
-  {{ else }}
-        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-
-        {{ end }}<br>{{ end }}
-  {{ end }}
-  {{ end }}
-
-{{ end }}
-
-{{ if .svTr1 }}
-        <hr class="target">
-{{ if eq .lTr1 1 }}
-        One Ship Passage Detected:<br>
-{{ else }}
-        {{ .lTr1 }} Ship Passages Detected:<br>
-{{ end }}
-
-  {{ range .svTr1 }}
-  {{ if eq $f.Fid .Controller }}
-        {{ $dest := (index $svDest .) }}
-        {{ $loc := index $svLoc . }}
-        {{ $dloc := $dest.Loc }}
-        &bull; Your faction, size {{ .Size }}<br>
-
-      {{ if $loc.Valid }}
-        {{ if $loc.IsCoord $center }}
-          Current location: ({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})<br>
-        {{ else }}
-        Current location: <a href="{{ command "recenter" }}/{{ index $loc.Coord 0 }}/{{ index $loc.Coord 1 }}">({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})</a><br>
-        {{ end }}
-      {{ else }}
-        Current location unknown<br>
-      {{ end }}
-
-        {{ if eq $dloc.String $center.String }}
-        Destination: [ {{ $dest.Name }} ]<br>
-        {{ else }}
-        Destination: [ <a href="{{ command "recenter" }}/{{ index $dloc 0 }}/{{ index $dloc 1}}">{{ $dest.Name }}</a> ]<br>
-        {{ end }}
-
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-        {{ end }}<br> {{ end }}
-
-
-  {{ else }}
-        {{ $loc := index $svLoc . }}
-        &bull; {{ index $fNames .Controller }}, size {{ .Size }}<br>
-
-      {{ if $loc.Valid }}
-        {{ if $loc.IsCoord $center }}
-          Current location: ({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})<br>
-        {{ else }}
-        Current location: <a href="{{ command "recenter" }}/{{ index $loc.Coord 0 }}/{{ index $loc.Coord 1 }}">({{ index $loc.Coord 0 }}, {{ index $loc.Coord 1 }})</a><br>
-        {{ end }}
-      {{ else }}
-        Current location unknown<br>
-      {{ end }}
-
-        {{ if .Trail }} Passed Through: {{ range .Trail }}
-        <a href="{{ command "recenter" }}/{{ index . 0 }}/{{ index . 1}}">({{ index . 0 }}, {{ index . 1 }})</a>
-        {{ end }}<br> {{ end }}
-
-  {{ end }}
-  {{ end }}
-
-{{ end }}
-
-
-
-</div>
+</div> </div>
+<div id="targetorderbox"></div>
+<button class="redclicker" id="orderconfirm"><b>Confirm Order</b></button>
 <div class="clearer"></div>
 </div>
 
-</div>
-<script type="text/javascript">
-var curTurn = {{ $g.Turn }};
-var curGame = {{ $g.Gid }};
-</script>
-<script src="/static/js/mapclicks.js"></script>
-<script src="/static/js/turncheck.js"></script>
+<script src="/static/js/stars.js" type="text/javascript"></script>
+<script src="/static/js/grid.js" type="text/javascript"></script>
+
+<script src="/static/js/gamedata.js" type="text/javascript"></script>
+<script src="/static/js/map.js" type="text/javascript"></script>
+<script src="/static/js/infobox.js" type="text/javascript"></script>
+
+<script src="/static/js/input.js" type="text/javascript"></script>
+<script src="/static/js/getdata.js" type="text/javascript"></script>
+<script type="text/javascript"> (function() {
+var canvas = document.getElementById('mainscreen');
+canvas.fetchFullView({{ .game.Gid }}, {{ .faction.Fid }});
+})(); </script>
+
 {{ end }}

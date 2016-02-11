@@ -309,6 +309,5 @@ canvas.centerPt = function(pt) {
     canvas.muleGrid.setOutPtAt(pt, [this.width/2, this.height/2]);
 };
 
-canvas.centerHex(canvas.overpowerData.map.center);
 
 })();

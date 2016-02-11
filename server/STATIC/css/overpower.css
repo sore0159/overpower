@@ -2,13 +2,34 @@ body {
         padding-bottom:200px;
         min-width: 1100px;
 }
-button.redclicker {
-        display: none;
-        margin: 3px; padding: 5px;
-        border: 2px solid #000000;
+span {
+}
+div {
+        padding: 0px; margin: 0px;
+}
+
+#maintargetbox {
+        text-align:left;
+}
+#blockbutton {
+        margin: 0px; padding: 3px;
+        border: 2px solid #ffffff;
         border-radius: 5px;
-        background: #991111;
-        color: #ffffff;
+        font-weight: bold;
+        text-size:x-large;
+        background-color: #ffffff;
+        color: #000000;
+}
+button.hexbutton {
+        display: inline-block;
+        margin: 1px; padding: 3px;
+        border: 0px solid #000000;
+        background-color: #aaccff;
+        border-radius: 5px;
+        color: #000000;
+        text-size: 1em;
+        font-weight: bold;
+        ext-decoration:underline;
 }
 button.clicker {
         display: inline-block;
@@ -16,9 +37,10 @@ button.clicker {
         border: 0px solid #000000;
         border-radius: 5px;
         background: #aaccff;
+        font-weight: bold;
 }
 
-div.screenblock {
+div.canvasspacer {
         padding: 0px; margin: 0px;
         margin-top: -5px;
         margin-right:10px;
@@ -139,6 +161,21 @@ div.leftframe {
         idth: 49%;
         xborder: 2px solid #000000;
         ext-align:center;
+}
+#targetorderbox {
+        padding-left: 10px;
+}
+#swapbutton {
+        display: none;
+}
+#orderconfirm {
+        display: none;
+        argin: 3px; padding: 3px;
+        margin-left: 10px;
+        border: 0px solid #000000;
+        border-radius: 5px;
+        background: #991111;
+        color: #ffffff;
 }
 div.clearer {
         clear:right;

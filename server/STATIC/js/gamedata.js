@@ -2,6 +2,7 @@
 
 var canvas = document.getElementById('mainscreen');
 
+
 canvas.parseOPData = function() {
     var data = this.overpowerData;
     var fidMap = new Map();
@@ -28,6 +29,7 @@ canvas.parseOPData = function() {
         order.targetPl = plidMap.get(order.target);
     });
     data.map = {"center":data.mapview.center};
+    canvas.centerHex(canvas.overpowerData.map.center);
 
     data.swapTargets = function() {
         var t1 = this.targetOne;
@@ -133,7 +135,7 @@ canvas.parseOPData = function() {
         } else {
             this.setTargetOrder();
         }
-        canvas.refreshTargetBoxes();
+        //canvas.redrawPage();
     };
 
     data.setTargetTwo = function(hex, help, drop) {
@@ -169,7 +171,7 @@ canvas.parseOPData = function() {
         } else {
             this.setTargetOrder();
         }
-        canvas.refreshTargetBoxes();
+        //canvas.redrawPage();
     };
 
     data.setTargetOrder = function(pl1, pl2) {
@@ -203,12 +205,10 @@ canvas.parseOPData = function() {
             }
             this.targetOrder = order;
         }
-        canvas.refreshTargetBoxes();
+        //canvas.redrawPage();
     };
 
 };
-
-canvas.parseOPData();
 
 
 })();
