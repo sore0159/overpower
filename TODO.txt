@@ -1,11 +1,9 @@
 DB:
-    * Switch to psx?
-    * Jasonb it up?
-
-API:
-    * JSON?  Bytes?
-    * Game turn
-    * Faction turnDone status
+    * Planets PK locX locY
+    * Orders use new planetPK and turn: keep old turns
+    * reports broken into launches: old orders, landings: numerical records
+    * Game "winner" stat
+    * CAPTAINS
 
 Misc: 
     * Optional email notifications on new turns/last player not done
@@ -14,18 +12,22 @@ Misc:
 
 Game:
     * Endstate: score?
-    * Show planet count of self, and winner
-    * What % planets to win: game creation decides?
     * What happens on game over?
+    * CAPTAINS
 
 UI:
-    * Sorted planet/shipviews, filterable
-    * Directional order/ship visualizations
+    * Remembers recentering on reload
+    * Click-drag for map?
+    * Configurable factionveiw
     * Sort out help/instruction pages for everything
-    * Drop target buttons?
-    * favicon.ico - stock and "New turn avail" versions
 
 // ========================= DONE ========================= //
+
+API:
+    * JSON?  Bytes?
+    * Game turn
+    * Faction turnDone status
+
 DB:
     * Revamp query construction: use $N and mass inserts
 
@@ -35,6 +37,8 @@ Reports:
     * Ship landings
 
 Game:
+    * What % planets to win: game creation decides?
+    * Show planet count of self, and winner
     * Manager-set auto-run controls
     * Quit option: turn planets neutral
     * Galaxy creation: robustness ( ??? )
@@ -46,6 +50,9 @@ Interactive Map:
     * focus coord
 
 UI:
+    * Shiptrail info
+    * Clickable hex coords in infoboxes
+    * favicon.ico - stock and "New turn avail" versions
     * 'Focused' coordinate
     * Zoomed out indicator binary parts avail
     * Planet parts avail shown on map

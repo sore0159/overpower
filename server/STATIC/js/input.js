@@ -13,13 +13,6 @@ function mapClick(event) {
     var clicky = event.pageY - canvas.offsetTop;
     this.muleClicked([clickx, clicky], event.button, event.shiftKey);
 }
-function mapDown(event) {
-    if (event.button !== 0) {
-        var clickx = event.pageX - canvas.offsetLeft;
-        var clicky = event.pageY - canvas.offsetTop;
-        this.muleClicked([clickx, clicky], event.button, event.shiftKey);
-    }
-}
 function mapWheel(event) {
     event.preventDefault();
     var up;
@@ -38,8 +31,7 @@ function mapWheel(event) {
     this.muleWheeled(up, event.shiftKey, event.ctrlKey);
     return false;
 }
-canvas.onmousedown = mapDown;
-canvas.onclick = mapClick;
+canvas.addEventListener("mouseup", mapClick);
 canvas.oncontextmenu= function() { return false; };
 canvas.onmousewheel = mapWheel;
 canvas.onDOMMouseScroll = mapWheel;

@@ -75,6 +75,8 @@ canvas.turnCheck = function(cycle) {
             blinkIco();
         } else if (cycle){
             window.setTimeout(turnCheckCycle, 15000);
+        } else {
+            canvas.unblockScreen();
         }
     }
     function onFail(err) {

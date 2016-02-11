@@ -31,11 +31,29 @@
     // setupText performs a refresh of the target area of the infobox
     canvas.setupTargets = function() {
         var data = canvas.overpowerData;
-        var secTargetText = document.getElementById('secondtargettext');
+
         var secTargetDiv = document.getElementById('secondtargetbox');
+        var planetInfoBox = document.getElementById('planetinfobox');
+        var orderInfoBox = document.getElementById('orderinfobox');
+        var shipInfoBox = document.getElementById('shipinfobox');
+        var trailInfoBox = document.getElementById('trailinfobox');
+        var targetOrderDiv = document.getElementById('targetorderbox');
+
+        var divList = [secTargetDiv, planetInfoBox,
+           orderInfoBox, shipInfoBox, trailInfoBox, targetOrderDiv];
+
+        for (var i = 0; i < divList.length; i++) {
+            while (divList[i].firstChild) {
+                divList[i].removeChild(divList[i].firstChild);
+            }
+        }
+       
+        var secTargetText = document.getElementById('secondtargettext');
+        var mainTargetText = document.getElementById('maintargettext');
+        var mainTargetBox = document.getElementById('maintargetbox');
         var swapButton = document.getElementById('swapbutton');
         var dist, elem, button;
-        secTargetDiv.textContent = "";
+        //secTargetDiv.textContent = "";
         if (!data.targetTwo) {
             secTargetText.textContent = "None";
             swapButton.style.display = "none";
@@ -61,21 +79,11 @@
             }
            
         }
-        var mainTargetText = document.getElementById('maintargettext');
-        var mainTargetBox = document.getElementById('maintargetbox');
-        var planetInfoBox = document.getElementById('planetinfobox');
-        var orderInfoBox = document.getElementById('orderinfobox');
-        var shipInfoBox = document.getElementById('shipinfobox');
-        var trailInfoBox = document.getElementById('trailinfobox');
         var htmlStr;
-                function hello() {
-                    console.log("hELLO");
-                }
         if (data.targetOne) {
             mainTargetText.textContent = "("+data.targetOne[0]+","+data.targetOne[1]+")";
             mainTargetBox.style.display="block";
             var planet = data.targetOneInfo.planet;
-            planetInfoBox.innerHTML = "";
             if (planet) {
                 elem = document.createElement("hr");
                 elem.className = "target";
@@ -95,7 +103,7 @@
                             var name = data.fidMap.get(planet.controller).name;
                             htmlStr = name + " planet";
                         } else {
-                            htmlStr = "Nuetral planet";
+                            htmlStr = "Neutral planet";
                         }
                         htmlStr += " \u2022 Last seen on turn "+planet.turn;
                     }
@@ -126,23 +134,25 @@
                     planetInfoBox.appendChild(elem);
                 }
             }
-            orderInfoBox.innerHTML = "";
+            var uList, lItem;
             if (data.targetOneInfo.orders && data.targetOneInfo.orders.length > 0 && (!data.targetOrder || data.targetOneInfo.orders.length > 1 || data.targetOrder !== data.targetOneInfo.orders[0])) {
                 elem = document.createElement("hr");
                 elem.className = "target";
                 orderInfoBox.appendChild(elem);
                 elem = document.createElement("b");
-                elem.textContent = "Launch orders from "+planet.name+":";
+                elem.textContent = "Launch orders";
+                orderInfoBox.appendChild(elem);
+                elem = document.createTextNode(" from "+planet.name+":");
                 orderInfoBox.appendChild(elem);
                 elem = document.createElement("br");
                 orderInfoBox.appendChild(elem);
-                var uList = document.createElement("ul");
+                uList = document.createElement("ul");
                 orderInfoBox.appendChild(uList);
-                for (var i = 0; i < data.targetOneInfo.orders.length; i++) {
+                for (i = 0; i < data.targetOneInfo.orders.length; i++) {
                     if (data.targetOneInfo.orders[i] === data.targetOrder) {
                         continue;
                     }
-                    var lItem = document.createElement("li");
+                    lItem = document.createElement("li");
                     uList.appendChild(lItem);
                     elem = document.createElement("b");
                     elem.textContent = "Target: ";
@@ -150,109 +160,181 @@
                     button = planetButton(data.targetOneInfo.orders[i].targetPl);
                     lItem.appendChild(button);
                     elem = document.createElement("b");
-                    elem.innerHTML = " &bull; Size: ";
+                    elem.textContent = " \u2022 Size: ";
                     lItem.appendChild(elem);
                     elem = document.createTextNode(data.targetOneInfo.orders[i].size);
                     lItem.appendChild(elem);
                 }
             }
             if (data.targetOneInfo.ships.length > 0 ) {
-                htmlStr = "<hr class=\"target\">";
-                htmlStr += "<b>Ship";
+                elem = document.createElement("hr");
+                elem.className = "target";
+                shipInfoBox.appendChild(elem);
+                htmlStr = "Ship";
                 if (data.targetOneInfo.ships.length > 1) {
                     htmlStr += "s";
                 }
-                htmlStr += " detected:</b><br><ul>";
+                htmlStr += " detected:";
+                elem = document.createElement("b");
+                elem.textContent = htmlStr;
+                shipInfoBox.appendChild(elem);
+                elem = document.createElement("br");
+                shipInfoBox.appendChild(elem);
+                uList = document.createElement("ul");
+                shipInfoBox.appendChild(uList);
                 data.targetOneInfo.ships.forEach(function(ship) {
-                    htmlStr += "<li>";
+                    lItem = document.createElement("li");
+                    uList.appendChild(lItem);
                     if (ship.controller == ship.fid) {
-                        htmlStr += "Your ship &bull;";
-                        htmlStr += " Sized "+ship.size;
-                        htmlStr += " &bull; Destination: "+ship.dest.planet.name;
+                        elem = document.createTextNode("Your ship \u2022 Sized "+ship.size+ " \u2022 Destination: ");
+                        lItem.appendChild(elem);
+                        button = planetButton(ship.dest.planet);
+                        lItem.appendChild(button);
                     } else {
-                        htmlStr += data.fidMap.get(ship.controller).name+" ship &bull;";
-                        htmlStr += " Sized "+ship.size;
+                        elem = document.createTextNode(data.fidMap.get(ship.controller).name+" ship \u2022 Sized "+ship.size);
+                        lItem.appendChild(elem);
                     }
+                    if (ship.trail.length > 0) {
+                        elem = document.createElement("br");
+                        lItem.appendChild(elem);
+                        elem = document.createTextNode("Travelled through:");
+                        lItem.appendChild(elem);
+                        ship.trail.forEach(function(trailHex) {
+                            button = coordButton(trailHex);
+                            lItem.appendChild(button);
+                        });
+                    }
+              
                 });
-                htmlStr += "</ul>";
-                shipInfoBox.innerHTML = htmlStr;
-            } else {
-                shipInfoBox.innerHTML = "";
             }
             if (data.targetOneInfo.trails.length > 0 ) {
-                htmlStr = "<hr class=\"target\">";
-                htmlStr += "<b>Ship passage";
-                if (data.targetOneInfo.trails.length > 1) {
+                elem = document.createElement("hr");
+                elem.className = "target";
+                trailInfoBox.appendChild(elem);
+                htmlStr = "Ship passage";
+                if (data.targetOneInfo.ships.length > 1) {
                     htmlStr += "s";
                 }
-                htmlStr += " detected:</b><br><ul>";
+                htmlStr += " detected:";
+                elem = document.createElement("b");
+                elem.textContent = htmlStr;
+                trailInfoBox.appendChild(elem);
+                elem = document.createElement("br");
+                trailInfoBox.appendChild(elem);
+                uList = document.createElement("ul");
+                trailInfoBox.appendChild(uList);
                 data.targetOneInfo.trails.forEach(function(ship) {
-                    htmlStr += "<li>";
+                    lItem = document.createElement("li");
+                    uList.appendChild(lItem);
                     if (ship.controller == ship.fid) {
-                        htmlStr += "Your ship &bull;";
-                        htmlStr += " Sized "+ship.size;
+                        htmlStr = "Your ship \u2022 Sized "+ship.size+" \u2022 ";
                         if (ship.loc.valid) {
-                            htmlStr += " &bull; Currently at: ("+ship.loc.coord[0]+", "+ship.loc.coord[1]+")";
+                            htmlStr += "Currently at: ";
+                            elem = document.createTextNode(htmlStr);
+                            lItem.appendChild(elem);
+                            button = coordButton(ship.loc.coord);
+                            lItem.appendChild(button);
                         } else {
-                            htmlStr += " &bull; Landed on: "+ship.dest.planet.name;
+                            htmlStr += "Landed on: ";
+                            elem = document.createTextNode(htmlStr);
+                            lItem.appendChild(elem);
+                            button = planetButton(ship.dest.planet);
+                            lItem.appendChild(button);
                         }
                     } else {
-                        htmlStr += data.fidMap.get(ship.controller).name+" ship &bull;";
-                        htmlStr += " Sized "+ship.size;
+                        htmlStr = data.fidMap.get(ship.controller).name+" ship \u2022 Sized "+ship.size+ " \u2022 ";
                         if (ship.loc.valid) {
-                            htmlStr += " &bull; Currently at: ("+ship.loc.coord[0]+", "+ship.loc.coord[1]+")";
+                            htmlStr += "Currently at: ";
+                            elem = document.createTextNode(htmlStr);
+                            lItem.appendChild(elem);
+                            button = coordButton(ship.loc.coord);
+                            lItem.appendChild(button);
                         } else {
-                            htmlStr += " &bull; Location unknown";
+                            htmlStr += "Location unknown";
+                            elem = document.createTextNode(htmlStr);
+                            lItem.appendChild(elem);
                         }
                     }
+                    elem = document.createElement("br");
+                    lItem.appendChild(elem);
+                    elem = document.createTextNode("Travelled through:");
+                    lItem.appendChild(elem);
+                    ship.trail.forEach(function(trailHex) {
+                        button = coordButton(trailHex);
+                        lItem.appendChild(button);
+                    });
                 });
-                htmlStr += "</ul>";
-                trailInfoBox.innerHTML = htmlStr;
-            } else {
-                trailInfoBox.innerHTML = "";
+            }
+            if (!planet && data.targetOneInfo.ships.length === 0 && data.targetOneInfo.trails.length === 0 ) {
+                elem = document.createElement("hr");
+                elem.className = "target";
+                planetInfoBox.appendChild(elem);
+                elem = document.createElement("b");
+                elem.textContent = "The Great Void";
+                planetInfoBox.appendChild(elem);
             }
         } else {
             mainTargetText.textContent = "None";
             mainTargetBox.style.display="none";
         }
-        var targetOrderDiv = document.getElementById('targetorderbox');
         var orderConfirmButton = document.getElementById('orderconfirm');
         if (data.targetOrder) {
+            elem = document.createElement("hr");
+            elem.className = "target";
+            targetOrderDiv.appendChild(elem);
             var order = data.targetOrder;
             var changedOrder = ((data.targetOrder.brandnew && data.targetOrder.size !== 0) || (!data.targetOrder.brandnew && data.targetOrder.originSize != data.targetOrder.size)) ;
-            htmlStr = "<hr class=\"target\">";
             dist = grid.stepsBetween(order.sourcePl.loc, order.targetPl.loc);
             dist = Math.ceil(dist/10);
             if (order.brandnew) {
-                htmlStr +=  "Launch from <b>"+order.sourcePl.name + "</b> to <b>"+ order.targetPl.name+"</b> ("+dist+" turns)?<br> &nbsp;&nbsp;&nbsp;&nbsp;&bull; ";
-                if (changedOrder) {
-                    htmlStr += "<b>Launch ship sized: "+order.size+"</b>";
-                } else {
-                    htmlStr += "Launch ship sized: "+order.size;
-                }
+                elem = document.createTextNode("Launch from ");
+                targetOrderDiv.appendChild(elem);
+                htmlStr = "New ship sized: "+order.size;
             } else {
-                htmlStr +=  "Modifiy launch order from <b>"+order.sourcePl.name + "</b> to <b>"+ order.targetPl.name+"</b> (currently sized "+order.originSize+") ("+dist+" turns)?<br> &nbsp;&nbsp;&nbsp;&nbsp;&bull; ";
-                if (changedOrder) {
-                    htmlStr += "<b>New ship size: "+order.size+"</b>";
-                } else {
-                    htmlStr += "New ship size: "+order.size;
-                }
+                elem = document.createTextNode("Modify launch order from ");
+                targetOrderDiv.appendChild(elem);
+                htmlStr = "Launch ship sized: "+order.size;
             }
+            elem = document.createElement("b");
+            elem.textContent = order.sourcePl.name;
+            targetOrderDiv.appendChild(elem);
+            elem = document.createTextNode(" to ");
+            targetOrderDiv.appendChild(elem);
+            elem = document.createElement("b");
+            elem.textContent = order.targetPl.name;
+            targetOrderDiv.appendChild(elem);
+            elem = document.createTextNode(" ("+dist+" turns)?");
+            targetOrderDiv.appendChild(elem);
+            elem = document.createElement("br");
+            targetOrderDiv.appendChild(elem);
+            elem = document.createTextNode("\u00A0\u00A0\u00A0\u00A0\u2022 ");
+            targetOrderDiv.appendChild(elem);
+            if (changedOrder) {
+                elem = document.createElement("b");
+                elem.textContent = htmlStr;
+            } else {
+                elem = document.createTextNode(htmlStr);
+            }
+            targetOrderDiv.appendChild(elem);
             if (changedOrder) {
                 orderConfirmButton.style.display = "inline";
             } else {
                 if (order.sourcePl.avail || order.size > 0) {
-                    htmlStr += "<br>(hold shift and scroll the mousewheel to change)";
+                    elem = document.createElement("br");
+                    targetOrderDiv.appendChild(elem);
+                    elem = document.createTextNode("(hold shift and scroll the mousewheel to change)");
+                    targetOrderDiv.appendChild(elem);
                 }
                 orderConfirmButton.style.display = "none";
             }
-            targetOrderDiv.innerHTML = htmlStr;
         } else if (data.targetOneInfo && data.targetOneInfo.planet && data.targetOneInfo.planet.avail > 0)  {
-            targetOrderDiv.innerHTML = "<hr class=\"target\">"+
-                "To launch a spaceship from this planet, right click another planet to set it as your secondary target";
+            elem = document.createElement("hr");
+            elem.className = "target";
+            targetOrderDiv.appendChild(elem);
+            elem = document.createTextNode("To launch a spaceship from this planet, right click another planet to set it as your secondary target");
+            targetOrderDiv.appendChild(elem);
             orderConfirmButton.style.display = "none";
         } else {
-            targetOrderDiv.textContent = "";
             orderConfirmButton.style.display = "none";
         }
     };
@@ -277,6 +359,9 @@
         screen.style.display = 'none';
     };
 
+    function coordButton(hex) {
+        return hexButton(hex, "("+hex[0]+","+hex[1]+")");
+    }
     function planetButton(planet) {
         return hexButton(planet.loc, planet.name);
     }
