@@ -4,44 +4,50 @@ import (
 	"mule/hexagon"
 )
 
-type Order struct {
+type LaunchRecord struct {
 	gid    int
 	fid    int
+	turn   int
 	source hexagon.Coord
 	target hexagon.Coord
 	size   int
 }
 
-func NewOrder() *Order {
-	return &Order{
+func NewLaunchRecord() *LaunchRecord {
+	return &LaunchRecord{
 	//
 	}
 }
 
-func (o *Order) Gid() int {
+func (o *LaunchRecord) Gid() int {
 	return o.gid
 }
-func (o *Order) Fid() int {
+func (o *LaunchRecord) Fid() int {
 	return o.fid
 }
-func (o *Order) Source() hexagon.Coord {
+func (o *LaunchRecord) Turn() int {
+	return o.turn
+}
+func (o *LaunchRecord) Source() hexagon.Coord {
 	return o.source
 }
-func (o *Order) Target() hexagon.Coord {
+func (o *LaunchRecord) Target() hexagon.Coord {
 	return o.target
 }
-func (o *Order) Size() int {
+func (o *LaunchRecord) Size() int {
 	return o.size
 }
-func (o *Order) SetSize(size int) {
+func (o *LaunchRecord) SetSize(size int) {
 	o.size = size
 }
-func (item *Order) SQLVal(name string) interface{} {
+func (item *LaunchRecord) SQLVal(name string) interface{} {
 	switch name {
 	case "gid":
 		return item.gid
 	case "fid":
 		return item.fid
+	case "turn":
+		return item.turn
 	case "sourcex":
 		return item.source[0]
 	case "sourcey":
@@ -56,12 +62,14 @@ func (item *Order) SQLVal(name string) interface{} {
 	return nil
 }
 
-func (item *Order) SQLPtr(name string) interface{} {
+func (item *LaunchRecord) SQLPtr(name string) interface{} {
 	switch name {
 	case "gid":
 		return &item.gid
 	case "fid":
 		return &item.fid
+	case "turn":
+		return &item.turn
 	case "sourcex":
 		return &item.source[0]
 	case "sourcey":
@@ -76,18 +84,19 @@ func (item *Order) SQLPtr(name string) interface{} {
 	return nil
 }
 
-func (item *Order) SQLTable() string {
-	return "orders"
+func (item *LaunchRecord) SQLTable() string {
+	return "launchrecords"
 }
 
-func (group *OrderGroup) SQLTable() string {
-	return "orders"
+func (group *LaunchRecordGroup) SQLTable() string {
+	return "launchrecords"
 }
 
-func (group *OrderGroup) SelectCols() []string {
+func (group *LaunchRecordGroup) SelectCols() []string {
 	return []string{
 		"gid",
 		"fid",
+		"turn",
 		"sourcex",
 		"sourcey",
 		"targetx",
@@ -96,16 +105,15 @@ func (group *OrderGroup) SelectCols() []string {
 	}
 }
 
-func (group *OrderGroup) UpdateCols() []string {
-	return []string{
-		"size",
-	}
+func (group *LaunchRecordGroup) UpdateCols() []string {
+	return nil
 }
 
-func (group *OrderGroup) PKCols() []string {
+func (group *LaunchRecordGroup) PKCols() []string {
 	return []string{
 		"gid",
 		"fid",
+		"turn",
 		"sourcex",
 		"sourcey",
 		"targetx",
@@ -113,10 +121,11 @@ func (group *OrderGroup) PKCols() []string {
 	}
 }
 
-func (group *OrderGroup) InsertCols() []string {
+func (group *LaunchRecordGroup) InsertCols() []string {
 	return []string{
 		"gid",
 		"fid",
+		"turn",
 		"sourcex",
 		"sourcey",
 		"targetx",
@@ -125,6 +134,6 @@ func (group *OrderGroup) InsertCols() []string {
 	}
 }
 
-func (group *OrderGroup) InsertScanCols() []string {
+func (group *LaunchRecordGroup) InsertScanCols() []string {
 	return nil
 }

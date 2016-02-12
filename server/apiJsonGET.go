@@ -98,8 +98,6 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 			h.apiJsonGETShipViews(w, r, ints[0], ints[1])
 		case "planetviews":
 			h.apiJsonGETPlanetViews(w, r, ints[0], ints[1])
-		case "reports":
-			h.apiJsonGETReports(w, r, ints[0], ints[1])
 		case "fullviews":
 			h.apiJsonGETFullViews(w, r, searchF)
 		}
@@ -260,41 +258,6 @@ func (h *Handler) apiJsonGETPlanetViews(w http.ResponseWriter, r *http.Request, 
 	return
 }
 
-// overpower/json/reports/gid/fid/turn
-func (h *Handler) apiJsonGETReports(w http.ResponseWriter, r *http.Request, gid, fid int) {
-	lastFull := h.LastFull()
-	turn, ok := h.IntAt(6)
-	if !ok {
-		if lastFull > 5 {
-			jFail(w, 400, "url", "bad args for object specification")
-			return
-		}
-		list, err := OPDB.GetReports("gid", gid, "fid", fid)
-		if my, bad := Check(err, "api json get reports failure", "gid", gid, "fid", fid); bad {
-			Kirk(my, w)
-			return
-		}
-		jsonList := json.LoadReports(list)
-		jSuccess(w, jsonList)
-		return
-	}
-	if lastFull > 6 {
-		jFail(w, 400, "url", "too many args for object specification")
-		return
-	}
-	item, err := OPDB.GetReport("gid", gid, "fid", fid, "turn", turn)
-	if err == ErrNoneFound {
-		jFail(w, 400, "params", "id does not correspond to any existing object")
-		return
-	} else if my, bad := Check(err, "api json get reports failure", "gid", gid, "fid", fid, "turn", turn); bad {
-		Kirk(my, w)
-		return
-	}
-	jsonItem := json.LoadReport(item)
-	jSuccess(w, jsonItem)
-	return
-}
-
 // /overpower/json/games/
 func (h *Handler) apiJsonGETGames(w http.ResponseWriter, r *http.Request) {
 	lastFull := h.LastFull()
@@ -403,7 +366,6 @@ type FullView struct {
 	ShipViews   []*json.ShipView   `json:"shipviews"`
 	Orders      []*json.Order      `json:"orders"`
 	MapView     *json.MapView      `json:"mapview"`
-	Reports     []*json.Report     `json:"reports"`
 }
 
 func FillFullView(f overpower.Faction) (*FullView, error) {
@@ -418,8 +380,7 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 	shVs, err4 := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", turn)
 	orders, err5 := OPDB.GetOrders("gid", gid, "fid", fid)
 	mapview, err6 := OPDB.GetMapView("gid", gid, "fid", fid)
-	reports, err7 := OPDB.GetReports("gid", gid, "fid", fid, "turn", turn)
-	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7} {
+	for i, err := range []error{err1, err2, err3, err4, err5, err6} {
 		if my, bad := Check(err, "fill fullview failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
 		}
@@ -432,7 +393,6 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 		ShipViews:   json.LoadShipViews(shVs),
 		Orders:      json.LoadOrders(orders),
 		MapView:     json.LoadMapView(mapview),
-		Reports:     json.LoadReports(reports),
 	}
 	return fv, nil
 }

@@ -17,14 +17,13 @@ type Source interface {
 	NewMapView(int, hexagon.Coord) MapView
 	NewShip(int, int, int, hexagon.CoordList) Ship
 	NewShipView(Ship, int, int, hexagon.NullCoord, hexagon.NullCoord, hexagon.CoordList) ShipView
-	NewReport(int, int) Report
-	AddReportEvent(int, string) bool
+	NewLaunchRecord(Ship)
+	NewLandingRecord(int, int, Ship, [3]int)
 	// ------ CHANGE ----- //
 	UpdatePlanetView(int, int, Planet) PlanetView
 	// ------- DROP ------ //
 	DropShip(Ship)
-	//DropOrders()
-	//	DropShipViews()
+	DropOrders()
 }
 
 type Game interface {
@@ -91,7 +90,6 @@ type PlanetView interface {
 type Order interface {
 	Gid() int
 	Fid() int
-	Turn() int
 	Source() hexagon.Coord
 	Target() hexagon.Coord
 	Size() int
@@ -132,4 +130,25 @@ type Report interface {
 	Turn() int
 	Contents() []string
 	AddContent(string)
+}
+
+type LaunchRecord interface {
+	Gid() int
+	Fid() int
+	Turn() int
+	Source() hexagon.Coord
+	Target() hexagon.Coord
+	Size() int
+}
+
+type LandingRecord interface {
+	Gid() int
+	Fid() int
+	Turn() int
+	Index() int
+	Target() hexagon.Coord
+	Size() int
+	FirstController() int
+	ResultController() int
+	ResultInhabitants() int
 }

@@ -5,27 +5,29 @@ import (
 	"mule/overpower"
 )
 
-func LoadOrder(item overpower.Order) *Order {
-	return &Order{
+func LoadLaunchRecord(item overpower.LaunchRecord) *LaunchRecord {
+	return &LaunchRecord{
 		Gid:    item.Gid(),
 		Fid:    item.Fid(),
+		Turn:   item.Turn(),
 		Source: item.Source(),
 		Target: item.Target(),
 		Size:   item.Size(),
 	}
 }
 
-func LoadOrders(list []overpower.Order) []*Order {
-	jList := make([]*Order, len(list))
+func LoadLaunchRecords(list []overpower.LaunchRecord) []*LaunchRecord {
+	jList := make([]*LaunchRecord, len(list))
 	for i, item := range list {
-		jList[i] = LoadOrder(item)
+		jList[i] = LoadLaunchRecord(item)
 	}
 	return jList
 }
 
-type Order struct {
+type LaunchRecord struct {
 	Gid    int           `json:"gid"`
 	Fid    int           `json:"fid"`
+	Turn   int           `json:"turn"`
 	Source hexagon.Coord `json:"source"`
 	Target hexagon.Coord `json:"target"`
 	Size   int           `json:"size"`

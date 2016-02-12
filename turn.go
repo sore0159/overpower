@@ -1,7 +1,6 @@
 package overpower
 
 import (
-	"fmt"
 	"mule/hexagon"
 )
 
@@ -44,7 +43,6 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	}
 	turn := game.Turn()
 	names := make(map[int]string, len(factions))
-	reports := make(map[int]Report, len(factions))
 	var auto bool
 	for _, f := range factions {
 		doneB := f.DoneBuffer()
@@ -55,7 +53,6 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		}
 		fid := f.Fid()
 		names[fid] = "faction " + f.Name()
-		reports[fid] = source.NewReport(fid, turn)
 	}
 	// --------- GAME ALREADY OVER -------- //
 	if game.HighScore() >= game.ToWin() {
@@ -89,14 +86,9 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		path := src.Loc().PathTo(tar.Loc())
 		sh := source.NewShip(src.Controller(), size, turn, path)
 		ships = append(ships, sh)
-		rStr := fmt.Sprintf("%s launched size %d ship toward %s", src.Name(), size, tar.Name())
-		if !source.AddReportEvent(src.Controller(), rStr) {
-			loggerM.AddContext("report problem", "couldn't find report", "fid", src.Controller(), "report", rStr)
-			errOccured = true
-			return
-		}
+		source.NewLaunchRecord(sh)
 	}
-	//source.DropOrders()
+	source.DropOrders()
 	// ---- SHIPS MOVE ---- //
 	// dist, ship index
 	landings := map[int][]int{}

@@ -16,7 +16,7 @@
 &bull; {{ if $active }}Turn {{ $g.Turn }}{{ else }}Not yet begun{{ end }}<br>
 {{ if index . "gfactions" }}
 <ul> {{ range index . "gfactions" }}
-        <li>Faction {{ if eq $user .Owner }} [ {{ if $g.Turn }}<a href="/overpower/view/{{ $g.Gid }}/play">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }} ] (Your Faction){{ else }}{{ .Name }} (Owner: {{ .Owner }}){{ end }} {{ if $active }}{{ if .Done }}(Turn Completed){{ else }}(Turn In Progress){{ end }}{{ end }}</li>
+        <li>Faction {{ if eq $user .Owner }} [ {{ if $g.Turn }}<a href="/overpower/view/{{ $g.Gid }}/play">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }} ] (Your Faction){{ else }}{{ .Name }} (Owner: {{ .Owner }}){{ end }} {{ if $active }}{{ if .IsDone }}(Turn Completed){{ else }}(Turn In Progress){{ end }}{{ end }}</li>
 {{ end }}
 </ul>
 {{ else }}
@@ -86,7 +86,7 @@ Password (leave blank for open game): <input name="password" type="text"><br>
 <br>ALL OF YOUR FACTIONS:<br>
 <ul> {{ range $i, $f := $oFacs }}
 {{ $g := index $oGames $i }}
-<li>Game [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] (Owner: {{ $g.Owner }}), Faction: [ <a href="/overpower/view/{{ $g.Gid}}/play">{{ $f.Name }}</a> ] {{ if $g.Turn }}Turn {{ $g.Turn }} {{ if $f.Done }}(Complete){{else}}(In Progress){{ end }}{{ else }}Not yet begun{{ end }}</li>
+<li>Game [ <a href="/overpower/view/{{ $g.Gid }}">{{ $g.Name }}</a> ] (Owner: {{ $g.Owner }}), Faction: [ <a href="/overpower/view/{{ $g.Gid}}/play">{{ $f.Name }}</a> ] {{ if $g.Turn }}Turn {{ $g.Turn }} {{ if $f.IsDone }}(Complete){{else}}(In Progress){{ end }}{{ else }}Not yet begun{{ end }}</li>
 {{ else }}
 <li>You are currently playing no games.</li>
 {{ end }}</ul>

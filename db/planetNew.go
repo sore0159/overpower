@@ -55,6 +55,7 @@ func (p *Planet) SetController(x int) {
 		p.modified = true
 	}
 }
+
 func (p *Planet) Inhabitants() int {
 	return p.inhabitants
 }

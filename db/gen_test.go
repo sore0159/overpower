@@ -264,7 +264,7 @@ func XTest2(t *testing.T) {
 		return
 	}
 	log.Println("Got planetview", plV)
-	err = db.MakeOrder(gid, fac.Fid(), 1, 5, pl.Loc(), pl.Loc())
+	err = db.MakeOrder(gid, fac.Fid(), 5, pl.Loc(), pl.Loc())
 	if my, bad := Check(err, "test2 make order failure"); bad {
 		log.Println(my.LogError())
 	} else {
@@ -301,23 +301,6 @@ func XTest2(t *testing.T) {
 		return
 	}
 	log.Println("Got shipview:", shV)
-
-	err = db.MakeReport(gid, fac.Fid(), 1, []string{"HEL,LO"})
-	if my, bad := Check(err, "test2 make report failure"); bad {
-		if my.BaseIs(ErrNotUnique) {
-			log.Println("Report not unique!")
-		} else {
-			log.Println(my.LogError())
-		}
-	} else {
-		log.Println("Made report!")
-	}
-	rpt, err := db.GetReport("gid", gid)
-	if my, bad := Check(err, "test2 get report failure"); bad {
-		log.Println(my.MuleError())
-		return
-	}
-	log.Println("Got report:", rpt, len(rpt.Contents()))
 
 	// ---------------------- //
 	f := func(d2 DB) error {
@@ -383,102 +366,6 @@ func XTest2(t *testing.T) {
 	}
 	log.Println("Got shipList:", shList)
 	// -------------------- //
-	err = db.DropGames("gid", gid)
-	if my, bad := Check(err, "test2 failed dropgame", "gid", gid); bad {
-		log.Println(my.MuleError())
-		return
-	}
-	log.Println("Dropped game", gid)
-}
-
-func XTest3(t *testing.T) {
-	db, err := LoadDB()
-	if my, bad := Check(err, "test2 loaddb fail"); bad {
-		log.Println(my.MuleError())
-		return
-	}
-	log.Println("DB loaded")
-	// -------------------- //
-	game, err := db.GetGame("owner", "AutoTest")
-	if my, bad := Check(err, "test2 getgame fail", "owner", "AutoTest"); bad {
-		if !my.BaseIs(ErrNoneFound) {
-			log.Println(my.MuleError())
-			return
-		}
-		log.Println("game not found")
-		err = db.MakeGame("AutoTest", "Automade", "", 40)
-		if my, bad := Check(err, "test2 automake game fail"); bad {
-			log.Println(my.MuleError())
-			return
-		}
-		log.Println("Made auto-test game")
-		game, err = db.GetGame("owner", "AutoTest")
-		if my, bad := Check(err, "test2 getgame fail two", "owner", "AutoTest"); bad {
-			log.Println(my.MuleError())
-			return
-		}
-	}
-	log.Println("Looking at game:", game)
-	gid := game.Gid()
-	fac, err := db.GetFaction("gid", gid, "owner", "AutoTest")
-	if my, bad := Check(err, "test2 getfaction failure"); bad {
-		if !my.BaseIs(ErrNoneFound) {
-			log.Println(my.MuleError())
-			return
-		}
-		log.Println("fac not found")
-		err = db.MakeFaction(gid, "AutoTest", "AutoFaction")
-		if my, bad := Check(err, "test2 faction make failure"); bad {
-			log.Println(my.MuleError())
-			return
-		}
-		log.Println("Made faction!")
-		fac, err = db.GetFaction("gid", gid, "owner", "AutoTest")
-		if my, bad := Check(err, "test2 getfaction failure"); bad {
-			log.Println(my.MuleError())
-			return
-		}
-	}
-	log.Println("Got faction:", fac)
-
-	rpts, err := db.GetReports("gid", gid)
-	if my, bad := Check(err, "test2 get reports failure"); bad {
-		log.Println(my.MuleError())
-		return
-	}
-	if len(rpts) > 0 {
-		err = db.DropReports("gid", gid)
-		if my, bad := Check(err, "test2 drop reports failure"); bad {
-			log.Println(my.MuleError())
-			return
-		}
-		log.Println("Dropped", len(rpts), "reports!")
-	}
-	log.Println("Making report")
-	err = db.MakeReport(gid, fac.Fid(), 1, []string{"HEL<,\"'LO", "D"})
-	if my, bad := Check(err, "test2 make report failure"); bad {
-		log.Println(my.LogError())
-		return
-	}
-	log.Println("Made report!")
-	rpts, err = db.GetReports("gid", gid)
-	if my, bad := Check(err, "test2 get reports failure"); bad {
-		log.Println(my.MuleError())
-		return
-	}
-	if len(rpts) == 0 {
-		log.Println("No reports found!")
-		return
-	}
-	log.Println("Got reports:", rpts, len(rpts))
-	for i, rpt := range rpts {
-		log.Println("REPORT", i, ":", rpt)
-		for j, item := range rpt.Contents() {
-			log.Println("   CONTENT ITEM", j, ":", item)
-		}
-	}
-	// -------------------------------- //
-	return
 	err = db.DropGames("gid", gid)
 	if my, bad := Check(err, "test2 failed dropgame", "gid", gid); bad {
 		log.Println(my.MuleError())

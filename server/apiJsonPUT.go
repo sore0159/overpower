@@ -39,6 +39,7 @@ func (h *Handler) apiJsonPUTFactions(w http.ResponseWriter, r *http.Request) {
 		*json.Faction
 	}{}
 	err := jsend.Read(r, &jF)
+	Ping("FACTION:", *jF.Faction)
 	if my, bad := Check(err, "API PUT failure on data read"); bad {
 		Kirk(my, w)
 		return
@@ -103,15 +104,6 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		jFail(w, 400, "bad specification", "source/target planets must differ")
 		return
 	}
-	g, err := OPDB.GetGame("gid", o.Gid)
-	if err == ErrNoneFound {
-		jFail(w, 400, "bad specification", "no game found matching given order data")
-		return
-	} else if my, bad := Check(err, "Json PUT failure on game validation check", "resource", "orders", "order", o); bad {
-		Kirk(my, w)
-		return
-	}
-	turn := g.Turn()
 	f, err := OPDB.GetFaction("gid", o.Gid, "fid", o.Fid)
 	if err == ErrNoneFound {
 		jFail(w, 400, "bad specification", "no faction found matching given order data")
@@ -150,7 +142,7 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 	have := source.Parts()
 	using := 0
 	var curOrder overpower.Order
-	orders, err := OPDB.GetOrders("gid", o.Gid, "fid", o.Fid, "turn", turn, "sourcex", o.Source[0], "sourcey", o.Source[1])
+	orders, err := OPDB.GetOrders("gid", o.Gid, "fid", o.Fid, "sourcex", o.Source[0], "sourcey", o.Source[1])
 	if my, bad := Check(err, "Json PUT failure on orders validation check", "resource", "orders", "order", o); bad {
 		Kirk(my, w)
 		return
@@ -174,7 +166,7 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		curOrder.SetSize(o.Size)
 		err = OPDB.UpdateOrders(curOrder)
 	} else {
-		err = OPDB.MakeOrder(o.Gid, o.Fid, turn, o.Size, o.Source, o.Target)
+		err = OPDB.MakeOrder(o.Gid, o.Fid, o.Size, o.Source, o.Target)
 	}
 	if my, bad := Check(err, "Json PUT failure on database entry", "resource", "orders", "item", o); bad {
 		Kirk(my, w)

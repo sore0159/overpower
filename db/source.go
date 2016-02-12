@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 	"mule/hexagon"
 	"mule/mydb"
 	"mule/overpower"
@@ -33,53 +34,43 @@ type Source struct {
 	factions    []*Faction
 	planetViews map[[3]int]*PlanetView
 	// ------- MAKE ------- //
-	MadePlanets     []*Planet
-	MadePlanetViews map[[3]int]*PlanetView
-	MadeShips       []*Ship
-	MadeShipViews   map[overpower.Ship][]*ShipView
-	MadeMapViews    []*MapView
-	MadeReports     map[int]*Report
+	MadePlanets        []*Planet
+	MadePlanetViews    map[[3]int]*PlanetView
+	MadeShips          []*Ship
+	MadeShipViews      map[overpower.Ship][]*ShipView
+	MadeMapViews       []*MapView
+	MadeLaunchRecords  []*LaunchRecord
+	MadeLandingRecords map[int][]*LandingRecord
 	// ------- DROP ------ //
 	DroppedShips []overpower.Ship
-	//dropOrders   bool
-	//dropShipViews bool
+	dropOrders   bool
 }
 
 func (d DB) NewSource(gid int) *Source {
 	return &Source{
-		Gid:             gid,
-		db:              d,
-		planetViews:     map[[3]int]*PlanetView{},
-		MadePlanets:     []*Planet{},
-		MadePlanetViews: map[[3]int]*PlanetView{},
-		MadeShips:       []*Ship{},
-		MadeShipViews:   map[overpower.Ship][]*ShipView{},
-		MadeMapViews:    []*MapView{},
-		MadeReports:     map[int]*Report{},
-		DroppedShips:    []overpower.Ship{},
+		Gid:                gid,
+		db:                 d,
+		planetViews:        map[[3]int]*PlanetView{},
+		MadePlanets:        []*Planet{},
+		MadePlanetViews:    map[[3]int]*PlanetView{},
+		MadeShips:          []*Ship{},
+		MadeShipViews:      map[overpower.Ship][]*ShipView{},
+		MadeMapViews:       []*MapView{},
+		MadeLaunchRecords:  []*LaunchRecord{},
+		MadeLandingRecords: map[int][]*LandingRecord{},
+		DroppedShips:       []overpower.Ship{},
 	}
 }
 
 func (s *Source) Commit() error {
-	//cond := C{"gid", s.Gid}
 	var err error
 	// ------- DROP ------ //
-	/*
-		if s.dropShipViews {
-			err = s.db.dropItemsIf("shipviews", cond)
-			if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "shipviews"); bad {
-				return my
-			}
+	if s.dropOrders {
+		err = s.db.dropItemsIf("orders", C{"gid", s.Gid})
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "orders"); bad {
+			return my
 		}
-	*/
-	/*
-		if s.dropOrders {
-			err = s.db.dropItemsIf("orders", cond)
-			if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "orders"); bad {
-				return my
-			}
-		}
-	*/
+	}
 	if len(s.DroppedShips) > 0 {
 		err = s.db.dropTheseShips(s.DroppedShips)
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "ships", "list", s.DroppedShips); bad {
@@ -113,6 +104,24 @@ func (s *Source) Commit() error {
 			return my
 		}
 	}
+	if len(s.MadeLaunchRecords) > 0 {
+		group := &LaunchRecordGroup{s.MadeLaunchRecords}
+		err = s.db.makeGroup(group)
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "make", "LaunchRecords", "list", s.MadeLaunchRecords); bad {
+			return my
+		}
+	}
+	if len(s.MadeLandingRecords) > 0 {
+		allLR := make([]*LandingRecord, 0, len(s.MadeLandingRecords))
+		for _, list := range s.MadeLandingRecords {
+			allLR = append(allLR, list...)
+		}
+		group := &LandingRecordGroup{allLR}
+		err = s.db.makeGroup(group)
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "make", "landingrecords", "list", allLR); bad {
+			return my
+		}
+	}
 	if len(s.MadeShipViews) > 0 {
 		allSVs := make([]*ShipView, 0, len(s.MadeShipViews))
 		for sh, list := range s.MadeShipViews {
@@ -133,17 +142,6 @@ func (s *Source) Commit() error {
 		group := &MapViewGroup{s.MadeMapViews}
 		err = s.db.makeGroup(group)
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "make", "mapviews", "list", s.MadeMapViews); bad {
-			return my
-		}
-	}
-	if len(s.MadeReports) > 0 {
-		allRpt := make([]*Report, 0, len(s.MadeReports))
-		for _, r := range s.MadeReports {
-			allRpt = append(allRpt, r)
-		}
-		group := &ReportGroup{allRpt}
-		err = s.db.makeGroup(group)
-		if my, bad := Check(err, "source commit error", "gid", s.Gid, "make", "reports", "list", allRpt); bad {
 			return my
 		}
 	}
@@ -207,21 +205,6 @@ func (s *Source) Orders() ([]overpower.Order, error) {
 }
 func (s *Source) Ships() ([]overpower.Ship, error) {
 	return s.db.GetShips("gid", s.Gid)
-}
-
-func (s *Source) NewReport(fid, turn int) (report overpower.Report) {
-	r := NewReport()
-	r.gid, r.fid, r.turn = s.Gid, fid, turn
-	s.MadeReports[fid] = r
-	return r
-}
-func (s *Source) AddReportEvent(fid int, str string) bool {
-	r, ok := s.MadeReports[fid]
-	if !ok {
-		return false
-	}
-	r.AddContent(str)
-	return true
 }
 
 func (s *Source) NewMapView(fid int, center hexagon.Coord) (mapview overpower.MapView) {
@@ -291,6 +274,7 @@ func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (plane
 
 func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.PlanetView {
 	pv := NewPlanetView()
+	pv.loc = pl.Loc()
 	pv.gid = s.Gid
 	pv.fid = fid
 	pv.turn = turn
@@ -300,18 +284,44 @@ func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.
 	pv.resources = sql.NullInt64{int64(pl.Resources()), true}
 	pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
 	pv.parts = sql.NullInt64{int64(pl.Parts()), true}
-	s.MadePlanetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
+	s.planetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
 	return pv
 }
 
-/*
 func (s *Source) DropOrders() {
 	s.dropOrders = true
 }
-*/
 
-/*
-func (s *Source) DropShipViews() {
-	s.dropShipViews = true
+func (s *Source) NewLaunchRecord(ship overpower.Ship) {
+	lr := NewLaunchRecord()
+	lr.gid, lr.size, lr.fid = ship.Gid(), ship.Size(), ship.Fid()
+	lr.turn = ship.Launched()
+	path := ship.Path()
+	lr.source = path[0]
+	lr.target = path[len(path)-1]
+	s.MadeLaunchRecords = append(s.MadeLaunchRecords, lr)
 }
-*/
+
+func (s *Source) NewLandingRecord(fid, turn int, ship overpower.Ship, result [3]int) {
+	lr := NewLandingRecord()
+	lr.gid, lr.size, lr.fid, lr.turn = ship.Gid(), ship.Size(), fid, turn
+	if result[0] != 0 {
+		lr.firstcontroller.Valid = true
+		lr.firstcontroller.Int64 = int64(result[0])
+	}
+	if result[1] != 0 {
+		lr.resultcontroller.Valid = true
+		lr.resultcontroller.Int64 = int64(result[1])
+	}
+	lr.resultinhabitants = result[2]
+	path := ship.Path()
+	lr.target = path[len(path)-1]
+	list, ok := s.MadeLandingRecords[fid]
+	if !ok {
+		s.MadeLandingRecords[fid] = []*LandingRecord{lr}
+	} else {
+		lr.index = len(list)
+		s.MadeLandingRecords[fid] = append(list, lr)
+	}
+	log.Println("MADE", *lr)
+}

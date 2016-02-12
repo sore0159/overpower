@@ -63,7 +63,8 @@ function putJSON(url, obj, onFail, onPass) {
                 err = "unknown json response from server:"+resp.status;
             }
         } else {
-            err = req.status +'\n'+req.statusText;
+            err = req.status +'\n'+req.statusText+"\nJSON:"+
+                req.responseText;
         }
         if (err) {
             onFail(err);
@@ -87,8 +88,15 @@ function putErr(err) {
 
 function turnChange() {
     var faction = canvas.overpowerData.faction;
-    faction.done = !faction.done;
+    if (!faction.donebuffer) {
+        faction.donebuffer = 1;
+        faction.done = true;
+    } else {
+        faction.donebuffer = 0;
+        faction.done = false;
+    }
     canvas.setupText();
+    console.log("SENDING:", faction);
     canvas.blockScreen("Checking for new turn...");
     putJSON("/overpower/json/factions", faction, putErr, function() {
         canvas.turnCheck();

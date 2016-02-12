@@ -10,14 +10,13 @@ import (
 )
 
 func (d DB) getPlanetsByLoc(gid int, locs ...hexagon.Coord) ([]*Planet, error) {
-	parts := make([]string, len(locs))
-	args := make([]interface{}, 2*len(locs)+1)
-	args[0] = gid
+	parts := make([]string, 0, len(locs))
+	args := make([]interface{}, 0, 2*len(locs)+1)
+	args = append(args, gid)
 	count := 2
-	for i, item := range locs {
-		parts[i] = fmt.Sprintf("($%d, $%d)", count, count+1)
-		args[count] = item[0]
-		args[count+1] = item[1]
+	for _, item := range locs {
+		parts = append(parts, fmt.Sprintf("($%d, $%d)", count, count+1))
+		args = append(args, item[0], item[1])
 		count += 2
 	}
 	locStr := strings.Join(parts, ",")

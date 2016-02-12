@@ -1,7 +1,6 @@
 package overpower
 
 import (
-	"fmt"
 	"mule/hexagon"
 )
 
@@ -11,16 +10,11 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 	atk := sh.Size()
 	loc := pl.Loc()
 	def := arrivals[loc]
-	aSum := atk
-	dSum := def + pl.Inhabitants()
+	defer BothLandingReports(source, plFid, turn, sh, pl, arrivals)
 	if atk < 1 {
 		return
 	}
 	if shFid == plFid {
-		rStr := fmt.Sprintf("Your ship landed at %s with %d colonists, reinforcing inhabitants to %d.", pl.Name(), aSum, dSum+aSum)
-		if !source.AddReportEvent(shFid, rStr) {
-			return ErrBadArgs
-		}
 		arrivals[loc] += atk
 		return
 	}
@@ -31,20 +25,6 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 		} else {
 			arrivals[loc] = def - atk
 		}
-		var themStr string
-		if plFid == 0 {
-			themStr = "hostile natives"
-		} else {
-			themStr = names[plFid] + " inhabitants"
-			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, but your inhabitants fought them off (%d inhabitants remaining)", pl.Name(), aSum, names[shFid], dSum-aSum)
-			if !source.AddReportEvent(plFid, plStr) {
-				return ErrBadArgs
-			}
-		}
-		shStr := fmt.Sprintf("Your ship landed at %s with %d colonists, but were all killed by %s (%d inhabitants remaining).", pl.Name(), aSum, themStr, dSum-aSum)
-		if !source.AddReportEvent(shFid, shStr) {
-			return ErrBadArgs
-		}
 		return
 	}
 	delete(arrivals, loc)
@@ -52,68 +32,34 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 	def = pl.Inhabitants()
 	if def >= atk {
 		pl.SetInhabitants(def - atk)
-		var themStr string
-		if plFid == 0 {
-			themStr = "hostile natives"
-		} else {
-			themStr = names[plFid] + " inhabitants"
-			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, but your inhabitants fought them off (%d inhabitants remaining)", pl.Name(), aSum, names[shFid], dSum-aSum)
-			if !source.AddReportEvent(plFid, plStr) {
-				return ErrBadArgs
-			}
-		}
-		shStr := fmt.Sprintf("Your ship landed at %s with %d colonists, but were all killed by %s (%d inhabitants remaining).", pl.Name(), aSum, themStr, dSum-aSum)
-		if !source.AddReportEvent(shFid, shStr) {
-			return ErrBadArgs
-		}
 		return
 	}
 	pl.SetController(sh.Fid())
 	pl.SetInhabitants(0)
 	atk -= def
 	arrivals[loc] = atk
-	if dSum == 0 {
-		var shStr string
-		if plFid == 0 {
-			shStr = fmt.Sprintf("Your ship landed at %s with %d colonists and found no resistance from the local populace.", pl.Name(), aSum)
-		} else {
-			shStr = fmt.Sprintf("Your ship landed at %s with %d colonists and found no remaining %s inhabitants left to defend it", pl.Name(), aSum, names[plFid])
-			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, and you had no inhabitants present to retain control of the planet.", pl.Name(), aSum, names[shFid])
-			if !source.AddReportEvent(plFid, plStr) {
-				return ErrBadArgs
-			}
-		}
-		if !source.AddReportEvent(shFid, shStr) {
-			return ErrBadArgs
-		}
-	} else {
-		var themStr string
-		if plFid == 0 {
-			themStr = "hostile natives"
-		} else {
-			themStr = names[plFid] + " inhabitants"
-			plStr := fmt.Sprintf("%s was invaded by %d colonists from %s, who killed your %d inhabitants there and took control (%d invaders remaining)", pl.Name(), aSum, names[shFid], dSum, aSum-dSum)
-			if !source.AddReportEvent(plFid, plStr) {
-				return ErrBadArgs
-			}
-		}
-		shStr := fmt.Sprintf("Your ship landed at %s with %d colonists and were attacked by %d %s, but your colonists managed to defend themselves and take the planet (%d colonists survived).", pl.Name(), aSum, dSum, themStr, aSum-dSum)
-		if !source.AddReportEvent(shFid, shStr) {
-			return ErrBadArgs
-		}
-	}
 	return
 }
 
 func BothSee(source Source, pl Planet, fid1, fid2, turn int, arrivals map[hexagon.Coord]int) {
+	arv := arrivals[pl.Loc()]
 	for _, fid := range []int{fid1, fid2} {
 		if fid == 0 || fid == pl.Controller() {
 			continue
 		}
 		pv := source.UpdatePlanetView(fid, turn, pl)
-		arv := arrivals[pl.Loc()]
 		if arv > 0 {
 			pv.SetInhabitants(pv.Inhabitants() + arv)
 		}
+	}
+}
+
+func BothLandingReports(source Source, firstController, turn int, lander Ship, planet Planet, arrivals map[hexagon.Coord]int) {
+	arv := arrivals[planet.Loc()]
+	res := [3]int{firstController, planet.Controller(), planet.Inhabitants() + arv}
+	shFid := lander.Fid()
+	source.NewLandingRecord(shFid, turn, lander, res)
+	if firstController != 0 && firstController != shFid {
+		source.NewLandingRecord(firstController, turn, lander, res)
 	}
 }

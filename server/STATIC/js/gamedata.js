@@ -2,31 +2,49 @@
 
 var canvas = document.getElementById('mainscreen');
 
-
 canvas.parseOPData = function() {
     var data = this.overpowerData;
+    var grid = this.muleGrid;
     var fidMap = new Map();
     data.factions.forEach(function(faction) {
         fidMap.set(faction.fid, faction);
     });
     data.fidMap = fidMap;
-    var plidMap = new Map();
+
+
+    var gridMap = new Map();
+    gridMap.getHex = function(hex) {
+        var yMap = this.get(hex[0]);
+        if (!yMap) {
+            return null;
+        }
+        return yMap.get(hex[1]);
+    };
+    data.gridMap = gridMap;
+  
     data.planetviews.forEach(function(planet) {
-        plidMap.set(planet.pid, planet);
+        var yMap = gridMap.get(planet.loc[0]);
+        if (!yMap) {
+            yMap = new Map();
+            gridMap.set(planet.loc[0], yMap);
+        }
+        yMap.set(planet.loc[1], planet);
+        //
         if (planet.controller === data.faction.fid) {
             planet.avail = planet.parts;
         }
         data.shipviews.forEach(function(ship) {
-            if (ship.dest.valid && ship.dest.coord[0] === planet.loc[0] && ship.dest.coord[1] === planet.loc[1]) {
+            if (ship.dest.valid && grid.ptsEq(ship.dest.coord, planet.loc)) {
                 ship.dest.planet = planet;
             }
         });
     });
-    data.plidMap = plidMap;
+ 
+
     data.orders.forEach(function(order) {
-        order.sourcePl = plidMap.get(order.source);
+        order.sourcePl = gridMap.getHex(order.source);
         order.sourcePl.avail -= order.size;
-        order.targetPl = plidMap.get(order.target);
+        order.targetPl = gridMap.getHex(order.target);
     });
     data.map = {"center":data.mapview.center};
     canvas.centerHex(canvas.overpowerData.map.center);
@@ -122,7 +140,8 @@ canvas.parseOPData = function() {
             if (targetInfo.planet && this.orders) {
                 targetInfo.orders = [];
                 this.orders.forEach(function(order) {
-                    if (order.source === targetInfo.planet.pid) {
+                    var loc = targetInfo.planet.loc;
+                    if (grid.ptsEq(order.source, targetInfo.planet.loc)) {
                         targetInfo.orders.push(order);
                     }
                 });
@@ -135,7 +154,6 @@ canvas.parseOPData = function() {
         } else {
             this.setTargetOrder();
         }
-        //canvas.redrawPage();
     };
 
     data.setTargetTwo = function(hex, help, drop) {
@@ -171,7 +189,6 @@ canvas.parseOPData = function() {
         } else {
             this.setTargetOrder();
         }
-        //canvas.redrawPage();
     };
 
     data.setTargetOrder = function(pl1, pl2) {
@@ -192,7 +209,7 @@ canvas.parseOPData = function() {
             var order = null;
             for (var i = 0; i< this.orders.length; i++) {
                 var o = this.orders[i];
-                if (o.source === pl1.pid && o.target === pl2.pid) {
+                if (grid.ptsEq(o.source, pl1.loc) && grid.ptsEq(o.target, pl2.loc)) {
                     order = o;
                     if (!o.originSize) {
                         o.originSize = o.size;
@@ -201,11 +218,10 @@ canvas.parseOPData = function() {
                 }
             }
             if (!order && pl1.avail) {
-                order = {"brandnew": true, "gid": this.game.gid, "fid": this.faction.fid, "source":pl1.pid, "target": pl2.pid, "size":0, "targetPl": pl2, "sourcePl": pl1};
+                order = {"brandnew": true, "gid": this.game.gid, "fid": this.faction.fid, "source":pl1.loc, "target": pl2.loc, "size":0, "targetPl": pl2, "sourcePl": pl1};
             }
             this.targetOrder = order;
         }
-        //canvas.redrawPage();
     };
 
 };

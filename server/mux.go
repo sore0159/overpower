@@ -51,7 +51,7 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch h.Path[4] {
-	case "play", "reports":
+	case "play":
 		if !h.LoggedIn {
 			http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
 			return
@@ -75,8 +75,6 @@ func muxView(w http.ResponseWriter, r *http.Request) {
 		switch h.Path[4] {
 		case "play":
 			h.pageCanvas(w, r, g, f, facs)
-		case "reports":
-			h.pageOPReports(w, r, g, f, facs)
 		}
 		return
 	default:

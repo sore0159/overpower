@@ -71,7 +71,6 @@ func (d DB) MakeTables() (err error) {
 	queries = append(queries, `create table orders(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
-	turn int NOT NULL,
 	sourcex integer NOT NULL,
 	sourcey integer NOT NULL,
 	targetx integer NOT NULL,
@@ -80,7 +79,7 @@ func (d DB) MakeTables() (err error) {
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, sourcex, sourcey) REFERENCES planets ON DELETE CASCADE,
 	FOREIGN KEY(gid, targetx, targety) REFERENCES planets ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, turn, sourcex, sourcey, targetx, targety)
+	PRIMARY KEY(gid, fid, sourcex, sourcey, targetx, targety)
 );`)
 	queries = append(queries, `create table ships(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
@@ -106,13 +105,37 @@ func (d DB) MakeTables() (err error) {
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, sid)
 );`)
-	queries = append(queries, `create table reports(
+
+	queries = append(queries, `create table launchrecords(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
-	turn integer NOT NULL,
-	contents text[] NOT NULL,
+	turn int NOT NULL,
+	sourcex integer NOT NULL,
+	sourcey integer NOT NULL,
+	targetx integer NOT NULL,
+	targety integer NOT NULL,
+	size integer NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, turn)
+	FOREIGN KEY(gid, sourcex, sourcey) REFERENCES planets ON DELETE CASCADE,
+	FOREIGN KEY(gid, targetx, targety) REFERENCES planets ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, turn, sourcex, sourcey, targetx, targety)
+);`)
+	queries = append(queries, `create table landingrecords(
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid integer NOT NULL,
+	turn int NOT NULL,
+	index int NOT NULL,
+	size int NOT NULL,
+	targetx integer NOT NULL,
+	targety integer NOT NULL,
+	firstcontroller int,
+	resultcontroller int,
+	resultinhabitants int NOT NULL,
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, firstcontroller) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, resultcontroller) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, targetx, targety) REFERENCES planets ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, turn, index)
 );`)
 	for i, query := range queries {
 		_, err := d.db().Exec(query)
@@ -125,7 +148,7 @@ func (d DB) MakeTables() (err error) {
 }
 
 func (d DB) DropTables() (err error) {
-	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders, reports"
+	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders, landingrecords, launchrecords"
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tables)
 	_, err = d.db().Exec(query)
 	return err
