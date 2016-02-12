@@ -120,7 +120,7 @@ func Test4(t *testing.T) {
 
 		f := func(d DB) error {
 			source := d.NewSource(gid)
-			breakE, logE := overpower.RunGameTurn(source, true)
+			breakE, logE := overpower.RunGameTurn(source)
 			if logE != nil {
 				log.Println(logE.(*mybad.MuleError).MuleError())
 			}
@@ -219,50 +219,52 @@ func XTest2(t *testing.T) {
 		return
 	}
 	log.Println("Got mapView:", mapV)
-	err = db.MakePlanet(gid, 100, 0, 10, 20, 30, "Planet Test", hexagon.Coord{10, 10})
+	err = db.MakePlanet(gid, 0, 10, 20, 30, "Planet Test", hexagon.Coord{10, 10})
 	if my, bad := Check(err, "test2 make planet failure"); bad {
 		log.Println(my.LogError())
 	} else {
 		log.Println("Made planet!")
 	}
-	pl, err := db.GetPlanet("gid", gid, "pid", 100)
+	pl, err := db.GetPlanet("gid", gid, "locx", 10, "locy", 10)
 	if my, bad := Check(err, "test2 get planet failure"); bad {
 		log.Println(my.MuleError())
 		return
 	}
 	log.Println("Got planet", pl)
-	err = db.MakePlanet(gid, 101, 0, 10, 20, 30, "Planet Test2", hexagon.Coord{20, 20})
+	err = db.MakePlanet(gid, 0, 10, 20, 30, "Planet Test2", hexagon.Coord{20, 20})
 	if my, bad := Check(err, "test2 make planet2 failure"); bad {
 		log.Println(my.LogError())
 	} else {
 		log.Println("Made planet2!")
 	}
-	pl2, err := db.GetPlanet("gid", gid, "pid", 101)
+	pl2, err := db.GetPlanet("gid", gid, "locx", 20, "locy", 20)
 	if my, bad := Check(err, "test2 get planet2 failure"); bad {
 		log.Println(my.MuleError())
 		return
 	}
 	log.Println("Got planet2", pl2)
-	plList, err := db.GetPlanetsByPlid(gid, 100, 101)
-	if my, bad := Check(err, "test2 multi-planet get failed"); bad {
-		log.Println(my.MuleError())
-		return
-	}
-	log.Println("Got multi planets!", plList[0], plList[1])
+	/*
+		plList, err := db.GetPlanetsByLocs(gid, 100, 101)
+		if my, bad := Check(err, "test2 multi-planet get failed"); bad {
+			log.Println(my.MuleError())
+			return
+		}
+		log.Println("Got multi planets!", plList[0], plList[1])
+	*/
 
-	err = db.MakePlanetView(gid, pl.Pid(), fac.Fid(), 0, 0, 10, 10, 10, "Planet Test", hexagon.Coord{10, 10})
+	err = db.MakePlanetView(gid, fac.Fid(), 0, 0, 10, 10, 10, "Planet Test", hexagon.Coord{10, 10})
 	if my, bad := Check(err, "test2 make planetview failure"); bad {
 		log.Println(my.LogError())
 	} else {
 		log.Println("Made planetview!")
 	}
-	plV, err := db.GetPlanetView("gid", gid, "fid", fac.Fid(), "pid", 100)
+	plV, err := db.GetPlanetView("gid", gid, "fid", fac.Fid(), "locx", 10, "locy", 10)
 	if my, bad := Check(err, "test2 get planetview failure"); bad {
 		log.Println(my.MuleError())
 		return
 	}
 	log.Println("Got planetview", plV)
-	err = db.MakeOrder(gid, fac.Fid(), pl.Pid(), pl.Pid(), 5)
+	err = db.MakeOrder(gid, fac.Fid(), 1, 5, pl.Loc(), pl.Loc())
 	if my, bad := Check(err, "test2 make order failure"); bad {
 		log.Println(my.LogError())
 	} else {
@@ -327,14 +329,14 @@ func XTest2(t *testing.T) {
 			return my
 		}
 		log.Println("Updated game", gid)
-		fac.SetDone(true)
+		fac.SetDoneBuffer(3)
 		err = d2.UpdateFactions(fac)
 		if my, bad := Check(err, "test2 update faction failure"); bad {
 			log.Println(my.MuleError())
 			return my
 		}
 		log.Println("Updated faction", fac)
-		mapV.SetZoom(16)
+		mapV.SetCenter(hexagon.Coord{300, 350})
 		err = d2.UpdateMapViews(mapV)
 		if my, bad := Check(err, "test2 update mapV failure"); bad {
 			log.Println(my.MuleError())

@@ -5,8 +5,8 @@ import (
 	"mule/overpower"
 )
 
-func (d DB) MakePlanetView(gid, pid, fid, turn, controller, inhabitants, resources, parts int, name string, loc hexagon.Coord) error {
-	item := &PlanetView{gid: gid, pid: pid, fid: fid, turn: turn, name: name, loc: loc}
+func (d DB) MakePlanetView(gid, fid, turn, controller, inhabitants, resources, parts int, name string, loc hexagon.Coord) error {
+	item := &PlanetView{gid: gid, fid: fid, turn: turn, name: name, loc: loc}
 	if turn > 0 {
 		item.controller.Valid = true
 		item.controller.Int64 = int64(controller)

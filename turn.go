@@ -5,7 +5,7 @@ import (
 	"mule/hexagon"
 )
 
-func RunGameTurn(source Source, auto bool) (breaker, logger error) {
+func RunGameTurn(source Source) (breaker, logger error) {
 	game, err := source.Game()
 	if my, bad := Check(err, "run turn resource failure"); bad {
 		return my, nil
@@ -30,11 +30,9 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 	var errOccured bool
 	loggerM, _ := Check(ErrIgnorable, "run turn problem")
 	planetGrid := make(map[hexagon.Coord]Planet, len(planets))
-	plids := make(map[int]Planet, len(planets))
 	radar := make(map[int]hexagon.CoordList, len(factions))
 	for _, p := range planets {
 		planetGrid[p.Loc()] = p
-		plids[p.Pid()] = p
 		if fid := p.Controller(); fid != 0 {
 			loc := p.Loc()
 			if list, ok := radar[fid]; ok {
@@ -47,8 +45,14 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 	turn := game.Turn()
 	names := make(map[int]string, len(factions))
 	reports := make(map[int]Report, len(factions))
+	var auto bool
 	for _, f := range factions {
-		f.SetDone(false)
+		doneB := f.DoneBuffer()
+		if doneB > 0 {
+			f.SetDoneBuffer(doneB - 1)
+		} else if doneB == 0 {
+			auto = true
+		}
 		fid := f.Fid()
 		names[fid] = "faction " + f.Name()
 		reports[fid] = source.NewReport(fid, turn)
@@ -63,8 +67,8 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 	}
 	// ---- SHIPS LAUNCH ---- //
 	for _, o := range orders {
-		tar, ok1 := plids[o.Target()]
-		src, ok2 := plids[o.Source()]
+		tar, ok1 := planetGrid[o.Target()]
+		src, ok2 := planetGrid[o.Source()]
 		if !(ok1 && ok2) {
 			errOccured = true
 			loggerM.AddContext("bad order", "planets not found", "order", o)
@@ -92,7 +96,7 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 			return
 		}
 	}
-	source.DropOrders()
+	//source.DropOrders()
 	// ---- SHIPS MOVE ---- //
 	// dist, ship index
 	landings := map[int][]int{}
@@ -150,7 +154,7 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 	//
 	// ---- SHIPS LAND ---- //
 	// plid, amount
-	arrivals := map[int]int{}
+	arrivals := map[hexagon.Coord]int{}
 	for i := 1; i < SHIPSPEED+1; i++ {
 		shipsLandings, ok := landings[i]
 		if !ok {
@@ -203,7 +207,7 @@ func RunGameTurn(source Source, auto bool) (breaker, logger error) {
 			pl.SetParts(parts + prod)
 		}
 		// ---- ARRIVALS ARRIVE ---- //
-		if x := arrivals[pl.Pid()]; x > 0 {
+		if x := arrivals[pl.Loc()]; x > 0 {
 			pl.SetInhabitants(pl.Inhabitants() + x)
 		}
 		// ---- PLANETS ARE SEEN ---- //

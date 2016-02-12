@@ -12,7 +12,7 @@ type Source interface {
 	Orders() ([]Order, error)
 	Ships() ([]Ship, error)
 	// ------- MAKE ------- //
-	NewPlanet(string, int, int, int, int, int, hexagon.Coord) Planet
+	NewPlanet(string, int, int, int, int, hexagon.Coord) Planet
 	NewPlanetView(int, Planet, bool) PlanetView
 	NewMapView(int, hexagon.Coord) MapView
 	NewShip(int, int, int, hexagon.CoordList) Ship
@@ -23,7 +23,7 @@ type Source interface {
 	UpdatePlanetView(int, int, Planet) PlanetView
 	// ------- DROP ------ //
 	DropShip(Ship)
-	DropOrders()
+	//DropOrders()
 	//	DropShipViews()
 }
 
@@ -50,17 +50,17 @@ type Faction interface {
 	Fid() int
 	Owner() string
 	Name() string
-	Done() bool
-	SetDone(bool)
+	IsDone() bool
+	DoneBuffer() int
+	SetDoneBuffer(int)
 	Score() int
 	SetScore(int)
 }
 
 type Planet interface {
 	Gid() int
-	Pid() int
-	Name() string
 	Loc() hexagon.Coord
+	Name() string
 	Controller() int
 	SetController(int)
 	Inhabitants() int
@@ -73,11 +73,10 @@ type Planet interface {
 
 type PlanetView interface {
 	Gid() int
-	Pid() int
 	Fid() int
-	Name() string
 	Loc() hexagon.Coord
 	Turn() int
+	Name() string
 	SetTurn(int)
 	Controller() int
 	SetController(int)
@@ -92,8 +91,9 @@ type PlanetView interface {
 type Order interface {
 	Gid() int
 	Fid() int
-	Source() int
-	Target() int
+	Turn() int
+	Source() hexagon.Coord
+	Target() hexagon.Coord
 	Size() int
 	SetSize(int)
 }
@@ -114,24 +114,16 @@ type ShipView interface {
 	Turn() int
 	Size() int
 	Controller() int
-	Loc() (hexagon.Coord, bool)
-	Dest() (hexagon.Coord, bool)
+	Loc() hexagon.NullCoord
+	Dest() hexagon.NullCoord
 	Trail() hexagon.CoordList
 }
 
 type MapView interface {
 	Gid() int
 	Fid() int
-	Zoom() int
 	Center() hexagon.Coord
-	SetZoom(int)
 	SetCenter(hexagon.Coord)
-	Target1() hexagon.NullCoord
-	SetTarget1(hexagon.Coord)
-	DropTarget1()
-	Target2() hexagon.NullCoord
-	SetTarget2(hexagon.Coord)
-	DropTarget2()
 }
 
 type Report interface {

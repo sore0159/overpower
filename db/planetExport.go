@@ -6,13 +6,13 @@ import (
 	"mule/overpower"
 )
 
-func (d DB) MakePlanet(gid, pid, controller, inhabitants, resources, parts int, name string, loc hexagon.Coord) (err error) {
+func (d DB) MakePlanet(gid, controller, inhabitants, resources, parts int, name string, loc hexagon.Coord) (err error) {
 	contN := sql.NullInt64{}
 	if controller != 0 {
 		contN.Valid = true
 		contN.Int64 = int64(controller)
 	}
-	item := &Planet{gid: gid, pid: pid, name: name, controller: contN, inhabitants: inhabitants, resources: resources, parts: parts, loc: loc}
+	item := &Planet{gid: gid, name: name, controller: contN, inhabitants: inhabitants, resources: resources, parts: parts, loc: loc}
 	group := &PlanetGroup{[]*Planet{item}}
 	return d.makeGroup(group)
 }
@@ -29,9 +29,9 @@ func (d DB) UpdatePlanets(list ...overpower.Planet) error {
 	return d.updateGroup(&PlanetGroup{mylist})
 }
 
-func (d DB) GetPlanetsByPlid(gid int, plids ...int) ([]overpower.Planet, error) {
-	list, err := d.getPlanetsByPlid(gid, plids...)
-	if my, bad := Check(err, "getplanets by plid fail", "gid", gid, "plids", plids); bad {
+func (d DB) GetPlanetsByLoc(gid int, locs ...hexagon.Coord) ([]overpower.Planet, error) {
+	list, err := d.getPlanetsByLoc(gid, locs...)
+	if my, bad := Check(err, "getplanets by locs fail", "gid", gid, "locs", locs); bad {
 		return nil, my
 	}
 	return convertPlanets2OP(list...), nil

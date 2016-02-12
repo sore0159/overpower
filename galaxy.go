@@ -17,7 +17,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 	fids := make([]int, len(factions))
 	for i, f := range factions {
 		fids[i] = f.Fid()
-		f.SetDone(false)
+		f.SetDoneBuffer(0)
 		f.SetScore(1)
 	}
 	// TESTING //
@@ -40,13 +40,12 @@ func MakeGalaxy(source Source, exodus bool) error {
 	names := GetNames(bigN + littleN + homes)
 	// ------- //
 	// ---- BORION ---- //
-	borion := source.NewPlanet("Planet Borion", 9999, 0, 10, 30, 0, hexagon.Coord{0, 0})
+	borion := source.NewPlanet("Planet Borion", 0, 10, 30, 0, hexagon.Coord{0, 0})
 	planets := []Planet{borion}
 	places := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
 	for _, pt := range borion.Loc().Ring(1) {
 		places[pt] = true
 	}
-	pids := map[int]bool{0: true, 9999: true}
 	nameCount := 0
 	// ------------------ INNER PLANETS ------------------ //
 	//area := bigN * HexArea(10)
@@ -62,14 +61,8 @@ func MakeGalaxy(source Source, exodus bool) error {
 		extra := pick(5)
 		res := 4 + extra
 		inhab := pick(extra)
-		var pid int
-		for pids[pid] {
-			pid = 1000 + pick(8998)
-		}
-		pids[pid] = true
 		var spot hexagon.Coord
 		for {
-
 			testP := hexagon.Polar{pick(bigRadius), 0}
 			//Ping("TEST SPOT RAD:", testP[0])
 			//Ping("THETA OUT OF:", testP[0]*6)
@@ -86,7 +79,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 		for _, pt := range spot.Ring(1) {
 			places[pt] = true
 		}
-		p := source.NewPlanet(name, pid, 0, inhab, res, 0, spot)
+		p := source.NewPlanet(name, 0, inhab, res, 0, spot)
 		planets = append(planets, p)
 	}
 	// ------------------ OUTER PLANETS ------------------ //
@@ -103,11 +96,6 @@ func MakeGalaxy(source Source, exodus bool) error {
 			nameCount += 1
 			res := 1 + pick(5)
 			inhab := 0
-			var pid int
-			for pids[pid] {
-				pid = 1000 + pick(8998)
-			}
-			pids[pid] = true
 			var spot hexagon.Coord
 			for {
 				dist := bigRadius + pick(maxRadius-bigRadius)
@@ -130,7 +118,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 			for _, pt := range spot.Ring(1) {
 				places[pt] = true
 			}
-			p := source.NewPlanet(name, pid, 0, inhab, res, 0, spot)
+			p := source.NewPlanet(name, 0, inhab, res, 0, spot)
 			planets = append(planets, p)
 		}
 	}
@@ -149,11 +137,6 @@ func MakeGalaxy(source Source, exodus bool) error {
 	for i, fid := range fids {
 		name := names[nameCount]
 		nameCount += 1
-		var pid int
-		for pids[pid] {
-			pid = 1000 + pick(8998)
-		}
-		pids[pid] = true
 		var spot hexagon.Coord
 		for {
 			dist := homeRadiusStart + pick(homeRadiusEnd-homeRadiusStart)
@@ -171,7 +154,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 		for _, pt := range spot.Ring(1) {
 			places[pt] = true
 		}
-		p := source.NewPlanet(name, pid, fid, 5, 15, 5, spot)
+		p := source.NewPlanet(name, fid, 5, 15, 5, spot)
 		planets = append(planets, p)
 		// TESTING //
 		if fid == 0 {

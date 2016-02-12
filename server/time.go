@@ -49,7 +49,7 @@ func AutoTimer() {
 					count++
 					go func(g overpower.Game, done chan byte) {
 						Announce("AUTO RUNNING GAME", g.Gid())
-						err := RunGameTurn(g.Gid(), true)
+						err := RunGameTurn(g.Gid())
 						if my, bad := Check(err, "autorun game turn failure", "game", g); bad {
 							Log(my)
 						}

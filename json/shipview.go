@@ -6,8 +6,6 @@ import (
 )
 
 func LoadShipView(item overpower.ShipView) *ShipView {
-	loc, locV := item.Loc()
-	dest, destV := item.Dest()
 	return &ShipView{
 		Gid:        item.Gid(),
 		Fid:        item.Fid(),
@@ -15,8 +13,8 @@ func LoadShipView(item overpower.ShipView) *ShipView {
 		Turn:       item.Turn(),
 		Controller: item.Controller(),
 		Size:       item.Size(),
-		Loc:        hexagon.NullCoord{Coord: loc, Valid: locV},
-		Dest:       hexagon.NullCoord{Coord: dest, Valid: destV},
+		Loc:        item.Loc(),
+		Dest:       item.Dest(),
 		Trail:      item.Trail(),
 	}
 }

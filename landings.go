@@ -2,14 +2,15 @@ package overpower
 
 import (
 	"fmt"
+	"mule/hexagon"
 )
 
-func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[int]int, names map[int]string) (logErr error) {
+func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[hexagon.Coord]int, names map[int]string) (logErr error) {
 	shFid := sh.Fid()
 	plFid := pl.Controller()
-	plid := pl.Pid()
 	atk := sh.Size()
-	def := arrivals[plid]
+	loc := pl.Loc()
+	def := arrivals[loc]
 	aSum := atk
 	dSum := def + pl.Inhabitants()
 	if atk < 1 {
@@ -20,15 +21,15 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 		if !source.AddReportEvent(shFid, rStr) {
 			return ErrBadArgs
 		}
-		arrivals[plid] += atk
+		arrivals[loc] += atk
 		return
 	}
 	defer BothSee(source, pl, pl.Controller(), sh.Fid(), turn, arrivals)
 	if def >= atk {
 		if def == atk {
-			delete(arrivals, plid)
+			delete(arrivals, loc)
 		} else {
-			arrivals[plid] = def - atk
+			arrivals[loc] = def - atk
 		}
 		var themStr string
 		if plFid == 0 {
@@ -46,7 +47,7 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 		}
 		return
 	}
-	delete(arrivals, plid)
+	delete(arrivals, loc)
 	atk -= def
 	def = pl.Inhabitants()
 	if def >= atk {
@@ -70,7 +71,7 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 	pl.SetController(sh.Fid())
 	pl.SetInhabitants(0)
 	atk -= def
-	arrivals[plid] = atk
+	arrivals[loc] = atk
 	if dSum == 0 {
 		var shStr string
 		if plFid == 0 {
@@ -104,13 +105,13 @@ func PlanetaryLanding(source Source, pl Planet, sh Ship, turn int, arrivals map[
 	return
 }
 
-func BothSee(source Source, pl Planet, fid1, fid2, turn int, arrivals map[int]int) {
+func BothSee(source Source, pl Planet, fid1, fid2, turn int, arrivals map[hexagon.Coord]int) {
 	for _, fid := range []int{fid1, fid2} {
 		if fid == 0 || fid == pl.Controller() {
 			continue
 		}
 		pv := source.UpdatePlanetView(fid, turn, pl)
-		arv := arrivals[pl.Pid()]
+		arv := arrivals[pl.Loc()]
 		if arv > 0 {
 			pv.SetInhabitants(pv.Inhabitants() + arv)
 		}

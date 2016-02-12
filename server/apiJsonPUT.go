@@ -64,7 +64,7 @@ func (h *Handler) apiJsonPUTFactions(w http.ResponseWriter, r *http.Request) {
 	for _, test := range facs {
 		if test.Fid() == jF.Fid {
 			f = test
-		} else if !test.Done() {
+		} else if !test.IsDone() {
 			allDone = false
 		}
 	}
@@ -76,16 +76,15 @@ func (h *Handler) apiJsonPUTFactions(w http.ResponseWriter, r *http.Request) {
 		jFail(w, 400, "authorization", "you are not authorized for that resource")
 		return
 	}
-	if jF.Done && allDone {
-		err = RunGameTurn(jF.Gid, false)
+	f.SetDoneBuffer(jF.DoneBuffer)
+	err = OPDB.UpdateFactions(f)
+	if my, bad := Check(err, "update problem in faction set done", "faction", f); bad {
+		Kirk(my, w)
+		return
+	}
+	if jF.DoneBuffer != 0 && allDone {
+		err = RunGameTurn(jF.Gid)
 		if my, bad := Check(err, "update problem in faction set done (run turn)", "faction", f); bad {
-			Kirk(my, w)
-			return
-		}
-	} else {
-		f.SetDone(jF.Done)
-		err = OPDB.UpdateFactions(f)
-		if my, bad := Check(err, "update problem in faction set done", "faction", f); bad {
 			Kirk(my, w)
 			return
 		}
@@ -104,6 +103,15 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		jFail(w, 400, "bad specification", "source/target planets must differ")
 		return
 	}
+	g, err := OPDB.GetGame("gid", o.Gid)
+	if err == ErrNoneFound {
+		jFail(w, 400, "bad specification", "no game found matching given order data")
+		return
+	} else if my, bad := Check(err, "Json PUT failure on game validation check", "resource", "orders", "order", o); bad {
+		Kirk(my, w)
+		return
+	}
+	turn := g.Turn()
 	f, err := OPDB.GetFaction("gid", o.Gid, "fid", o.Fid)
 	if err == ErrNoneFound {
 		jFail(w, 400, "bad specification", "no faction found matching given order data")
@@ -112,11 +120,12 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		Kirk(my, w)
 		return
 	}
+
 	if f.Owner() != h.User.String() {
 		jFail(w, 400, "authorization", "you are not authorized for that resource")
 		return
 	}
-	planets, err := OPDB.GetPlanetsByPlid(o.Gid, o.Source, o.Target)
+	planets, err := OPDB.GetPlanetsByLoc(o.Gid, o.Source, o.Target)
 	if my, bad := Check(err, "Json PUT failure on planet validation check", "resource", "orders", "order", o); bad {
 		Kirk(my, w)
 		return
@@ -126,9 +135,9 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var source overpower.Planet
-	if planets[0].Pid() == o.Source {
+	if planets[0].Loc() == o.Source {
 		source = planets[0]
-	} else if planets[1].Pid() == o.Source {
+	} else if planets[1].Loc() == o.Source {
 		source = planets[1]
 	} else {
 		jFail(w, 400, "bad specification", "bad planets found matching given order data")
@@ -141,7 +150,7 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 	have := source.Parts()
 	using := 0
 	var curOrder overpower.Order
-	orders, err := OPDB.GetOrders("gid", o.Gid, "fid", o.Fid, "source", o.Source)
+	orders, err := OPDB.GetOrders("gid", o.Gid, "fid", o.Fid, "turn", turn, "sourcex", o.Source[0], "sourcey", o.Source[1])
 	if my, bad := Check(err, "Json PUT failure on orders validation check", "resource", "orders", "order", o); bad {
 		Kirk(my, w)
 		return
@@ -165,7 +174,7 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		curOrder.SetSize(o.Size)
 		err = OPDB.UpdateOrders(curOrder)
 	} else {
-		err = OPDB.MakeOrder(o.Gid, o.Fid, o.Source, o.Target, o.Size)
+		err = OPDB.MakeOrder(o.Gid, o.Fid, turn, o.Size, o.Source, o.Target)
 	}
 	if my, bad := Check(err, "Json PUT failure on database entry", "resource", "orders", "item", o); bad {
 		Kirk(my, w)

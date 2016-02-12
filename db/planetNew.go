@@ -9,9 +9,8 @@ type Planet struct {
 	modified bool
 	//
 	gid         int
-	pid         int
-	name        string
 	loc         hexagon.Coord
+	name        string
 	controller  sql.NullInt64
 	inhabitants int
 	resources   int
@@ -26,9 +25,6 @@ func NewPlanet() *Planet {
 
 func (p *Planet) Gid() int {
 	return p.gid
-}
-func (p *Planet) Pid() int {
-	return p.pid
 }
 func (p *Planet) Name() string {
 	return p.name
@@ -93,12 +89,12 @@ func (p *Planet) SQLVal(name string) interface{} {
 	switch name {
 	case "gid":
 		return p.gid
-	case "pid":
-		return p.pid
 	case "name":
 		return p.name
-	case "loc":
-		return p.loc
+	case "locx":
+		return p.loc[0]
+	case "locy":
+		return p.loc[1]
 	case "controller":
 		return p.controller
 	case "inhabitants":
@@ -114,8 +110,10 @@ func (p *Planet) SQLPtr(name string) interface{} {
 	switch name {
 	case "gid":
 		return &p.gid
-	case "pid":
-		return &p.pid
+	case "locx":
+		return &p.loc[0]
+	case "locy":
+		return &p.loc[1]
 	case "name":
 		return &p.name
 	case "loc":
@@ -143,9 +141,9 @@ func (group *PlanetGroup) SQLTable() string {
 func (group *PlanetGroup) SelectCols() []string {
 	return []string{
 		"gid",
-		"pid",
+		"locx",
+		"locy",
 		"name",
-		"loc",
 		"controller",
 		"inhabitants",
 		"resources",
@@ -163,15 +161,15 @@ func (group *PlanetGroup) UpdateCols() []string {
 }
 
 func (group *PlanetGroup) PKCols() []string {
-	return []string{"gid", "pid"}
+	return []string{"gid", "locx", "locy"}
 }
 
 func (group *PlanetGroup) InsertCols() []string {
 	return []string{
 		"gid",
-		"pid",
+		"locx",
+		"locy",
 		"name",
-		"loc",
 		"controller",
 		"inhabitants",
 		"resources",

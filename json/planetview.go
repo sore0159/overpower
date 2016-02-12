@@ -9,9 +9,8 @@ func LoadPlanetView(item overpower.PlanetView) *PlanetView {
 	return &PlanetView{
 		Gid:         item.Gid(),
 		Fid:         item.Fid(),
-		Pid:         item.Pid(),
-		Name:        item.Name(),
 		Loc:         item.Loc(),
+		Name:        item.Name(),
 		Turn:        item.Turn(),
 		Controller:  item.Controller(),
 		Inhabitants: item.Inhabitants(),
@@ -31,9 +30,8 @@ func LoadPlanetViews(list []overpower.PlanetView) []*PlanetView {
 type PlanetView struct {
 	Gid         int           `json:"gid"`
 	Fid         int           `json:"fid"`
-	Pid         int           `json:"pid"`
-	Name        string        `json:"name"`
 	Loc         hexagon.Coord `json:"loc"`
+	Name        string        `json:"name"`
 	Turn        int           `json:"turn"`
 	Controller  int           `json:"controller"`
 	Inhabitants int           `json:"inhabitants"`

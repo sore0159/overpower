@@ -1,14 +1,15 @@
 package db
 
 import (
+	"mule/hexagon"
 	"mule/overpower"
 )
 
-func (d DB) MakeOrder(gid, fid, source, target, size int) (err error) {
+func (d DB) MakeOrder(gid, fid, turn, size int, source, target hexagon.Coord) (err error) {
 	if size < 1 {
 		return nil
 	}
-	item := &Order{gid: gid, fid: fid, size: size, source: source, target: target}
+	item := &Order{gid: gid, fid: fid, turn: turn, size: size, source: source, target: target}
 	group := &OrderGroup{[]*Order{item}}
 	return d.makeGroup(group)
 }

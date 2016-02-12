@@ -7,12 +7,12 @@ func NewFaction() *Faction {
 type Faction struct {
 	modified bool
 	//
-	gid   int
-	fid   int
-	owner string
-	name  string
-	done  bool
-	score int
+	gid        int
+	fid        int
+	owner      string
+	name       string
+	donebuffer int
+	score      int
 }
 
 func (f *Faction) Gid() int {
@@ -27,14 +27,17 @@ func (f *Faction) Owner() string {
 func (f *Faction) Name() string {
 	return f.name
 }
-func (f *Faction) Done() bool {
-	return f.done
+func (f *Faction) IsDone() bool {
+	return f.donebuffer != 0
 }
-func (f *Faction) SetDone(x bool) {
-	if f.done == x {
+func (f *Faction) DoneBuffer() int {
+	return f.donebuffer
+}
+func (f *Faction) SetDoneBuffer(x int) {
+	if f.donebuffer == x {
 		return
 	}
-	f.done = x
+	f.donebuffer = x
 	f.modified = true
 }
 
@@ -59,8 +62,8 @@ func (f *Faction) SQLVal(name string) interface{} {
 		return f.owner
 	case "name":
 		return f.name
-	case "done":
-		return f.done
+	case "donebuffer":
+		return f.donebuffer
 	case "score":
 		return f.score
 	}
@@ -77,8 +80,8 @@ func (f *Faction) SQLPtr(name string) interface{} {
 		return &f.owner
 	case "name":
 		return &f.name
-	case "done":
-		return &f.done
+	case "donebuffer":
+		return &f.donebuffer
 	case "score":
 		return &f.score
 	}
@@ -99,14 +102,14 @@ func (group *FactionGroup) SelectCols() []string {
 		"fid",
 		"owner",
 		"name",
-		"done",
+		"donebuffer",
 		"score",
 	}
 }
 
 func (group *FactionGroup) UpdateCols() []string {
 	return []string{
-		"done",
+		"donebuffer",
 		"score",
 	}
 }

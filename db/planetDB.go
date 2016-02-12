@@ -3,22 +3,26 @@ package db
 import (
 	"errors"
 	"fmt"
+	"mule/hexagon"
 	"mule/mydb"
 	"mule/overpower"
 	"strings"
 )
 
-func (d DB) getPlanetsByPlid(gid int, plids ...int) ([]*Planet, error) {
-	parts := make([]string, len(plids))
-	args := make([]interface{}, len(plids)+1)
+func (d DB) getPlanetsByLoc(gid int, locs ...hexagon.Coord) ([]*Planet, error) {
+	parts := make([]string, len(locs))
+	args := make([]interface{}, 2*len(locs)+1)
 	args[0] = gid
-	for i, item := range plids {
-		parts[i] = fmt.Sprintf("$%d", i+2)
-		args[i+1] = item
+	count := 2
+	for i, item := range locs {
+		parts[i] = fmt.Sprintf("($%d, $%d)", count, count+1)
+		args[count] = item[0]
+		args[count+1] = item[1]
+		count += 2
 	}
-	pidStr := strings.Join(parts, ",")
+	locStr := strings.Join(parts, ",")
 	group := NewPlanetGroup()
-	query := fmt.Sprintf("SELECT %s FROM planets WHERE gid = $1 and pid IN (%s)", strings.Join(group.SelectCols(), ","), pidStr)
+	query := fmt.Sprintf("SELECT %s FROM planets WHERE gid = $1 and (locx, locy) IN (%s)", strings.Join(group.SelectCols(), ","), locStr)
 	err := mydb.Get(d.db(), group, query, args...)
 	if my, bad := Check(err, "getplanets failure", "query", query, "args", args); bad {
 		return nil, my

@@ -19,6 +19,7 @@ func (d DB) MakeTables() (err error) {
 	freeautos int NOT NULL DEFAULT 0,
 	towin int NOT NULL,
 	highscore int NOT NULL DEFAULT 0,
+	winner text DEFAULT NULL,
 	password varchar(20) DEFAULT NULL
 );`)
 	queries = append(queries, `create table factions(
@@ -26,7 +27,7 @@ func (d DB) MakeTables() (err error) {
 	fid SERIAL NOT NULL,
 	owner varchar(20) NOT NULL,
 	name varchar(20) NOT NULL,
-	done bool NOT NULL DEFAULT false,
+	donebuffer int NOT NULL DEFAULT 0,
 	score int NOT NULL DEFAULT 0,
 	UNIQUE(gid, owner),
 	PRIMARY KEY(gid, fid)
@@ -35,31 +36,28 @@ func (d DB) MakeTables() (err error) {
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
 	center point NOT NULL,
-	zoom int NOT NULL DEFAULT 14, 
-	target1 point DEFAULT NULL,
-	target2 point DEFAULT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	PRIMARY KEY (gid, fid)
 );`)
 	queries = append(queries, `create table planets(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
-	pid integer NOT NULL,
+	locx int NOT NULL,
+	locy int NOT NULL,
 	name varchar(20) NOT NULL,
-	loc point NOT NULL,
 	controller int,
 	inhabitants int NOT NULL,
 	resources int NOT NULL,
 	parts int NOT NULL,
 	UNIQUE(gid, name),
-	PRIMARY KEY(gid, pid),
+	PRIMARY KEY(gid, locx, locy),
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE
 );`)
 	queries = append(queries, `create table planetviews(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
-	pid integer NOT NULL,
+	locx int NOT NULL,
+	locy int NOT NULL,
 	name varchar(20) NOT NULL,
-	loc point NOT NULL,
 	turn int NOT NULL,
 	controller int,
 	inhabitants int,
@@ -67,19 +65,22 @@ func (d DB) MakeTables() (err error) {
 	parts int,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, pid) REFERENCES planets ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, pid)
+	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, locx, locy)
 );`)
 	queries = append(queries, `create table orders(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
-	source integer NOT NULL,
-	target integer NOT NULL,
+	turn int NOT NULL,
+	sourcex integer NOT NULL,
+	sourcey integer NOT NULL,
+	targetx integer NOT NULL,
+	targety integer NOT NULL,
 	size integer NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, source) REFERENCES planets ON DELETE CASCADE,
-	FOREIGN KEY(gid, target) REFERENCES planets ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, source, target)
+	FOREIGN KEY(gid, sourcex, sourcey) REFERENCES planets ON DELETE CASCADE,
+	FOREIGN KEY(gid, targetx, targety) REFERENCES planets ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, turn, sourcex, sourcey, targetx, targety)
 );`)
 	queries = append(queries, `create table ships(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,

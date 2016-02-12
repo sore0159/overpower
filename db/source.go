@@ -31,17 +31,17 @@ type Source struct {
 	game        *Game
 	planets     []*Planet
 	factions    []*Faction
-	planetViews map[[2]int]*PlanetView
+	planetViews map[[3]int]*PlanetView
 	// ------- MAKE ------- //
 	MadePlanets     []*Planet
-	MadePlanetViews map[[2]int]*PlanetView
+	MadePlanetViews map[[3]int]*PlanetView
 	MadeShips       []*Ship
 	MadeShipViews   map[overpower.Ship][]*ShipView
 	MadeMapViews    []*MapView
 	MadeReports     map[int]*Report
 	// ------- DROP ------ //
 	DroppedShips []overpower.Ship
-	dropOrders   bool
+	//dropOrders   bool
 	//dropShipViews bool
 }
 
@@ -49,9 +49,9 @@ func (d DB) NewSource(gid int) *Source {
 	return &Source{
 		Gid:             gid,
 		db:              d,
-		planetViews:     map[[2]int]*PlanetView{},
+		planetViews:     map[[3]int]*PlanetView{},
 		MadePlanets:     []*Planet{},
-		MadePlanetViews: map[[2]int]*PlanetView{},
+		MadePlanetViews: map[[3]int]*PlanetView{},
 		MadeShips:       []*Ship{},
 		MadeShipViews:   map[overpower.Ship][]*ShipView{},
 		MadeMapViews:    []*MapView{},
@@ -61,7 +61,7 @@ func (d DB) NewSource(gid int) *Source {
 }
 
 func (s *Source) Commit() error {
-	cond := C{"gid", s.Gid}
+	//cond := C{"gid", s.Gid}
 	var err error
 	// ------- DROP ------ //
 	/*
@@ -72,12 +72,14 @@ func (s *Source) Commit() error {
 			}
 		}
 	*/
-	if s.dropOrders {
-		err = s.db.dropItemsIf("orders", cond)
-		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "orders"); bad {
-			return my
+	/*
+		if s.dropOrders {
+			err = s.db.dropItemsIf("orders", cond)
+			if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "orders"); bad {
+				return my
+			}
 		}
-	}
+	*/
 	if len(s.DroppedShips) > 0 {
 		err = s.db.dropTheseShips(s.DroppedShips)
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "ships", "list", s.DroppedShips); bad {
@@ -254,11 +256,10 @@ func (s *Source) DropShip(ship overpower.Ship) {
 	s.DroppedShips = append(s.DroppedShips, ship)
 }
 
-func (s *Source) NewPlanet(name string, pid, controller, inhab, res, parts int, loc hexagon.Coord) (planet overpower.Planet) {
+func (s *Source) NewPlanet(name string, controller, inhab, res, parts int, loc hexagon.Coord) (planet overpower.Planet) {
 	p := NewPlanet()
 	p.name = name
 	p.gid = s.Gid
-	p.pid = pid
 	if controller != 0 {
 		p.controller = sql.NullInt64{int64(controller), true}
 	}
@@ -276,7 +277,6 @@ func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (plane
 	pv.turn = 0
 	pv.gid = s.Gid
 	pv.name = pl.Name()
-	pv.pid = pl.Pid()
 	pv.loc = pl.Loc()
 	if cont := pl.Controller(); cont == fid || (exodus && cont != 0) {
 		pv.turn = 1
@@ -285,7 +285,7 @@ func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (plane
 		pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
 		pv.parts = sql.NullInt64{int64(pl.Parts()), true}
 	}
-	s.MadePlanetViews[[2]int{pv.pid, pv.fid}] = pv
+	s.MadePlanetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
 	return pv
 }
 
@@ -293,7 +293,6 @@ func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.
 	pv := NewPlanetView()
 	pv.gid = s.Gid
 	pv.fid = fid
-	pv.pid = pl.Pid()
 	pv.turn = turn
 	if cont := pl.Controller(); cont != 0 {
 		pv.controller = sql.NullInt64{int64(cont), true}
@@ -301,13 +300,15 @@ func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.
 	pv.resources = sql.NullInt64{int64(pl.Resources()), true}
 	pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
 	pv.parts = sql.NullInt64{int64(pl.Parts()), true}
-	s.planetViews[[2]int{pv.pid, pv.fid}] = pv
+	s.MadePlanetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
 	return pv
 }
 
+/*
 func (s *Source) DropOrders() {
 	s.dropOrders = true
 }
+*/
 
 /*
 func (s *Source) DropShipViews() {

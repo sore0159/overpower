@@ -65,7 +65,7 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, "GAME NOT YET BEGUN", http.StatusBadRequest)
 					return
 				}
-				err = RunGameTurn(g.Gid(), true)
+				err = RunGameTurn(g.Gid())
 				if my, bad := Check(err, "failure on running turn", "gid", g.Gid()); bad {
 					Bail(w, my)
 					return

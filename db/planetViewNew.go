@@ -9,11 +9,10 @@ type PlanetView struct {
 	modified bool
 	//
 	gid         int
-	pid         int
 	fid         int
+	loc         hexagon.Coord
 	turn        int
 	name        string
-	loc         hexagon.Coord
 	controller  sql.NullInt64
 	inhabitants sql.NullInt64
 	resources   sql.NullInt64
@@ -28,9 +27,6 @@ func NewPlanetView() *PlanetView {
 
 func (p *PlanetView) Gid() int {
 	return p.gid
-}
-func (p *PlanetView) Pid() int {
-	return p.pid
 }
 func (p *PlanetView) Fid() int {
 	return p.fid
@@ -126,16 +122,16 @@ func (item *PlanetView) SQLVal(name string) interface{} {
 	switch name {
 	case "gid":
 		return item.gid
-	case "pid":
-		return item.pid
 	case "fid":
 		return item.fid
+	case "locx":
+		return item.loc[0]
+	case "locy":
+		return item.loc[1]
 	case "turn":
 		return item.turn
 	case "name":
 		return item.name
-	case "loc":
-		return item.loc
 	case "controller":
 		return item.controller
 	case "inhabitants":
@@ -152,16 +148,16 @@ func (item *PlanetView) SQLPtr(name string) interface{} {
 	switch name {
 	case "gid":
 		return &item.gid
-	case "pid":
-		return &item.pid
 	case "fid":
 		return &item.fid
+	case "locx":
+		return &item.loc[0]
+	case "locy":
+		return &item.loc[1]
 	case "turn":
 		return &item.turn
 	case "name":
 		return &item.name
-	case "loc":
-		return &item.loc
 	case "controller":
 		return &item.controller
 	case "inhabitants":
@@ -185,11 +181,11 @@ func (group *PlanetViewGroup) SQLTable() string {
 func (group *PlanetViewGroup) SelectCols() []string {
 	return []string{
 		"gid",
-		"pid",
+		"locx",
+		"locy",
 		"fid",
 		"turn",
 		"name",
-		"loc",
 		"controller",
 		"inhabitants",
 		"resources",
@@ -208,17 +204,17 @@ func (group *PlanetViewGroup) UpdateCols() []string {
 }
 
 func (group *PlanetViewGroup) PKCols() []string {
-	return []string{"gid", "fid", "pid"}
+	return []string{"gid", "fid", "locx", "locy"}
 }
 
 func (group *PlanetViewGroup) InsertCols() []string {
 	return []string{
 		"gid",
-		"pid",
 		"fid",
+		"locx",
+		"locy",
 		"turn",
 		"name",
-		"loc",
 		"controller",
 		"inhabitants",
 		"resources",

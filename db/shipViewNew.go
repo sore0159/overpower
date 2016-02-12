@@ -41,20 +41,20 @@ func (s *ShipView) Size() int {
 func (s *ShipView) Controller() int {
 	return s.controller
 }
-func (s *ShipView) Loc() (hexagon.Coord, bool) {
+func (s *ShipView) Loc() hexagon.NullCoord {
 	if s.loc.Valid {
-		return s.loc.Coord, true
+		return s.loc
 	}
-	return hexagon.Coord{0, 0}, false
+	return hexagon.NullCoord{}
 }
 func (s *ShipView) Trail() hexagon.CoordList {
 	return s.trail
 }
-func (s *ShipView) Dest() (hexagon.Coord, bool) {
+func (s *ShipView) Dest() hexagon.NullCoord {
 	if s.dest.Valid {
-		return s.dest.Coord, true
+		return s.dest
 	}
-	return hexagon.Coord{0, 0}, false
+	return hexagon.NullCoord{}
 }
 
 func (item *ShipView) SQLVal(name string) interface{} {
