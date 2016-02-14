@@ -13,6 +13,7 @@ func LoadLandingRecord(item overpower.LandingRecord) *LandingRecord {
 		Index:             item.Index(),
 		Target:            item.Target(),
 		Size:              item.Size(),
+		ShipController:    item.ShipController(),
 		FirstController:   item.FirstController(),
 		ResultController:  item.ResultController(),
 		ResultInhabitants: item.ResultInhabitants(),
@@ -34,6 +35,7 @@ type LandingRecord struct {
 	Index             int           `json:"index"`
 	Size              int           `json:"size"`
 	Target            hexagon.Coord `json:"target"`
+	ShipController    int           `json:"shipcontroller"`
 	FirstController   int           `json:"firstcontroller"`
 	ResultController  int           `json:"resultcontroller"`
 	ResultInhabitants int           `json:"resultinhabitants"`

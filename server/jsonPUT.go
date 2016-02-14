@@ -39,7 +39,6 @@ func (h *Handler) apiJsonPUTFactions(w http.ResponseWriter, r *http.Request) {
 		*json.Faction
 	}{}
 	err := jsend.Read(r, &jF)
-	Ping("FACTION:", *jF.Faction)
 	if my, bad := Check(err, "API PUT failure on data read"); bad {
 		Kirk(my, w)
 		return

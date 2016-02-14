@@ -96,7 +96,6 @@ function turnChange() {
         faction.done = false;
     }
     canvas.setupText();
-    console.log("SENDING:", faction);
     canvas.blockScreen("Checking for new turn...");
     putJSON("/overpower/json/factions", faction, putErr, function() {
         canvas.turnCheck();

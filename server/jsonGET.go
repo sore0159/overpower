@@ -65,7 +65,7 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 	case "factions":
 		h.apiJsonGETFactions(w, r)
 	// overpower/json/TABLE/gid/fid/....
-	case "orders", "shipviews", "reports", "planetviews", "fullviews":
+	case "orders", "shipviews", "launchrecords", "landingrecords", "planetviews", "fullviews":
 		if !h.LoggedIn {
 			jFail(w, 400, "authorization", "you are not authorized for that resource")
 			return
@@ -98,6 +98,10 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 			h.apiJsonGETShipViews(w, r, ints[0], ints[1])
 		case "planetviews":
 			h.apiJsonGETPlanetViews(w, r, ints[0], ints[1])
+		case "launchrecords":
+			h.apiJsonGETLaunchRecords(w, r, ints[0], ints[1])
+		case "landingrecords":
+			h.apiJsonGETLandingRecords(w, r, ints[0], ints[1])
 		case "fullviews":
 			h.apiJsonGETFullViews(w, r, searchF)
 		}
@@ -106,6 +110,84 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 		jFail(w, 404, "url", "unknown object type given")
 		return
 	}
+}
+
+// overpower/json/launchrecords/gid/fid/turn/sourcex/sourcey/targetx/targety
+func (h *Handler) apiJsonGETLaunchRecords(w http.ResponseWriter, r *http.Request, gid, fid int) {
+	lastFull := h.LastFull()
+	if len(h.Path) > 11 {
+		jFail(w, 400, "url", "too many args for object specification")
+		return
+	}
+	args := []interface{}{"gid", gid, "fid", fid}
+	argCheck := []string{"turn", "sourcex", "sourcey", "targetx", "targety"}
+	for i, key := range argCheck {
+		val, ok := h.IntAt(6 + i)
+		if !ok && lastFull > 5+i {
+			jFail(w, 400, "url", "bad args for object specification")
+			return
+		} else if !ok {
+			list, err := OPDB.GetLaunchRecords(args...)
+			if my, bad := Check(err, "api json get launch records failure", "args", args); bad {
+				Kirk(my, w)
+				return
+			}
+			jsonList := json.LoadLaunchRecords(list)
+			jSuccess(w, jsonList)
+			return
+		} else {
+			args = append(args, key, val)
+		}
+	}
+	item, err := OPDB.GetLaunchRecord(args...)
+	if err == ErrNoneFound {
+		jFail(w, 400, "params", "id does not correspond to any existing object")
+		return
+	} else if my, bad := Check(err, "api json get launchrecords failure", "args", args); bad {
+		Kirk(my, w)
+		return
+	}
+	jsonItem := json.LoadLaunchRecord(item)
+	jSuccess(w, jsonItem)
+}
+
+// overpower/json/landingrecords/gid/fid/turn/index
+func (h *Handler) apiJsonGETLandingRecords(w http.ResponseWriter, r *http.Request, gid, fid int) {
+	lastFull := h.LastFull()
+	if len(h.Path) > 8 {
+		jFail(w, 400, "url", "too many args for object specification")
+		return
+	}
+	args := []interface{}{"gid", gid, "fid", fid}
+	argCheck := []string{"turn", "index"}
+	for i, key := range argCheck {
+		val, ok := h.IntAt(6 + i)
+		if !ok && lastFull > 5+i {
+			jFail(w, 400, "url", "bad args for object specification")
+			return
+		} else if !ok {
+			list, err := OPDB.GetLandingRecords(args...)
+			if my, bad := Check(err, "api json get landing records failure", "args", args); bad {
+				Kirk(my, w)
+				return
+			}
+			jsonList := json.LoadLandingRecords(list)
+			jSuccess(w, jsonList)
+			return
+		} else {
+			args = append(args, key, val)
+		}
+	}
+	item, err := OPDB.GetLandingRecord(args...)
+	if err == ErrNoneFound {
+		jFail(w, 400, "params", "id does not correspond to any existing object")
+		return
+	} else if my, bad := Check(err, "api json get landingrecords failure", "args", args); bad {
+		Kirk(my, w)
+		return
+	}
+	jsonItem := json.LoadLandingRecord(item)
+	jSuccess(w, jsonItem)
 }
 
 // overpower/json/fullviews/gid/fid
@@ -122,10 +204,10 @@ func (h *Handler) apiJsonGETFullViews(w http.ResponseWriter, r *http.Request, f 
 	jSuccess(w, fv)
 }
 
-// overpower/json/orders/gid/fid/source/target
+// overpower/json/orders/gid/fid/sourcex/sourcey/targetx/targety
 func (h *Handler) apiJsonGETOrders(w http.ResponseWriter, r *http.Request, gid, fid int) {
 	lastFull := h.LastFull()
-	source, ok := h.IntAt(6)
+	sourcex, ok := h.IntAt(6)
 	if !ok {
 		if lastFull > 5 {
 			jFail(w, 400, "url", "bad args for object specification")
@@ -140,14 +222,20 @@ func (h *Handler) apiJsonGETOrders(w http.ResponseWriter, r *http.Request, gid, 
 		jSuccess(w, jsonList)
 		return
 	}
-	target, ok := h.IntAt(7)
+	sourcey, ok := h.IntAt(7)
 	if !ok {
-		if lastFull > 6 {
+		jFail(w, 400, "url", "bad source-y arg for object specification")
+		return
+	}
+
+	targetx, ok := h.IntAt(8)
+	if !ok {
+		if lastFull > 7 {
 			jFail(w, 400, "url", "bad args for object specification")
 			return
 		}
-		list, err := OPDB.GetOrders("gid", gid, "fid", fid, "source", source)
-		if my, bad := Check(err, "api json get orders failure", "gid", gid, "fid", fid, "source", source); bad {
+		list, err := OPDB.GetOrders("gid", gid, "fid", fid, "sourcex", sourcex, "sourcey", sourcey)
+		if my, bad := Check(err, "api json get orders failure", "gid", gid, "fid", fid, "sourcex", sourcex, "sourcey", sourcey); bad {
 			Kirk(my, w)
 			return
 		}
@@ -155,15 +243,20 @@ func (h *Handler) apiJsonGETOrders(w http.ResponseWriter, r *http.Request, gid, 
 		jSuccess(w, jsonList)
 		return
 	}
-	if lastFull > 7 {
+	targety, ok := h.IntAt(9)
+	if !ok {
+		jFail(w, 400, "url", "bad target-y arg for object specification")
+		return
+	}
+	if lastFull > 9 {
 		jFail(w, 400, "url", "too many args for object specification")
 		return
 	}
-	item, err := OPDB.GetOrder("gid", gid, "fid", fid, "source", source, "target", target)
+	item, err := OPDB.GetOrder("gid", gid, "fid", fid, "sourcex", sourcex, "sourcey", sourcey, "targetx", targetx, "targety", targety)
 	if err == ErrNoneFound {
 		jFail(w, 400, "params", "id does not correspond to any existing object")
 		return
-	} else if my, bad := Check(err, "api json get orders failure", "gid", gid, "fid", fid, "source", source, "target", target); bad {
+	} else if my, bad := Check(err, "api json get orders failure", "gid", gid, "fid", fid, "sourcex", sourcex, "sourcey", sourcey, "targetx", targetx, "targety", targety); bad {
 		Kirk(my, w)
 		return
 	}
@@ -223,10 +316,10 @@ func (h *Handler) apiJsonGETShipViews(w http.ResponseWriter, r *http.Request, gi
 	return
 }
 
-// overpower/json/planetviews/gid/fid/pid
+// overpower/json/planetviews/gid/fid/x/y
 func (h *Handler) apiJsonGETPlanetViews(w http.ResponseWriter, r *http.Request, gid, fid int) {
 	lastFull := h.LastFull()
-	pid, ok := h.IntAt(6)
+	plX, ok := h.IntAt(6)
 	if !ok {
 		if lastFull > 5 {
 			jFail(w, 400, "url", "bad args for object specification")
@@ -241,15 +334,30 @@ func (h *Handler) apiJsonGETPlanetViews(w http.ResponseWriter, r *http.Request, 
 		jSuccess(w, jsonList)
 		return
 	}
-	if lastFull > 6 {
+	plY, ok := h.IntAt(7)
+	if !ok {
+		if lastFull > 6 {
+			jFail(w, 400, "url", "bad args for object specification")
+			return
+		}
+		list, err := OPDB.GetPlanetViews("gid", gid, "fid", fid, "locx", plX)
+		if my, bad := Check(err, "api json get planetviews failure", "gid", gid, "fid", fid, "locx", plX); bad {
+			Kirk(my, w)
+			return
+		}
+		jsonList := json.LoadPlanetViews(list)
+		jSuccess(w, jsonList)
+		return
+	}
+	if lastFull > 7 {
 		jFail(w, 400, "url", "too many args for object specification")
 		return
 	}
-	item, err := OPDB.GetPlanetView("gid", gid, "fid", fid, "pid", pid)
+	item, err := OPDB.GetPlanetView("gid", gid, "fid", fid, "locx", plX, "locy", plY)
 	if err == ErrNoneFound {
 		jFail(w, 400, "params", "id does not correspond to any existing object")
 		return
-	} else if my, bad := Check(err, "api json get planetviews failure", "gid", gid, "fid", fid, "pid", pid); bad {
+	} else if my, bad := Check(err, "api json get planetviews failure", "gid", gid, "fid", fid, "locx", plX, "locy", plY); bad {
 		Kirk(my, w)
 		return
 	}
@@ -359,13 +467,15 @@ func (h *Handler) apiJsonGETFactions(w http.ResponseWriter, r *http.Request) {
 }
 
 type FullView struct {
-	Game        *json.Game         `json:"game"`
-	Faction     *json.Faction      `json:"faction"`
-	Factions    []*json.Faction    `json:"factions"`
-	PlanetViews []*json.PlanetView `json:"planetviews"`
-	ShipViews   []*json.ShipView   `json:"shipviews"`
-	Orders      []*json.Order      `json:"orders"`
-	MapView     *json.MapView      `json:"mapview"`
+	Game           *json.Game            `json:"game"`
+	Faction        *json.Faction         `json:"faction"`
+	Factions       []*json.Faction       `json:"factions"`
+	PlanetViews    []*json.PlanetView    `json:"planetviews"`
+	ShipViews      []*json.ShipView      `json:"shipviews"`
+	Orders         []*json.Order         `json:"orders"`
+	LaunchRecords  []*json.LaunchRecord  `json:"launchrecords"`
+	LandingRecords []*json.LandingRecord `json:"landingrecords"`
+	MapView        *json.MapView         `json:"mapview"`
 }
 
 func FillFullView(f overpower.Faction) (*FullView, error) {
@@ -380,19 +490,23 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 	shVs, err4 := OPDB.GetShipViews("gid", gid, "fid", fid, "turn", turn)
 	orders, err5 := OPDB.GetOrders("gid", gid, "fid", fid)
 	mapview, err6 := OPDB.GetMapView("gid", gid, "fid", fid)
-	for i, err := range []error{err1, err2, err3, err4, err5, err6} {
+	laRep, err7 := OPDB.GetLaunchRecords("gid", gid, "fid", fid, "turn", turn)
+	ldRep, err8 := OPDB.GetLandingRecords("gid", gid, "fid", fid, "turn", turn)
+	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7, err8} {
 		if my, bad := Check(err, "fill fullview failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
 		}
 	}
 	fv := &FullView{
-		Game:        json.LoadGame(g),
-		Faction:     json.LoadFaction(f, fid),
-		Factions:    json.LoadFactions(facs, fid),
-		PlanetViews: json.LoadPlanetViews(plVs),
-		ShipViews:   json.LoadShipViews(shVs),
-		Orders:      json.LoadOrders(orders),
-		MapView:     json.LoadMapView(mapview),
+		Game:           json.LoadGame(g),
+		Faction:        json.LoadFaction(f, fid),
+		Factions:       json.LoadFactions(facs, fid),
+		PlanetViews:    json.LoadPlanetViews(plVs),
+		ShipViews:      json.LoadShipViews(shVs),
+		Orders:         json.LoadOrders(orders),
+		MapView:        json.LoadMapView(mapview),
+		LaunchRecords:  json.LoadLaunchRecords(laRep),
+		LandingRecords: json.LoadLandingRecords(ldRep),
 	}
 	return fv, nil
 }

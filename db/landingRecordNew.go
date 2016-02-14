@@ -12,6 +12,7 @@ type LandingRecord struct {
 	index             int
 	size              int
 	target            hexagon.Coord
+	shipcontroller    int
 	firstcontroller   sql.NullInt64
 	resultcontroller  sql.NullInt64
 	resultinhabitants int
@@ -40,6 +41,9 @@ func (item *LandingRecord) Size() int {
 }
 func (item *LandingRecord) Target() hexagon.Coord {
 	return item.target
+}
+func (p *LandingRecord) ShipController() int {
+	return p.shipcontroller
 }
 func (p *LandingRecord) FirstController() int {
 	if p.firstcontroller.Valid {
@@ -72,6 +76,8 @@ func (mv *LandingRecord) SQLVal(name string) interface{} {
 		return mv.target[0]
 	case "targety":
 		return mv.target[1]
+	case "shipcontroller":
+		return mv.shipcontroller
 	case "firstcontroller":
 		return mv.firstcontroller
 	case "resultcontroller":
@@ -97,6 +103,8 @@ func (mv *LandingRecord) SQLPtr(name string) interface{} {
 		return &mv.target[0]
 	case "targety":
 		return &mv.target[1]
+	case "shipcontroller":
+		return &mv.shipcontroller
 	case "firstcontroller":
 		return &mv.firstcontroller
 	case "resultcontroller":
@@ -124,6 +132,7 @@ func (group *LandingRecordGroup) SelectCols() []string {
 		"size",
 		"targetx",
 		"targety",
+		"shipcontroller",
 		"firstcontroller",
 		"resultcontroller",
 		"resultinhabitants",
@@ -147,6 +156,7 @@ func (group *LandingRecordGroup) InsertCols() []string {
 		"size",
 		"targetx",
 		"targety",
+		"shipcontroller",
 		"firstcontroller",
 		"resultcontroller",
 		"resultinhabitants",

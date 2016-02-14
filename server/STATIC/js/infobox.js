@@ -25,6 +25,25 @@
             turnCompText.textContent = "Turn In Progress";
             turnChangeButton.textContent = "Set Turn Complete";
         }
+        var reportText = document.getElementById('reporttext');
+        var htmlStr;
+        if (data.launchrecords.length === 0) {
+            htmlStr = "No launch reports";
+        } else if (data.launchrecords.length === 1) {
+            htmlStr = "One launch report";
+        } else {
+            htmlStr = ""+data.launchrecords.length+" launch reports";
+        }
+        htmlStr += " \u2022 ";
+        if (data.landingrecords.length === 0) {
+            htmlStr += "No landing reports";
+        } else if (data.landingrecords.length === 1) {
+            htmlStr += "One landing report";
+        } else {
+            htmlStr += ""+data.landingrecords.length+" landing reports";
+        }
+      
+        reportText.textContent = htmlStr;
         canvas.setupTargets();
     };
 
@@ -41,7 +60,6 @@
 
         var divList = [secTargetDiv, planetInfoBox,
            orderInfoBox, shipInfoBox, trailInfoBox, targetOrderDiv];
-
         for (var i = 0; i < divList.length; i++) {
             while (divList[i].firstChild) {
                 divList[i].removeChild(divList[i].firstChild);
@@ -53,7 +71,6 @@
         var mainTargetBox = document.getElementById('maintargetbox');
         var swapButton = document.getElementById('swapbutton');
         var dist, elem, button;
-        //secTargetDiv.textContent = "";
         if (!data.targetTwo) {
             secTargetText.textContent = "None";
             swapButton.style.display = "none";
@@ -67,17 +84,18 @@
             secTargetDiv.appendChild(elem);
             button = planetButton(data.targetTwoInfo.planet);
             secTargetDiv.appendChild(button);
-            if (data.targetOne && data.targetOneInfo.planet) {
+            if (data.targetOne) {
                 elem = document.createElement("br");
                 secTargetDiv.appendChild(elem);
                 dist = grid.stepsBetween(data.targetOne, data.targetTwo);
                 elem = document.createTextNode(dist+" sectors from main target");
                 secTargetDiv.appendChild(elem);
-                swapButton.style.display = "inline";
+                if (data.targetOneInfo.planet) {
+                    swapButton.style.display = "inline";
+                }
             } else {
                 swapButton.style.display = "none";
             }
-           
         }
         var htmlStr;
         if (data.targetOne) {
@@ -385,5 +403,7 @@
         hexB.addEventListener("mouseup", hexClick, false);
         return hexB;
     }
+    canvas.planetButton = planetButton;
+    canvas.coordButton = planetButton;
 
 })();

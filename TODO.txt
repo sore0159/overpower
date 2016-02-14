@@ -1,7 +1,4 @@
 DB:
-    * Planets PK locX locY
-    * Orders use new planetPK and turn: keep old turns
-    * reports broken into launches: old orders, landings: numerical records
     * Game "winner" stat
     * CAPTAINS
 
@@ -29,6 +26,9 @@ API:
     * Faction turnDone status
 
 DB:
+    * Orders use new planetPK and turn: keep old turns
+    * reports broken into launches: old orders, landings: numerical records
+    * Planets PK locX locY
     * Revamp query construction: use $N and mass inserts
 
 Reports: 

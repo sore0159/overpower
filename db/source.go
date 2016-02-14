@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"log"
 	"mule/hexagon"
 	"mule/mydb"
 	"mule/overpower"
@@ -305,6 +304,7 @@ func (s *Source) NewLaunchRecord(ship overpower.Ship) {
 func (s *Source) NewLandingRecord(fid, turn int, ship overpower.Ship, result [3]int) {
 	lr := NewLandingRecord()
 	lr.gid, lr.size, lr.fid, lr.turn = ship.Gid(), ship.Size(), fid, turn
+	lr.shipcontroller = ship.Fid()
 	if result[0] != 0 {
 		lr.firstcontroller.Valid = true
 		lr.firstcontroller.Int64 = int64(result[0])
@@ -323,5 +323,4 @@ func (s *Source) NewLandingRecord(fid, turn int, ship overpower.Ship, result [3]
 		lr.index = len(list)
 		s.MadeLandingRecords[fid] = append(list, lr)
 	}
-	log.Println("MADE", *lr)
 }

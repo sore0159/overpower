@@ -148,6 +148,7 @@ type LandingRecord interface {
 	Index() int
 	Target() hexagon.Coord
 	Size() int
+	ShipController() int
 	FirstController() int
 	ResultController() int
 	ResultInhabitants() int
