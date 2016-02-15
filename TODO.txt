@@ -1,22 +1,22 @@
 DB:
-    * Game "winner" stat
-    * CAPTAINS
-
-Misc: 
-    * Optional email notifications on new turns/last player not done
-    * Let players set "auto turn-done" counters: N turns or forever
-    * Have auto turn done when no ship parts to use
+    * Factionview: color config
+    * Planets set to "friendly" to other factions
+    * Planet resources on per-faction basis
 
 Game:
     * Endstate: score?
     * What happens on game over?
-    * CAPTAINS
+    * Recheck galaxy creation
 
 UI:
+    * Turn buffer buttons
     * Remembers recentering on reload
     * Click-drag for map?
     * Configurable factionveiw
     * Sort out help/instruction pages for everything
+
+Reports: 
+    * Sort by index/planet
 
 // ========================= DONE ========================= //
 
@@ -32,11 +32,13 @@ DB:
     * Revamp query construction: use $N and mass inserts
 
 Reports: 
+    * Filtering
     * Generation/Display
     * Ship launches
     * Ship landings
 
 Game:
+    * Let players set "auto turn-done" counters: N turns or forever
     * What % planets to win: game creation decides?
     * Show planet count of self, and winner
     * Manager-set auto-run controls

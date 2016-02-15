@@ -110,23 +110,33 @@ div.blockertext {
         margin-left: 10px;
         text-align: left;
 }
+
 #reportmenu {
         width: 180px;
         float: right;
         text-align:center;
 }
-#reportclose {
-        margin: 5px;
+
+button.reportclicker {
+        display: inline-block;
+        margin: 5px; padding: 3px;
+        border: 0px solid #000000;
+        border-radius: 5px;
+        background: #aaccff;
         width: 150px;
+}
+#reportclose {
+        font-weight: bold;
 }
 #reportchangeturn {
         margin: 5px; padding: 5px;
         padding-top:20px;
         padding-bottom:20px;
-        width: 150px;
-        border: 0px solid #000000;
-        border-radius: 5px;
+        height: 85px;
 }
+#reportfilterall, #reportfilterlaunch, #reportfilterlanding {
+        height: 50px;
+} 
 
 
 a.blocker {

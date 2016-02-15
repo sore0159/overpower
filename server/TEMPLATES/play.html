@@ -7,10 +7,16 @@
 </div></div>
 <div id="reportscreen0"></div> <div id="reportscreen1">
         <div id="reportmenu">
-        <button class="clicker" id="reportclose">Close Reports</button>
-        <button class ="clicker" id="reportchangeturn"></button>
+        <button class="reportclicker" id="reportclose">Close Reports</button>
+        <button class ="reportclicker" id="reportchangeturn"></button>
+        <button class ="reportclicker" id="reportfilterall">View All Reports</button>
+        <button class ="reportclicker" id="reportfilterlaunch">View Only Launch Reports</button>
+        <button class ="reportclicker" id="reportfilterlanding">View Only Landing Reports</button>
         </div>
-        <div id="reportdisplay"><b>Reports for turn <span id="reportturntext"></span></b><hr><div id="reportdisplaybody"></div>
+        <div id="reportdisplay"><b>Reports for turn <span id="reportturntext"></span></b><div id="reportdisplaybody">
+                        <div id="launchbody"></div>
+                        <div id="landingbody"></div>
+                </div>
         </div>
 </div>
 <div class="canvasspacer">

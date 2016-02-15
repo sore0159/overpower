@@ -6,7 +6,11 @@ var reportChangeButton = document.getElementById('reportchangeturn');
 var closeButton = document.getElementById('reportclose');
 var reportScreen0 = document.getElementById('reportscreen0');
 var reportScreen1 = document.getElementById('reportscreen1');
-var reportDisplay = document.getElementById('reportdisplaybody');
+var reportDisplayLA = document.getElementById('launchbody');
+var reportDisplayLD = document.getElementById('landingbody');
+var filterAll = document.getElementById('reportfilterall');
+var filterLA = document.getElementById('reportfilterlaunch');
+var filterLD = document.getElementById('reportfilterlanding');
 
 reportButton.addEventListener("mouseup", openReports);
 reportScreen0.addEventListener("mouseup", closeReports);
@@ -14,12 +18,30 @@ closeButton.addEventListener("mouseup", closeReports);
 reportChangeButton.addEventListener("mouseup", changeClick);
 reportChangeButton.addEventListener("DOMMouseScroll", turnScroll);
 reportChangeButton.onmousewheel = turnScroll;
+filterAll.addEventListener("mouseup", setFilterAll);
+filterLA.addEventListener("mouseup", setFilterLA);
+filterLD.addEventListener("mouseup", setFilterLD);
 
 reportChangeButton.setTurn = function(turn) {
     this.turn = turn;
     this.clickTurn = turn;
     this.redraw();
 };
+function setFilterAll() {
+    var config = canvas.overpowerData.reportConfig;
+    config.filter = {};
+    parseRecords();
+}
+function setFilterLA() {
+    var config = canvas.overpowerData.reportConfig;
+    config.filter = {landing: true};
+    parseRecords();
+}
+function setFilterLD() {
+    var config = canvas.overpowerData.reportConfig;
+    config.filter = {launch: true};
+    parseRecords();
+}
 reportChangeButton.redraw = function() {
     if (this.turn === this.clickTurn) {
         this.textContent = "Mousescroll over this button to select new turn";
@@ -71,7 +93,7 @@ function openReports() {
     if (!data.reportConfig) {
         data.reportConfig = {
             turn:data.game.turn-1,
-            filters: {}
+            filter: {}
         };
         getRecords();
     } else {
@@ -112,18 +134,64 @@ function parseRecords() {
     var opData = canvas.overpowerData;
     var data = opData.reportConfig;
     reportChangeButton.setTurn(data.turn);
-    while (reportDisplay.firstChild) {
-        reportDisplay.removeChild(reportDisplay.firstChild);
+    while (reportDisplayLA.firstChild) {
+        reportDisplayLA.removeChild(reportDisplayLA.firstChild);
+    }
+    while (reportDisplayLD.firstChild) {
+        reportDisplayLD.removeChild(reportDisplayLD.firstChild);
     }
     var turnText = document.getElementById('reportturntext');
     turnText.textContent = data.turn;
-    var elem, uList, lItem, button;
-    if (data.launch.length) {
+    var elem, uList, lItem, button, htmlStr;
+    if (!data.filter.launch && !data.filter.landing) {
+        filterAll.style.fontWeight = "normal";
+        filterAll.style.background = "#ffffff";
+        filterAll.style.borderWidth = "2px";
+        filterAll.textContent = "Viewing all reports";
+        filterLA.style.fontWeight = "bold";
+        filterLA.style.background = "#aaccff";
+        filterLA.style.borderWidth = "0px";
+        filterLA.textContent = "Click to view only launch reports";
+        filterLD.style.fontWeight = "bold";
+        filterLD.style.background = "#aaccff";
+        filterLD.style.borderWidth = "0px";
+        filterLD.textContent = "Click to view only landing reports";
+    } else if (data.filter.launch) {
+        filterAll.style.fontWeight = "bold";
+        filterAll.style.background = "#aaccff";
+        filterAll.style.borderWidth = "0px";
+        filterAll.textContent = "Click to view all reports";
+        filterLA.style.fontWeight = "bold";
+        filterLA.style.background = "#aaccff";
+        filterLA.style.borderWidth = "0px";
+        filterLA.textContent = "Click to view only launch reports";
+        filterLD.style.fontWeight = "normal";
+        filterLD.style.background = "#ffffff";
+        filterLD.style.borderWidth = "2px";
+        filterLD.textContent = "Viewing only landing reports";
+    } else {
+        filterAll.style.fontWeight = "bold";
+        filterAll.style.background = "#aaccff";
+        filterAll.style.borderWidth = "0px";
+        filterAll.textContent = "Click to view all reports";
+        filterLA.style.fontWeight = "normal";
+        filterLA.style.background = "#ffffff";
+        filterLA.style.borderWidth = "2px";
+        filterLA.textContent = "Viewing only launch reports";
+        filterLD.style.fontWeight = "bold";
+        filterLD.style.background = "#aaccff";
+        filterLD.style.borderWidth = "0px";
+        filterLD.textContent = "Click to view only landing reports";
+    }
+    if (data.filter.launch) {
+    } else if (data.launch.length) {
+        elem = document.createElement("hr");
+        reportDisplayLA.appendChild(elem);
         elem = document.createElement("b");
         elem.textContent = "Launch reports:";
-        reportDisplay.appendChild(elem);
+        reportDisplayLA.appendChild(elem);
         uList = document.createElement("ul");
-        reportDisplay.appendChild(uList);
+        reportDisplayLA.appendChild(uList);
         data.launch.forEach(function(launch) {
             lItem = document.createElement("li");
             uList.appendChild(lItem);
@@ -135,39 +203,59 @@ function parseRecords() {
             lItem.appendChild(button);
         });
     } else {
+        elem = document.createElement("hr");
+        reportDisplayLA.appendChild(elem);
         elem = document.createElement("b");
         elem.textContent = "No launch reports";
-        reportDisplay.appendChild(elem);
-        elem = document.createElement("br");
-        reportDisplay.appendChild(elem);
+        reportDisplayLA.appendChild(elem);
     }
-    elem = document.createElement("hr");
-    reportDisplay.appendChild(elem);
-    if (data.landing) {
+    if (data.filter.landing) {
+    } else if (data.landing.length) {
+        elem = document.createElement("hr");
+        reportDisplayLD.appendChild(elem);
         elem = document.createElement("b");
         elem.textContent = "Landing reports:";
-        reportDisplay.appendChild(elem);
+        reportDisplayLD.appendChild(elem);
         uList = document.createElement("ul");
-        reportDisplay.appendChild(uList);
+        reportDisplayLD.appendChild(uList);
         data.landing.forEach(function(landing) {
             lItem = document.createElement("li");
             uList.appendChild(lItem);
             button = planetButton(landing.target);
             lItem.appendChild(button);
-            addText(lItem, " \u2022 Controlled by ");
+            htmlStr = ", controlled by ";
             if (landing.firstcontroller === 0)  {
+                htmlStr += "hostile natives";
             } else if (landing.firstcontroller === opData.faction.fid) {
+                htmlStr += "you";
             } else {
-                var fname = opData.fidMap.get(landing.firstcontroller).name;
+                htmlStr += opData.fidMap.get(landing.firstcontroller).name;
             }
-            addText(lItem, JSON.stringify(landing));
+            htmlStr += ", was landed on by a size "+landing.size+" ship of ";
+            if (landing.shipcontroller === opData.faction.fid) {
+                htmlStr += "yours";
+            } else {
+                htmlStr += "faction "+opData.fidMap.get(landing.shipcontroller).name;
+            }
+            htmlStr += ", ending with "+landing.resultinhabitants+" ";
+            if (landing.resultcontroller === 0)  {
+                htmlStr += "hostile native";
+                if (landing.resultinhabitants !== 1) {
+                    htmlStr += "s";
+                }
+            } else if (landing.resultcontroller === opData.faction.fid) {
+                htmlStr += "of your colonists";
+            } else {
+                htmlStr += "of faction "+opData.fidMap.get(landing.resultcontroller).name+" colonists";
+            }
+            addText(lItem, htmlStr);
         });
     } else {
+        elem = document.createElement("hr");
+        reportDisplayLD.appendChild(elem);
         elem = document.createElement("b");
         elem.textContent = "No landing reports";
-        reportDisplay.appendChild(elem);
-        elem = document.createElement("br");
-        reportDisplay.appendChild(elem);
+        reportDisplayLD.appendChild(elem);
     }
 
 }
