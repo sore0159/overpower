@@ -31,8 +31,13 @@
 <b>Turn:</b> <span id="turntext"></span> &bull;
         <span id="turncompletetext"></span> &bull;
         <button class="clicker" id="turnchange"></button>
-        <br><span id="reporttext"></span> &bull;
-        <button class="clicker" id="reportbutton">View Reports</button>
+        <div id="bufferbox">
+        <br> <span id="buffertext">TEST</span> &bull; 
+        <button class="clicker" id="turnbufferbutton">TEST</button>
+        </div>
+
+<br><b>Reports:</b> <span id="reporttext"></span> &bull;
+<button class="clicker" id="reportbutton">View Reports</button>
 
 <div class="targetframe">
 <div class="rightframe">
@@ -62,6 +67,7 @@
 
 <script src="/static/js/input.js" type="text/javascript"></script>
 <script src="/static/js/getdata.js" type="text/javascript"></script>
+<script src="/static/js/turnbuffer.js" type="text/javascript"></script>
 <script src="/static/js/reports.js" type="text/javascript"></script>
 <script type="text/javascript"> (function() {
 var canvas = document.getElementById('mainscreen');

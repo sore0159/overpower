@@ -70,6 +70,13 @@ div.blockertext {
         vertical-align: middle;
         margin-top: 20%;
 }
+#bufferbox {
+        display: none;
+        padding: 0px; margin: 0px;
+}
+#turnbufferbutton {
+        font-weight: normal;
+}
 
 #reportscreen0 {
         display:none;

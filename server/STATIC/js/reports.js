@@ -237,7 +237,7 @@ function parseRecords() {
             } else {
                 htmlStr += "faction "+opData.fidMap.get(landing.shipcontroller).name;
             }
-            htmlStr += ", ending with "+landing.resultinhabitants+" ";
+            htmlStr += ", resulting in "+landing.resultinhabitants+" ";
             if (landing.resultcontroller === 0)  {
                 htmlStr += "hostile native";
                 if (landing.resultinhabitants !== 1) {
@@ -248,6 +248,7 @@ function parseRecords() {
             } else {
                 htmlStr += "of faction "+opData.fidMap.get(landing.resultcontroller).name+" colonists";
             }
+            htmlStr += " left on the planet";
             addText(lItem, htmlStr);
         });
     } else {

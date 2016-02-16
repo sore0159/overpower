@@ -3,8 +3,6 @@
 
 var canvas = document.getElementById('mainscreen');
 var boxConfirm = document.getElementById('orderconfirm');
-var boxTurn = document.getElementById('turnbox');
-var boxTurnButton = document.getElementById('turnchange');
 var swapTargetsButton = document.getElementById('swapbutton');
 var blockButton = document.getElementById('blockbutton');
 
@@ -38,7 +36,6 @@ canvas.onDOMMouseScroll = mapWheel;
 canvas.addEventListener("DOMMouseScroll", mapWheel);
 
 boxConfirm.onclick = confirmOrder;
-boxTurnButton.onclick = turnChange;
 blockButton.onclick = function() {
     canvas.refetchFullView();
 };
@@ -48,6 +45,8 @@ swapTargetsButton.onclick = function() {
 };
 
 // ----------- GAME COMMANDS ------------- //
+canvas.putJSON = putJSON;
+canvas.putErr = putErr;
 
 function putJSON(url, obj, onFail, onPass) {
     var req = new XMLHttpRequest();
@@ -84,22 +83,6 @@ function putJSON(url, obj, onFail, onPass) {
 function putErr(err) {
     console.log("OVERPOWER SERVER ERROR:", err);
     canvas.blockScreen("There was a server error!", "Click here to reload");
-}
-
-function turnChange() {
-    var faction = canvas.overpowerData.faction;
-    if (!faction.donebuffer) {
-        faction.donebuffer = 1;
-        faction.done = true;
-    } else {
-        faction.donebuffer = 0;
-        faction.done = false;
-    }
-    canvas.setupText();
-    canvas.blockScreen("Checking for new turn...");
-    putJSON("/overpower/json/factions", faction, putErr, function() {
-        canvas.turnCheck();
-    });
 }
 
 function confirmOrder() {

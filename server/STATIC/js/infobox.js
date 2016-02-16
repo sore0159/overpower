@@ -16,15 +16,10 @@
         highScoreText.textContent = data.game.highscore;
         var turnText = document.getElementById('turntext');
         turnText.textContent = data.game.turn;
-        var turnCompText = document.getElementById('turncompletetext');
-        var turnChangeButton = document.getElementById('turnchange');
-        if (data.faction.done) {
-            turnCompText.textContent = "Turn Complete";
-            turnChangeButton.textContent = "Cancel Turn Complete";
-        } else {
-            turnCompText.textContent = "Turn In Progress";
-            turnChangeButton.textContent = "Set Turn Complete";
-        }
+        var boxTurnBuffer = document.getElementById('bufferbox');
+        // ---------- TURN INFO STUFF ------------ //
+        boxTurnBuffer.redraw();
+        // ---------- REPORT INFO STUFF ------------ //
         var reportText = document.getElementById('reporttext');
         var htmlStr;
         if (data.launchrecords.length === 0) {
