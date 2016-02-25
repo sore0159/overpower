@@ -6,6 +6,7 @@ import (
 	"mule/overpower"
 	"mule/overpower/json"
 	"net/http"
+	"sort"
 )
 
 func jFail(w http.ResponseWriter, code int, mp ...interface{}) {
@@ -132,6 +133,7 @@ func (h *Handler) apiJsonGETLaunchRecords(w http.ResponseWriter, r *http.Request
 				Kirk(my, w)
 				return
 			}
+			sortLARecords(list)
 			jsonList := json.LoadLaunchRecords(list)
 			jSuccess(w, jsonList)
 			return
@@ -171,6 +173,7 @@ func (h *Handler) apiJsonGETLandingRecords(w http.ResponseWriter, r *http.Reques
 				Kirk(my, w)
 				return
 			}
+			sortLDRecords(list)
 			jsonList := json.LoadLandingRecords(list)
 			jSuccess(w, jsonList)
 			return
@@ -492,6 +495,8 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 	mapview, err6 := OPDB.GetMapView("gid", gid, "fid", fid)
 	laRep, err7 := OPDB.GetLaunchRecords("gid", gid, "fid", fid, "turn", turn)
 	ldRep, err8 := OPDB.GetLandingRecords("gid", gid, "fid", fid, "turn", turn)
+	sortLARecords(laRep)
+	sortLDRecords(ldRep)
 	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7, err8} {
 		if my, bad := Check(err, "fill fullview failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
@@ -509,4 +514,45 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 		LandingRecords: json.LoadLandingRecords(ldRep),
 	}
 	return fv, nil
+}
+
+func sortLARecords(list []overpower.LaunchRecord) {
+	sort.Sort(sortLA(list))
+}
+
+func sortLDRecords(list []overpower.LandingRecord) {
+	sort.Sort(sortLD(list))
+}
+
+type sortLA []overpower.LaunchRecord
+type sortLD []overpower.LandingRecord
+
+func (s sortLA) Len() int {
+	return len(s)
+}
+func (s sortLA) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s sortLA) Less(i, j int) bool {
+	sI, sJ := s[i].Source(), s[j].Source()
+	if sI[0] != sJ[0] {
+		return sI[0] < sJ[0]
+	} else {
+		return sI[1] < sJ[1]
+	}
+}
+func (s sortLD) Len() int {
+	return len(s)
+}
+func (s sortLD) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s sortLD) Less(i, j int) bool {
+	sI, sJ := s[i].Target(), s[j].Target()
+	if sI[0] != sJ[0] {
+		return sI[0] < sJ[0]
+	} else if sI[1] != sJ[1] {
+		return sI[1] < sJ[1]
+	}
+	return s[i].Index() < s[j].Index()
 }

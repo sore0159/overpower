@@ -1,6 +1,8 @@
 // ========================= IN PROGRESS ========================= //
-UI:
-    * Turn buffer buttons
+Reports: 
+    * Sort by index/planet
+
+    Server side sorting?
 
 // ========================= IN QUEUE ========================= //
 DB:
@@ -15,12 +17,12 @@ Game:
 
 UI:
     * Remembers recentering on reload
+    * Set to upload mapview on faction uploads/every 1min?
+    * Remembers recentering on reload
     * Click-drag for map?
     * Configurable factionveiw
     * Sort out help/instruction pages for everything
 
-Reports: 
-    * Sort by index/planet
 
 // ========================= DONE ========================= //
 
@@ -56,6 +58,7 @@ Interactive Map:
     * focus coord
 
 UI:
+    * Turn buffer buttons
     * Shiptrail info
     * Clickable hex coords in infoboxes
     * favicon.ico - stock and "New turn avail" versions
