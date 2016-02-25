@@ -62,6 +62,7 @@ div.blocker {
         opacity: .75;
         text-align:center;
         vertical-align: center;
+        transition: opacity 0.25s ease 0s;
 }
 
 div.blockertext {

@@ -363,7 +363,11 @@
         } else {
             blockbutton.style.display = "none";
         }
+        screen.style.opacity = 0;
         screen.style.display = 'block';
+        window.setTimeout(function() {
+            screen.style.opacity = 0.75;
+        }, 100);
 
     };
 

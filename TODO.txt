@@ -1,3 +1,8 @@
+// ========================= IN PROGRESS ========================= //
+UI:
+    * Turn buffer buttons
+
+// ========================= IN QUEUE ========================= //
 DB:
     * Factionview: color config
     * Planets set to "friendly" to other factions
@@ -9,7 +14,6 @@ Game:
     * Recheck galaxy creation
 
 UI:
-    * Turn buffer buttons
     * Remembers recentering on reload
     * Click-drag for map?
     * Configurable factionveiw

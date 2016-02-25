@@ -27,8 +27,10 @@ canvas.fetchData = function(dataSpecs, onPass, onFail) {
     req.addEventListener("error", function() {
         onFail("an error occured with the request");
     });
+    //window.setTimeout(function() {
     req.open("GET", "/overpower/json/"+dataSpecs, true);
     req.send();
+    //}, 5000);
 };
 
 canvas.refetchFullView = function() {
@@ -76,6 +78,9 @@ canvas.turnCheck = function(cycle) {
         } else if (cycle){
             window.setTimeout(turnCheckCycle, 15000);
         } else {
+            //window.setTimeout(function() {
+                //canvas.unblockScreen();
+            //}, 500);
             canvas.unblockScreen();
         }
     }

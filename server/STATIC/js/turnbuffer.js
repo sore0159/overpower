@@ -24,10 +24,10 @@ boxTurnBuffer.redraw = function() {
     } else if (bufferVal === -1) {
         boxTurnButton.textContent = "Clear turn completion buffer";
         turnCompText.textContent = "Turns set to auto-complete indefinitely";
-        bufferText.textContent = "Set further turns to auto-complete?";
+        bufferText.textContent = "Change auto-complete settings?";
     } else {
         boxTurnButton.textContent = "Clear turn completion buffer";
-        turnCompText.textContent = data.faction.donebuffer+" turns set to complete";
+        turnCompText.textContent = bufferVal+" turns set to complete";
     }
     
 };
@@ -45,6 +45,10 @@ function turnChange() {
         faction.donebuffer = 0;
         faction.done = false;
     }
+    factionPUT(faction);
+}
+
+function factionPUT(faction) {
     boxTurnBuffer.redraw();
     if (faction.donebuffer) {
         canvas.blockScreen("Checking for new turn...");
@@ -66,17 +70,25 @@ turnBufferButton.redraw = function() {
         this.textContent = "Mousescroll to set buffer";
         this.style.fontWeight = "normal";
     } else {
-        this.textContent = "Click to set buffer to "+this.clickBuffer;
         this.style.fontWeight = "bold";
+        if (this.clickBuffer === 1) {
+            this.textContent = "Click to set only the current turn turn done";
+        } else if (this.clickBuffer === -1) {
+            this.textContent = "Click to set turns to always auto-complete";
+        } else {
+            this.textContent = "Click to set the next "+this.clickBuffer+" turns complete";
+        }
     }
 };
 
 function bufferClick(event) {
-    var buffer =  canvas.overpowerData.faction.donebuffer;
+    var faction = canvas.overpowerData.faction;
+    var buffer =  faction.donebuffer;
     if (!buffer || buffer === this.clickBuffer) {
         return;
     }
-    console.log("BUFFER CLICK", this.clickBuffer);
+    faction.donebuffer = this.clickBuffer;
+    factionPUT(faction);
 }
 
 function bufferScroll(event) {
