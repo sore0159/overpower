@@ -309,9 +309,9 @@ canvas.drawMap = function(timestamp) {
             if (planet.turn !== 0) {
                 var numStr;
                 if (planet.controller === data.faction.fid) {
-                    numStr = planet.inhabitants+"|"+planet.resources+"|"+planet.parts;
+                    numStr = planet.presence+"|"+planet.resources+"|"+planet.parts;
                 } else {
-                    numStr = planet.inhabitants+"?|"+planet.resources+"?";
+                    numStr = planet.presence+"?|"+planet.resources+"?";
                 }
                 var numStrWidth = ctx.measureText(numStr).width;
                 ctx.strokeText(numStr, center[0]-numStrWidth/2, center[1]+planetRad+fontHeight);
@@ -373,7 +373,6 @@ canvas.mapCentered = function() {
 };
 
 
-//canvas.drawMap(0);
 window.requestAnimationFrame(animateMap);
 
 })();

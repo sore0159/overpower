@@ -54,6 +54,7 @@ function factionPUT(faction) {
         canvas.blockScreen("Checking for new turn...");
     }
     canvas.putJSON("/overpower/json/factions", faction, canvas.putErr, function() {
+        canvas.mapUpdateCheck();
         if (faction.donebuffer) {
             canvas.turnCheck();
         }

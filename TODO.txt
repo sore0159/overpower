@@ -1,14 +1,14 @@
 // ========================= IN PROGRESS ========================= //
-Reports: 
-    * Sort by index/planet
 
-    Server side sorting?
+DB:
+    * Truce object: Planets set to "friendly" to other factions
+    * Power Order object
+    * Fix source
+
 
 // ========================= IN QUEUE ========================= //
 DB:
     * Factionview: color config
-    * Planets set to "friendly" to other factions
-    * Planet resources on per-faction basis
 
 Game:
     * Endstate: score?
@@ -16,9 +16,6 @@ Game:
     * Recheck galaxy creation
 
 UI:
-    * Remembers recentering on reload
-    * Set to upload mapview on faction uploads/every 1min?
-    * Remembers recentering on reload
     * Click-drag for map?
     * Configurable factionveiw
     * Sort out help/instruction pages for everything
@@ -32,12 +29,16 @@ API:
     * Faction turnDone status
 
 DB:
+    * Planet resources UpDown
+    * Planets able to hold 2 inhab
+    * Planet presence power up/down/none
     * Orders use new planetPK and turn: keep old turns
     * reports broken into launches: old orders, landings: numerical records
     * Planets PK locX locY
     * Revamp query construction: use $N and mass inserts
 
 Reports: 
+    * Sort by index/planet
     * Filtering
     * Generation/Display
     * Ship launches
@@ -58,6 +59,8 @@ Interactive Map:
     * focus coord
 
 UI:
+    * Rename Inhabitants to "presence"
+    * Remembers recentering on reload
     * Turn buffer buttons
     * Shiptrail info
     * Clickable hex coords in infoboxes

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const UPDATETABLES byte = 0
+const UPDATETABLES byte = 1
 
 func (d DB) MakeTables() (err error) {
 	queries := []string{}
@@ -44,13 +44,16 @@ func (d DB) MakeTables() (err error) {
 	locx int NOT NULL,
 	locy int NOT NULL,
 	name varchar(20) NOT NULL,
-	controller int,
-	inhabitants int NOT NULL,
-	resources int NOT NULL,
-	parts int NOT NULL,
+	primaryfaction int,
+	primarypresence int NOT NULL,
+	secondaryfaction int,
+	secondarypresence int NOT NULL,
+	antimatter int NOT NULL,
+	tachyons int NOT NULL,
 	UNIQUE(gid, name),
 	PRIMARY KEY(gid, locx, locy),
-	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE
+	FOREIGN KEY(gid, primaryfaction) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, secondaryfaction) REFERENCES factions ON DELETE CASCADE
 );`)
 	queries = append(queries, `create table planetviews(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
@@ -59,12 +62,13 @@ func (d DB) MakeTables() (err error) {
 	locy int NOT NULL,
 	name varchar(20) NOT NULL,
 	turn int NOT NULL,
-	controller int,
-	inhabitants int,
-	resources int,
-	parts int,
+	primaryfaction int,
+	primarypresence int NOT NULL,
+	secondaryfaction int,
+	secondarypresence int NOT NULL,
+	antimatter int NOT NULL,
+	tachyons int NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, controller) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, locx, locy)
 );`)
@@ -120,25 +124,62 @@ func (d DB) MakeTables() (err error) {
 	FOREIGN KEY(gid, targetx, targety) REFERENCES planets ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, sourcex, sourcey, targetx, targety)
 );`)
-	queries = append(queries, `create table landingrecords(
+	queries = append(queries, `create table battlerecords(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
 	fid integer NOT NULL,
 	turn int NOT NULL,
 	index int NOT NULL,
-	size int NOT NULL,
+
 	targetx integer NOT NULL,
 	targety integer NOT NULL,
-	shipcontroller int NOT NULL,
-	firstcontroller int,
-	resultcontroller int,
-	resultinhabitants int NOT NULL,
+
+	shipfaction int,
+	shipsize int NOT NULL,
+
+	initprimaryfaction int,
+	initprimarypresence int NOT NULL,
+	initsecondaryfaction int,
+	initsecondarypresence int NOT NULL,
+
+	resultprimaryfaction int,
+	resultprimarypresence int NOT NULL,
+	resultsecondaryfaction int,
+	resultsecondarypresence int NOT NULL,
+
+	betrayals int[]
+
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, shipcontroller) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, firstcontroller) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, resultcontroller) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, shipfaction) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, initprimaryfaction) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, resultprimaryfaction) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, initprimaryfaction) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, initsecondaryfaction) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, targetx, targety) REFERENCES planets ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, index)
 );`)
+
+	queries = append(queries, `create table truces(
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid integer NOT NULL,
+	locx int NOT NULL,
+	locy int NOT NULL,
+	with int NOT NULL,
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, with) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, locx, locy, with)
+);`)
+	queries = append(queries, `create table powerorders(
+	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
+	fid integer NOT NULL,
+	locx int NOT NULL,
+	locy int NOT NULL,
+	uppower bool NOT NULL,
+	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
+	PRIMARY KEY(gid, fid, locx, locy)
+);`)
+
 	for i, query := range queries {
 		_, err := d.db().Exec(query)
 		if my, bad := Check(err, "failed table creation", "index", i); bad {
@@ -150,7 +191,7 @@ func (d DB) MakeTables() (err error) {
 }
 
 func (d DB) DropTables() (err error) {
-	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders, landingrecords, launchrecords"
+	tables := "games, planets, factions, mapviews, ships, shipviews, planetviews, orders, battlerecords, launchrecords, truces, powerorders"
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tables)
 	_, err = d.db().Exec(query)
 	return err

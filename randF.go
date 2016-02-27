@@ -2,12 +2,7 @@ package overpower
 
 import (
 	"math/rand"
-	"time"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func shuffleInts(list []int) []int {
 	if list == nil {
@@ -27,6 +22,10 @@ func shuffleInts(list []int) []int {
 
 func pick(n int) int {
 	return rand.Intn(n) + 1
+}
+
+func coin() bool {
+	return rand.Intn(2) == 0
 }
 
 func RandF(x float64) float64 {

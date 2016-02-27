@@ -25,15 +25,47 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	if my, bad := Check(err, "run turn resource failure"); bad {
 		return my, nil
 	}
+	truces, err := source.Truces()
+	if my, bad := Check(err, "run turn resource failure"); bad {
+		return my, nil
+	}
+	dbPowerOrders, err := source.PowerOrders()
+	if my, bad := Check(err, "run turn resource failure"); bad {
+		return my, nil
+	}
+	// --------- GAME ALREADY OVER -------- //
+	if game.HighScore() >= game.ToWin() {
+		return nil, nil
+	}
 	// -------------------------------- //
 	var errOccured bool
 	loggerM, _ := Check(ErrIgnorable, "run turn problem")
 	planetGrid := make(map[hexagon.Coord]Planet, len(planets))
 	radar := make(map[int]hexagon.CoordList, len(factions))
+
+	truceMap := map[hexagon.Coord]map[[2]int]bool{}
+	for _, tr := range truces {
+		loc := tr.Loc()
+		if mp, ok := truceMap[loc]; ok {
+			mp[[2]int{tr.Fid(), tr.With()}] = true
+		} else {
+			truceMap[loc] = map[[2]int]bool{[2]int{tr.Fid(), tr.With()}: true}
+		}
+	}
+	var atWar []Planet
 	for _, p := range planets {
-		planetGrid[p.Loc()] = p
-		if fid := p.Controller(); fid != 0 {
-			loc := p.Loc()
+		loc := p.Loc()
+		planetGrid[loc] = p
+		pFid, sFid := p.PrimaryFaction(), p.SecondaryFaction()
+		if pFid != 0 && sFid != 0 {
+			if mp := truceMap[loc]; mp == nil || !mp[[2]int{pFid, sFid}] || !mp[[2]int{sFid, pFid}] {
+				atWar = append(atWar, p)
+			}
+		}
+		for _, fid := range []int{pFid, sFid} {
+			if fid == 0 {
+				continue
+			}
 			if list, ok := radar[fid]; ok {
 				radar[fid] = append(list, loc)
 			} else {
@@ -41,8 +73,23 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			}
 		}
 	}
+	powerOrders := make([]PowerOrder, 0, len(dbPowerOrders))
+	for _, pO := range dbPowerOrders {
+		pl, ok := planetGrid[pO.Loc()]
+		if !ok {
+			errOccured = true
+			loggerM.AddContext("bad powerorder", "planet not found", "powerorder", pO)
+			continue
+		}
+		fid := pO.Fid()
+		if pl.PrimaryFaction() != fid && pl.SecondaryFaction() != fid {
+			errOccured = true
+			loggerM.AddContext("bad powerorder", "planet not owner", "powerorder", pO)
+			continue
+		}
+		powerOrders = append(powerOrders, pO)
+	}
 	turn := game.Turn()
-	names := make(map[int]string, len(factions))
 	var auto bool
 	for _, f := range factions {
 		doneB := f.DoneBuffer()
@@ -51,21 +98,21 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		} else if doneB == 0 {
 			auto = true
 		}
-		fid := f.Fid()
-		names[fid] = "faction " + f.Name()
-	}
-	// --------- GAME ALREADY OVER -------- //
-	if game.HighScore() >= game.ToWin() {
-		return nil, nil
 	}
 	// ------ AUTO TURN ------- //
 	if !auto {
 		game.SetFreeAutos(game.FreeAutos() + 1)
 	}
+	// ---- PLANETS AT WAR ---- //
+	for _, p := range atWar {
+		Battle(source, p, nil, turn, truceMap[p.Loc()])
+	}
 	// ---- SHIPS LAUNCH ---- //
+	var secondaryOrders []Order
+
 	for _, o := range orders {
-		tar, ok1 := planetGrid[o.Target()]
 		src, ok2 := planetGrid[o.Source()]
+		tar, ok1 := planetGrid[o.Target()]
 		if !(ok1 && ok2) {
 			errOccured = true
 			loggerM.AddContext("bad order", "planets not found", "order", o)
@@ -77,16 +124,86 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			loggerM.AddContext("bad order", "size <0", "order", o)
 			continue
 		}
-		if cont := src.Controller(); cont == 0 || src.Parts() < size || cont != o.Fid() {
+		if fid := o.Fid(); fid == src.SecondaryFaction() {
+			secondaryOrders = append(secondaryOrders, o)
+			continue
+		} else if fid != src.PrimaryFaction() {
 			errOccured = true
-			loggerM.AddContext("bad order", "misc", "order", o)
+			loggerM.AddContext("bad order", "bad controller", "order", o)
 			continue
 		}
-		src.SetParts(src.Parts() - size)
-		path := src.Loc().PathTo(tar.Loc())
-		sh := source.NewShip(src.Controller(), size, turn, path)
-		ships = append(ships, sh)
-		source.NewLaunchRecord(sh)
+		switch src.PrimaryPower() {
+		case -1:
+			if have := src.Tachyons(); size > have {
+				size = have
+				src.SetTachyons(0)
+			} else {
+				src.SetTachyons(have - size)
+			}
+		case 1:
+			if have := src.Antimatter(); size > have {
+				size = have
+				src.SetAntimatter(0)
+			} else {
+				src.SetAntimatter(have - size)
+			}
+		default:
+			errOccured = true
+			loggerM.AddContext("bad order", "bad power", "order", o)
+			continue
+		}
+		if size > 0 {
+			path := src.Loc().PathTo(tar.Loc())
+			sh := source.NewShip(src.PrimaryFaction(), size, turn, path)
+			ships = append(ships, sh)
+			source.NewLaunchRecord(o, sh)
+		} else {
+			source.NewLaunchRecord(o, nil)
+		}
+	}
+
+	for _, o := range secondaryOrders {
+		src, ok2 := planetGrid[o.Source()]
+		tar, ok1 := planetGrid[o.Target()]
+		if !(ok1 && ok2) {
+			errOccured = true
+			loggerM.AddContext("bad order", "planets not found", "order", o)
+			continue
+		}
+		size := o.Size()
+		if size < 1 {
+			errOccured = true
+			loggerM.AddContext("bad order", "size <0", "order", o)
+			continue
+		}
+		switch src.SecondaryPower() {
+		case -1:
+			if have := src.Tachyons(); size > have {
+				size = have
+				src.SetTachyons(0)
+			} else {
+				src.SetTachyons(have - size)
+			}
+		case 1:
+			if have := src.Antimatter(); size > have {
+				size = have
+				src.SetAntimatter(0)
+			} else {
+				src.SetAntimatter(have - size)
+			}
+		default:
+			errOccured = true
+			loggerM.AddContext("bad order", "bad power", "order", o)
+			continue
+		}
+		if size > 0 {
+			path := src.Loc().PathTo(tar.Loc())
+			sh := source.NewShip(src.SecondaryFaction(), size, turn, path)
+			ships = append(ships, sh)
+			source.NewLaunchRecord(o, sh)
+		} else {
+			source.NewLaunchRecord(o, nil)
+		}
 	}
 	source.DropOrders()
 	// ---- SHIPS MOVE ---- //
@@ -146,7 +263,6 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	//
 	// ---- SHIPS LAND ---- //
 	// plid, amount
-	arrivals := map[hexagon.Coord]int{}
 	for i := 1; i < SHIPSPEED+1; i++ {
 		shipsLandings, ok := landings[i]
 		if !ok {
@@ -161,11 +277,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 				loggerM.AddContext("bad ship", "landing nonexistant", "ship", sh)
 				errOccured = true
 			} else {
-				err := PlanetaryLanding(source, p, sh, turn, arrivals, names)
-				if my, bad := Check(err, "landing report problem", "planet", p, "ship", sh); bad {
-					loggerM.Grab(my)
-					errOccured = true
-				}
+				Battle(source, p, sh, turn, truceMap[loc])
 			}
 			source.DropShip(sh)
 		}
@@ -176,34 +288,36 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		errOccured = true
 	}
 	//
+	// ------- PLANETS CHANGE POWER -------- //
+	for _, pO := range powerOrders {
+		pl := planetGrid[pO.Loc()]
+		fid := pO.Fid()
+		powNum := -1
+		if pO.UpPower() {
+			powNum = 1
+		}
+		if pl.PrimaryFaction() == fid {
+			pl.SetPrimaryPower(powNum)
+		} else if pl.SecondaryFaction() == fid {
+			pl.SetSecondaryPower(powNum)
+		} else {
+			continue
+		}
+	}
+	source.DropPowerOrders()
 	// ---- TURN STARTS ---- //
 	game.IncTurn()
 	turn = game.Turn()
 	facScores := make(map[int]int, len(factions))
-	// ---- PLANETS PRODUCE ---- //
 	for _, pl := range planets {
-		cont := pl.Controller()
-		if cont == 0 {
-			continue
-		}
-		facScores[cont] += 1
-		if parts, inh, res := pl.Parts(), pl.Inhabitants(), pl.Resources(); inh > 0 && res > 0 && parts < inh {
-			prod := inh - parts
-			if prod > res {
-				prod = res
-			}
-			if prod > 5 {
-				prod = 5
-			}
-			pl.SetResources(res - prod)
-			pl.SetParts(parts + prod)
-		}
-		// ---- ARRIVALS ARRIVE ---- //
-		if x := arrivals[pl.Loc()]; x > 0 {
-			pl.SetInhabitants(pl.Inhabitants() + x)
-		}
 		// ---- PLANETS ARE SEEN ---- //
-		source.UpdatePlanetView(cont, turn, pl)
+		for _, cont := range []int{pl.PrimaryFaction(), pl.SecondaryFaction()} {
+			if cont == 0 {
+				continue
+			}
+			facScores[cont] += 1
+			source.UpdatePlanetView(cont, turn, pl)
+		}
 	}
 	var highScore int
 	toWin := game.ToWin()

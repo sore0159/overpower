@@ -47,6 +47,7 @@ swapTargetsButton.onclick = function() {
 // ----------- GAME COMMANDS ------------- //
 canvas.putJSON = putJSON;
 canvas.putErr = putErr;
+canvas.mapUpdateCheck = mapUpdateCheck;
 
 function putJSON(url, obj, onFail, onPass) {
     var req = new XMLHttpRequest();
@@ -108,7 +109,19 @@ function confirmOrder() {
     } else {
         console.log("ERROR: CONFIRATION FOR BAD ORDER", order);
     }
+    mapUpdateCheck();
     canvas.redrawPage();
+}
+
+// Currently done in the background when order or turnbuffer is updated
+function mapUpdateCheck() {
+    var dbCenter = canvas.overpowerData.mapview.center;
+    var jsCenter = canvas.overpowerData.map.center;
+    if (!jsCenter || (jsCenter[0] == dbCenter[0] && jsCenter[1] == dbCenter[1])) {
+        return;
+    }
+    canvas.overpowerData.mapview.center = jsCenter;
+    putJSON("/overpower/json/mapviews", canvas.overpowerData.mapview, putErr);
 }
 
 canvas.muleClicked = function(pt, button, shift) {

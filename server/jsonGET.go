@@ -432,6 +432,7 @@ func (h *Handler) apiJsonGETFactions(w http.ResponseWriter, r *http.Request) {
 			Kirk(my, w)
 			return
 		}
+		sortFactions(list)
 		jsonList := json.LoadFactions(list, fid)
 		jSuccess(w, jsonList)
 		return
@@ -497,6 +498,7 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 	ldRep, err8 := OPDB.GetLandingRecords("gid", gid, "fid", fid, "turn", turn)
 	sortLARecords(laRep)
 	sortLDRecords(ldRep)
+	sortFactions(facs)
 	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7, err8} {
 		if my, bad := Check(err, "fill fullview failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
@@ -519,13 +521,16 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 func sortLARecords(list []overpower.LaunchRecord) {
 	sort.Sort(sortLA(list))
 }
-
 func sortLDRecords(list []overpower.LandingRecord) {
 	sort.Sort(sortLD(list))
+}
+func sortFactions(list []overpower.Faction) {
+	sort.Sort(sortFA(list))
 }
 
 type sortLA []overpower.LaunchRecord
 type sortLD []overpower.LandingRecord
+type sortFA []overpower.Faction
 
 func (s sortLA) Len() int {
 	return len(s)
@@ -541,6 +546,7 @@ func (s sortLA) Less(i, j int) bool {
 		return sI[1] < sJ[1]
 	}
 }
+
 func (s sortLD) Len() int {
 	return len(s)
 }
@@ -555,4 +561,14 @@ func (s sortLD) Less(i, j int) bool {
 		return sI[1] < sJ[1]
 	}
 	return s[i].Index() < s[j].Index()
+}
+
+func (s sortFA) Len() int {
+	return len(s)
+}
+func (s sortFA) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s sortFA) Less(i, j int) bool {
+	return s[i].Fid() < s[j].Fid()
 }

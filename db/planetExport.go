@@ -6,13 +6,26 @@ import (
 	"mule/overpower"
 )
 
-func (d DB) MakePlanet(gid, controller, inhabitants, resources, parts int, name string, loc hexagon.Coord) (err error) {
-	contN := sql.NullInt64{}
-	if controller != 0 {
-		contN.Valid = true
-		contN.Int64 = int64(controller)
+func (d DB) MakePlanet(gid, prFac, prPres, secFac, secPres, antiM, tach int, name string, loc hexagon.Coord) (err error) {
+	prFacN := sql.NullInt64{}
+	if prFac != 0 {
+		prFacN.Valid = true
+		prFacN.Int64 = int64(prFac)
 	}
-	item := &Planet{gid: gid, name: name, controller: contN, inhabitants: inhabitants, resources: resources, parts: parts, loc: loc}
+	secFacN := sql.NullInt64{}
+	if secFac != 0 {
+		secFacN.Valid = true
+		secFacN.Int64 = int64(secFac)
+	}
+	item := &Planet{&MiniPlanet{
+		gid: gid, name: name, loc: loc,
+		primaryfaction:    prFacN,
+		primarypresence:   prPres,
+		secondaryfaction:  secFacN,
+		secondarypresence: secPres,
+		antimatter:        antiM, tachyons: tach,
+	},
+	}
 	group := &PlanetGroup{[]*Planet{item}}
 	return d.makeGroup(group)
 }

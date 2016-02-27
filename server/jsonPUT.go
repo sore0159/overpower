@@ -27,6 +27,8 @@ func apiJsonPUT(w http.ResponseWriter, r *http.Request) {
 		h.apiJsonPUTOrders(w, r)
 	case "factions":
 		h.apiJsonPUTFactions(w, r)
+	case "mapviews":
+		h.apiJsonPUTMapViews(w, r)
 	default:
 		jFail(w, 404, "url", "unsupported object type given")
 		return
@@ -168,6 +170,34 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		err = OPDB.MakeOrder(o.Gid, o.Fid, o.Size, o.Source, o.Target)
 	}
 	if my, bad := Check(err, "Json PUT failure on database entry", "resource", "orders", "item", o); bad {
+		Kirk(my, w)
+		return
+	}
+	jSuccess(w, nil)
+}
+
+func (h *Handler) apiJsonPUTMapViews(w http.ResponseWriter, r *http.Request) {
+	mV := &json.MapView{}
+	err := jsend.Read(r, &mV)
+	if my, bad := Check(err, "API PUT failure on data read"); bad {
+		Kirk(my, w)
+		return
+	}
+	f, err := OPDB.GetFaction("gid", mV.Gid, "fid", mV.Fid)
+	if err == ErrNoneFound {
+		jFail(w, 400, "bad specification", "no faction found matching given mapview data")
+		return
+	} else if my, bad := Check(err, "Json PUT failure on mapview validation check", "resource", "mapview", "mapview", mV); bad {
+		Kirk(my, w)
+		return
+	}
+	if f.Owner() != h.User.String() {
+		jFail(w, 400, "authorization", "you are not authorized for that resource")
+		return
+	}
+	Ping("JSON PUT", mV)
+	err = OPDB.UpdateMapView("center", mV.Center, "WHERE", "gid", mV.Gid, "fid", mV.Fid)
+	if my, bad := Check(err, "Json PUT failure on database entry", "resource", "mapview", "item", mV); bad {
 		Kirk(my, w)
 		return
 	}

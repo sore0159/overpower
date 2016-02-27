@@ -1,9 +1,11 @@
 package main
 
 import (
+	"math/rand"
 	"mule/overpower/db"
 	"mule/users"
 	"net/http"
+	"time"
 )
 
 const (
@@ -16,6 +18,10 @@ var (
 	OPDB    db.DB
 	DBLOCK  bool
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func main() {
 	var err error

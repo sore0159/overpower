@@ -44,7 +44,7 @@ function setFilterLD() {
 }
 reportChangeButton.redraw = function() {
     if (this.turn === this.clickTurn) {
-        this.textContent = "Mousescroll over this button to select new turn";
+        this.textContent = "Mousescroll over this button to view a different turn's reports";
         this.style.fontWeight = "normal";
     } else {
         this.textContent = "Click to view reports for turn "+this.clickTurn;
@@ -237,18 +237,18 @@ function parseRecords() {
             } else {
                 htmlStr += "faction "+opData.fidMap.get(landing.shipcontroller).name;
             }
-            htmlStr += ", resulting in "+landing.resultinhabitants+" ";
+            htmlStr += ", ";
             if (landing.resultcontroller === 0)  {
                 htmlStr += "hostile native";
-                if (landing.resultinhabitants !== 1) {
+                if (landing.resultpresence !== 1) {
                     htmlStr += "s";
                 }
             } else if (landing.resultcontroller === opData.faction.fid) {
-                htmlStr += "of your colonists";
+                htmlStr += "your faction";
             } else {
-                htmlStr += "of faction "+opData.fidMap.get(landing.resultcontroller).name+" colonists";
+                htmlStr += "faction "+opData.fidMap.get(landing.resultcontroller).name;
             }
-            htmlStr += " left on the planet";
+            htmlStr += " ending with a presence of "+landing.resultpresence+" on the planet";
             addText(lItem, htmlStr);
         });
     } else {

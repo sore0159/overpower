@@ -1,23 +1,33 @@
 package db
 
 import (
+	"database/sql"
 	"mule/hexagon"
 	"mule/overpower"
 )
 
-func (d DB) MakePlanetView(gid, fid, turn, controller, inhabitants, resources, parts int, name string, loc hexagon.Coord) error {
-	item := &PlanetView{gid: gid, fid: fid, turn: turn, name: name, loc: loc}
-	if turn > 0 {
-		item.controller.Valid = true
-		item.controller.Int64 = int64(controller)
-		item.inhabitants.Valid = true
-		item.inhabitants.Int64 = int64(inhabitants)
-		item.resources.Valid = true
-		item.resources.Int64 = int64(resources)
-		item.parts.Valid = true
-		item.parts.Int64 = int64(parts)
+func (d DB) MakePlanetView(gid, fid, turn, prFac, prPres, secFac, secPres, antiM, tach int, name string, loc hexagon.Coord) (err error) {
+	prFacN := sql.NullInt64{}
+	if prFac != 0 {
+		prFacN.Valid = true
+		prFacN.Int64 = int64(prFac)
 	}
-	group := &PlanetViewGroup{[]*PlanetView{item}}
+	secFacN := sql.NullInt64{}
+	if secFac != 0 {
+		secFacN.Valid = true
+		secFacN.Int64 = int64(secFac)
+	}
+	item := &Planet{&MiniPlanet{
+		gid: gid, name: name, loc: loc,
+		fid: fid, turn: turn,
+		primaryfaction:    prFacN,
+		primarypresence:   prPres,
+		secondaryfaction:  secFacN,
+		secondarypresence: secPres,
+		antimatter:        antiM, tachyons: tach,
+	},
+	}
+	group := &PlanetGroup{[]*Planet{item}}
 	return d.makeGroup(group)
 }
 

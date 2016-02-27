@@ -5,6 +5,7 @@ import (
 	"mule/overpower"
 )
 
+// "center", center, "WHERE", "gid", gid, "fid", fid
 func (d DB) UpdateMapView(vals ...interface{}) error {
 	set := make([]interface{}, 0)
 	where := make([]interface{}, 0)

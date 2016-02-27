@@ -1,11 +1,13 @@
 package db
 
 import (
-	"database/sql"
+	//"database/sql"
 	"mule/hexagon"
 	"mule/mydb"
 	"mule/overpower"
 )
+
+var sourceT overpower.Source = &Source{}
 
 // Usage Example:
 // f := func(d DB) error {
@@ -33,31 +35,34 @@ type Source struct {
 	factions    []*Faction
 	planetViews map[[3]int]*PlanetView
 	// ------- MAKE ------- //
-	MadePlanets        []*Planet
-	MadePlanetViews    map[[3]int]*PlanetView
-	MadeShips          []*Ship
-	MadeShipViews      map[overpower.Ship][]*ShipView
-	MadeMapViews       []*MapView
-	MadeLaunchRecords  []*LaunchRecord
-	MadeLandingRecords map[int][]*LandingRecord
+	MadePlanets       []*Planet
+	MadePlanetViews   map[[3]int]*PlanetView
+	MadeShips         []*Ship
+	MadeShipViews     map[overpower.Ship][]*ShipView
+	MadeMapViews      []*MapView
+	MadeLaunchRecords []*LaunchRecord
+	MadeBattleRecords map[int][]*BattleRecord
 	// ------- DROP ------ //
-	DroppedShips []overpower.Ship
-	dropOrders   bool
+	DroppedShips    []overpower.Ship
+	DroppedTruces   []overpower.Truce
+	dropOrders      bool
+	dropPowerOrders bool
 }
 
 func (d DB) NewSource(gid int) *Source {
 	return &Source{
-		Gid:                gid,
-		db:                 d,
-		planetViews:        map[[3]int]*PlanetView{},
-		MadePlanets:        []*Planet{},
-		MadePlanetViews:    map[[3]int]*PlanetView{},
-		MadeShips:          []*Ship{},
-		MadeShipViews:      map[overpower.Ship][]*ShipView{},
-		MadeMapViews:       []*MapView{},
-		MadeLaunchRecords:  []*LaunchRecord{},
-		MadeLandingRecords: map[int][]*LandingRecord{},
-		DroppedShips:       []overpower.Ship{},
+		Gid:               gid,
+		db:                d,
+		planetViews:       map[[3]int]*PlanetView{},
+		MadePlanets:       []*Planet{},
+		MadePlanetViews:   map[[3]int]*PlanetView{},
+		MadeShips:         []*Ship{},
+		MadeShipViews:     map[overpower.Ship][]*ShipView{},
+		MadeMapViews:      []*MapView{},
+		MadeLaunchRecords: []*LaunchRecord{},
+		MadeBattleRecords: map[int][]*BattleRecord{},
+		DroppedShips:      []overpower.Ship{},
+		DroppedTruces:     []overpower.Truce{},
 	}
 }
 
@@ -110,12 +115,12 @@ func (s *Source) Commit() error {
 			return my
 		}
 	}
-	if len(s.MadeLandingRecords) > 0 {
-		allLR := make([]*LandingRecord, 0, len(s.MadeLandingRecords))
-		for _, list := range s.MadeLandingRecords {
+	if len(s.MadeBattleRecords) > 0 {
+		allLR := make([]*BattleRecord, 0, len(s.MadeBattleRecords))
+		for _, list := range s.MadeBattleRecords {
 			allLR = append(allLR, list...)
 		}
-		group := &LandingRecordGroup{allLR}
+		group := &BattleRecordGroup{allLR}
 		err = s.db.makeGroup(group)
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "make", "landingrecords", "list", allLR); bad {
 			return my
@@ -205,6 +210,12 @@ func (s *Source) Orders() ([]overpower.Order, error) {
 func (s *Source) Ships() ([]overpower.Ship, error) {
 	return s.db.GetShips("gid", s.Gid)
 }
+func (s *Source) PowerOrders() ([]overpower.PowerOrder, error) {
+	return nil, nil
+}
+func (s *Source) Truces() ([]overpower.Truce, error) {
+	return nil, nil
+}
 
 func (s *Source) NewMapView(fid int, center hexagon.Coord) (mapview overpower.MapView) {
 	mv := NewMapView()
@@ -237,52 +248,32 @@ func (s *Source) NewShip(fid, size, turn int, path hexagon.CoordList) (ship over
 func (s *Source) DropShip(ship overpower.Ship) {
 	s.DroppedShips = append(s.DroppedShips, ship)
 }
+func (s *Source) DropTruce(pl overpower.Planet, trucer, trucee int) {
+	/*
+		tr := &Truce{
+			gid:  pl.Gid(),
+			fid:  trucer,
+			loc:  pl.Loc(),
+			with: trucee,
+		}
+		s.DroppedTruces = append(s.DroppedTruces, tr)
+	*/
+}
 
-func (s *Source) NewPlanet(name string, controller, inhab, res, parts int, loc hexagon.Coord) (planet overpower.Planet) {
+func (s *Source) NewPlanet(name string, pp, ppF, ppP, sp, spF, spP, antiM, tach int, loc hexagon.Coord) (planet overpower.Planet) {
 	p := NewPlanet()
-	p.name = name
-	p.gid = s.Gid
-	if controller != 0 {
-		p.controller = sql.NullInt64{int64(controller), true}
-	}
-	p.inhabitants = inhab
-	p.resources = res
-	p.parts = parts
-	p.loc = loc
 	s.MadePlanets = append(s.MadePlanets, p)
 	return p
 }
 
 func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (planetview overpower.PlanetView) {
 	pv := NewPlanetView()
-	pv.fid = fid
-	pv.turn = 0
-	pv.gid = s.Gid
-	pv.name = pl.Name()
-	pv.loc = pl.Loc()
-	if cont := pl.Controller(); cont == fid || (exodus && cont != 0) {
-		pv.turn = 1
-		pv.controller = sql.NullInt64{int64(cont), true}
-		pv.resources = sql.NullInt64{int64(pl.Resources()), true}
-		pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
-		pv.parts = sql.NullInt64{int64(pl.Parts()), true}
-	}
 	s.MadePlanetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
 	return pv
 }
 
 func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.PlanetView {
 	pv := NewPlanetView()
-	pv.loc = pl.Loc()
-	pv.gid = s.Gid
-	pv.fid = fid
-	pv.turn = turn
-	if cont := pl.Controller(); cont != 0 {
-		pv.controller = sql.NullInt64{int64(cont), true}
-	}
-	pv.resources = sql.NullInt64{int64(pl.Resources()), true}
-	pv.inhabitants = sql.NullInt64{int64(pl.Inhabitants()), true}
-	pv.parts = sql.NullInt64{int64(pl.Parts()), true}
 	s.planetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
 	return pv
 }
@@ -290,37 +281,22 @@ func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.
 func (s *Source) DropOrders() {
 	s.dropOrders = true
 }
+func (s *Source) DropPowerOrders() {
+	s.dropPowerOrders = true
+}
 
-func (s *Source) NewLaunchRecord(ship overpower.Ship) {
+func (s *Source) NewLaunchRecord(o overpower.Order, ship overpower.Ship) {
 	lr := NewLaunchRecord()
-	lr.gid, lr.size, lr.fid = ship.Gid(), ship.Size(), ship.Fid()
-	lr.turn = ship.Launched()
-	path := ship.Path()
-	lr.source = path[0]
-	lr.target = path[len(path)-1]
 	s.MadeLaunchRecords = append(s.MadeLaunchRecords, lr)
 }
 
-func (s *Source) NewLandingRecord(fid, turn int, ship overpower.Ship, result [3]int) {
-	lr := NewLandingRecord()
-	lr.gid, lr.size, lr.fid, lr.turn = ship.Gid(), ship.Size(), fid, turn
-	lr.shipcontroller = ship.Fid()
-	if result[0] != 0 {
-		lr.firstcontroller.Valid = true
-		lr.firstcontroller.Int64 = int64(result[0])
-	}
-	if result[1] != 0 {
-		lr.resultcontroller.Valid = true
-		lr.resultcontroller.Int64 = int64(result[1])
-	}
-	lr.resultinhabitants = result[2]
-	path := ship.Path()
-	lr.target = path[len(path)-1]
-	list, ok := s.MadeLandingRecords[fid]
+func (s *Source) NewBattleRecord(ship overpower.Ship, fid, turn, initPrFac, initPrPres, initSeFac, initSecPres int, pl overpower.Planet, betrayals [][2]int) {
+	lr := NewBattleRecord()
+	list, ok := s.MadeBattleRecords[fid]
 	if !ok {
-		s.MadeLandingRecords[fid] = []*LandingRecord{lr}
+		s.MadeBattleRecords[fid] = []*BattleRecord{lr}
 	} else {
 		lr.index = len(list)
-		s.MadeLandingRecords[fid] = append(list, lr)
+		s.MadeBattleRecords[fid] = append(list, lr)
 	}
 }

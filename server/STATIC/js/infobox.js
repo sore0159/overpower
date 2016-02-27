@@ -37,6 +37,12 @@
         } else {
             htmlStr += ""+data.landingrecords.length+" landing reports";
         }
+        var reportButton = document.getElementById('reportbutton');
+        if (data.game.turn === 1) {
+            reportButton.style.display = 'none';
+        } else {
+            reportButton.style.display = 'inline';
+        }
       
         reportText.textContent = htmlStr;
         canvas.setupTargets();
@@ -87,6 +93,8 @@
                 secTargetDiv.appendChild(elem);
                 if (data.targetOneInfo.planet) {
                     swapButton.style.display = "inline";
+                } else {
+                    swapButton.style.display = "none";
                 }
             } else {
                 swapButton.style.display = "none";
@@ -126,9 +134,9 @@
                     planetInfoBox.appendChild(elem);
 
                     elem = document.createElement("b");
-                    elem.textContent = "Inhabitants: ";
+                    elem.textContent = "Presence: ";
                     planetInfoBox.appendChild(elem);
-                    elem = document.createTextNode(planet.inhabitants + " \u2022 ");
+                    elem = document.createTextNode(planet.presence + " \u2022 ");
                     planetInfoBox.appendChild(elem);
                     elem = document.createElement("b");
                     elem.textContent = "Resources: ";
@@ -362,6 +370,9 @@
             blockbutton.style.display = "inline";
         } else {
             blockbutton.style.display = "none";
+        }
+        if (screen.style.display === 'block') {
+            return;
         }
         screen.style.opacity = 0;
         screen.style.display = 'block';

@@ -1,173 +1,13 @@
 package db
 
-import (
-	"database/sql"
-	"mule/hexagon"
-)
-
 type PlanetView struct {
-	modified bool
-	//
-	gid         int
-	fid         int
-	loc         hexagon.Coord
-	turn        int
-	name        string
-	controller  sql.NullInt64
-	inhabitants sql.NullInt64
-	resources   sql.NullInt64
-	parts       sql.NullInt64
+	*MiniPlanet
 }
 
 func NewPlanetView() *PlanetView {
 	return &PlanetView{
-	//
+		&MiniPlanet{},
 	}
-}
-
-func (p *PlanetView) Gid() int {
-	return p.gid
-}
-func (p *PlanetView) Fid() int {
-	return p.fid
-}
-func (p *PlanetView) Name() string {
-	return p.name
-}
-func (p *PlanetView) Loc() hexagon.Coord {
-	return p.loc
-}
-func (p *PlanetView) Controller() int {
-	if p.controller.Valid {
-		return int(p.controller.Int64)
-	} else {
-		return 0
-	}
-}
-func (p *PlanetView) SetController(x int) {
-	if x == 0 {
-		if !p.controller.Valid {
-			return
-		}
-		p.controller.Int64 = 0
-		p.controller.Valid = false
-		p.modified = true
-	} else {
-		x64 := int64(x)
-		if p.controller.Valid && p.controller.Int64 == x64 {
-			return
-		}
-		p.controller.Valid = true
-		p.controller.Int64 = x64
-		p.modified = true
-	}
-}
-
-func (p *PlanetView) Inhabitants() int {
-	if p.inhabitants.Valid {
-		return int(p.inhabitants.Int64)
-	}
-	return 0
-}
-func (p *PlanetView) SetInhabitants(x int) {
-	x64 := int64(x)
-	if p.inhabitants.Valid && p.inhabitants.Int64 == x64 {
-		return
-	}
-	p.inhabitants.Valid = true
-	p.inhabitants.Int64 = x64
-	p.modified = true
-}
-func (p *PlanetView) Resources() int {
-	if p.resources.Valid {
-		return int(p.resources.Int64)
-	}
-	return 0
-}
-func (p *PlanetView) SetResources(x int) {
-	x64 := int64(x)
-	if p.resources.Valid && p.resources.Int64 == x64 {
-		return
-	}
-	p.resources.Valid = true
-	p.resources.Int64 = x64
-	p.modified = true
-}
-func (p *PlanetView) Parts() int {
-	if p.parts.Valid {
-		return int(p.parts.Int64)
-	}
-	return 0
-}
-func (p *PlanetView) SetParts(x int) {
-	x64 := int64(x)
-	if p.parts.Valid && p.parts.Int64 == x64 {
-		return
-	}
-	p.parts.Valid = true
-	p.parts.Int64 = x64
-	p.modified = true
-}
-func (p *PlanetView) Turn() int {
-	return p.turn
-}
-func (p *PlanetView) SetTurn(x int) {
-	if p.turn == x {
-		return
-	}
-	p.turn = x
-	p.modified = true
-}
-func (item *PlanetView) SQLVal(name string) interface{} {
-	switch name {
-	case "gid":
-		return item.gid
-	case "fid":
-		return item.fid
-	case "locx":
-		return item.loc[0]
-	case "locy":
-		return item.loc[1]
-	case "turn":
-		return item.turn
-	case "name":
-		return item.name
-	case "controller":
-		return item.controller
-	case "inhabitants":
-		return item.inhabitants
-	case "resources":
-		return item.resources
-	case "parts":
-		return item.parts
-	}
-	return nil
-}
-
-func (item *PlanetView) SQLPtr(name string) interface{} {
-	switch name {
-	case "gid":
-		return &item.gid
-	case "fid":
-		return &item.fid
-	case "locx":
-		return &item.loc[0]
-	case "locy":
-		return &item.loc[1]
-	case "turn":
-		return &item.turn
-	case "name":
-		return &item.name
-	case "controller":
-		return &item.controller
-	case "inhabitants":
-		return &item.inhabitants
-	case "resources":
-		return &item.resources
-	case "parts":
-		return &item.parts
-	}
-	return nil
 }
 
 func (item *PlanetView) SQLTable() string {
@@ -181,25 +21,33 @@ func (group *PlanetViewGroup) SQLTable() string {
 func (group *PlanetViewGroup) SelectCols() []string {
 	return []string{
 		"gid",
+		"fid",
 		"locx",
 		"locy",
-		"fid",
 		"turn",
 		"name",
-		"controller",
-		"inhabitants",
-		"resources",
-		"parts",
+		"primaryfaction",
+		"primarypresence",
+		"primarypower",
+		"secondaryfaction",
+		"secondarypresence",
+		"secondarypower",
+		"antimatter",
+		"tachyons",
 	}
 }
 
 func (group *PlanetViewGroup) UpdateCols() []string {
 	return []string{
 		"turn",
-		"controller",
-		"inhabitants",
-		"resources",
-		"parts",
+		"primaryfaction",
+		"primarypresence",
+		"primarypower",
+		"secondaryfaction",
+		"secondarypresence",
+		"secondarypower",
+		"antimatter",
+		"tachyons",
 	}
 }
 
@@ -215,10 +63,14 @@ func (group *PlanetViewGroup) InsertCols() []string {
 		"locy",
 		"turn",
 		"name",
-		"controller",
-		"inhabitants",
-		"resources",
-		"parts",
+		"primaryfaction",
+		"primarypresence",
+		"primarypower",
+		"secondaryfaction",
+		"secondarypresence",
+		"secondarypower",
+		"antimatter",
+		"tachyons",
 	}
 }
 

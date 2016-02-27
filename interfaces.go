@@ -11,19 +11,32 @@ type Source interface {
 	Planets() ([]Planet, error)
 	Orders() ([]Order, error)
 	Ships() ([]Ship, error)
+	Truces() ([]Truce, error)
+	PowerOrders() ([]PowerOrder, error)
 	// ------- MAKE ------- //
-	NewPlanet(string, int, int, int, int, hexagon.Coord) Planet
+
+	// name primaryFac, primaryPres, prPower, seFac, secondaryPres, sePower
+	// antimatter, tachyons, loc
+	NewPlanet(string, int, int, int, int, int, int, int, int, hexagon.Coord) Planet
+	// turn planet exodus
 	NewPlanetView(int, Planet, bool) PlanetView
 	NewMapView(int, hexagon.Coord) MapView
 	NewShip(int, int, int, hexagon.CoordList) Ship
 	NewShipView(Ship, int, int, hexagon.NullCoord, hexagon.NullCoord, hexagon.CoordList) ShipView
-	NewLaunchRecord(Ship)
-	NewLandingRecord(int, int, Ship, [3]int)
+	NewLaunchRecord(Order, Ship)
+	// ship, fid, turn, initPrFac, initPrPres, initSeFac, initSecPre, resPlanet
+	// droppedtruces
+	NewBattleRecord(Ship, int, int, int, int, int, int, Planet, [][2]int)
 	// ------ CHANGE ----- //
+
+	// viewer, turn, planet
 	UpdatePlanetView(int, int, Planet) PlanetView
 	// ------- DROP ------ //
 	DropShip(Ship)
 	DropOrders()
+	DropPowerOrders()
+	// planet trucer trucee
+	DropTruce(Planet, int, int)
 }
 
 type Game interface {
@@ -56,35 +69,62 @@ type Faction interface {
 	SetScore(int)
 }
 
+type MapView interface {
+	Gid() int
+	Fid() int
+	Center() hexagon.Coord
+}
+
 type Planet interface {
 	Gid() int
 	Loc() hexagon.Coord
 	Name() string
-	Controller() int
-	SetController(int)
-	Inhabitants() int
-	SetInhabitants(int)
-	Resources() int
-	SetResources(int)
-	Parts() int
-	SetParts(int)
+
+	PrimaryFaction() int
+	SetPrimaryFaction(int)
+	PrimaryPresence() int
+	SetPrimaryPresence(int)
+	PrimaryPower() int
+	SetPrimaryPower(int)
+
+	SecondaryFaction() int
+	SetSecondaryFaction(int)
+	SecondaryPresence() int
+	SetSecondaryPresence(int)
+	SecondaryPower() int
+	SetSecondaryPower(int)
+
+	Antimatter() int
+	SetAntimatter(int)
+	Tachyons() int
+	SetTachyons(int)
 }
 
 type PlanetView interface {
 	Gid() int
 	Fid() int
 	Loc() hexagon.Coord
-	Turn() int
 	Name() string
+	Turn() int
 	SetTurn(int)
-	Controller() int
-	SetController(int)
-	Inhabitants() int
-	SetInhabitants(int)
-	Resources() int
-	SetResources(int)
-	Parts() int
-	SetParts(int)
+
+	PrimaryFaction() int
+	PrimaryPresence() int
+	PrimaryPower() int
+
+	SecondaryFaction() int
+	SecondaryPresence() int
+	SecondaryPower() int
+
+	Antimatter() int
+	Tachyons() int
+}
+
+type PowerOrder interface {
+	Gid() int
+	Fid() int
+	Loc() hexagon.Coord
+	UpPower() bool
 }
 
 type Order interface {
@@ -117,21 +157,6 @@ type ShipView interface {
 	Trail() hexagon.CoordList
 }
 
-type MapView interface {
-	Gid() int
-	Fid() int
-	Center() hexagon.Coord
-	SetCenter(hexagon.Coord)
-}
-
-type Report interface {
-	Gid() int
-	Fid() int
-	Turn() int
-	Contents() []string
-	AddContent(string)
-}
-
 type LaunchRecord interface {
 	Gid() int
 	Fid() int
@@ -141,15 +166,32 @@ type LaunchRecord interface {
 	Size() int
 }
 
-type LandingRecord interface {
+type BattleRecord interface {
 	Gid() int
 	Fid() int
 	Turn() int
 	Index() int
-	Target() hexagon.Coord
-	Size() int
-	ShipController() int
-	FirstController() int
-	ResultController() int
-	ResultInhabitants() int
+	Loc() hexagon.Coord
+
+	ShipFaction() int
+	ShipSize() int
+
+	InitPrimaryFaction() int
+	InitSecondaryFaction() int
+	InitPrimaryPresence() int
+	InitSecondaryPresence() int
+
+	ResultPrimaryFaction() int
+	ResultSecondaryFaction() int
+	ResultPrimaryPresence() int
+	ResultSecondaryPresence() int
+
+	Betrayals() [][2]int
+}
+
+type Truce interface {
+	Gid() int
+	Fid() int
+	Loc() hexagon.Coord
+	With() int
 }
