@@ -2,9 +2,9 @@ package db
 
 import (
 	"log"
-	"mule/hexagon"
-	"mule/mybad"
-	"mule/overpower"
+	//	"mule/hexagon"
+	//	"mule/mybad"
+	//	"mule/overpower"
 	"testing"
 )
 
@@ -12,6 +12,7 @@ func Test1(t *testing.T) {
 	log.Println("TEST ONE")
 }
 
+/*
 func Test4(t *testing.T) {
 	db, err := LoadDB()
 	if my, bad := Check(err, "test2 loaddb fail"); bad {
@@ -243,14 +244,12 @@ func XTest2(t *testing.T) {
 		return
 	}
 	log.Println("Got planet2", pl2)
-	/*
-		plList, err := db.GetPlanetsByLocs(gid, 100, 101)
-		if my, bad := Check(err, "test2 multi-planet get failed"); bad {
-			log.Println(my.MuleError())
-			return
-		}
-		log.Println("Got multi planets!", plList[0], plList[1])
-	*/
+		//plList, err := db.GetPlanetsByLocs(gid, 100, 101)
+		//if my, bad := Check(err, "test2 multi-planet get failed"); bad {
+			//log.Println(my.MuleError())
+			//return
+		//}
+		//log.Println("Got multi planets!", plList[0], plList[1])
 
 	err = db.MakePlanetView(gid, fac.Fid(), 0, 0, 10, 10, 10, "Planet Test", hexagon.Coord{10, 10})
 	if my, bad := Check(err, "test2 make planetview failure"); bad {
@@ -373,3 +372,4 @@ func XTest2(t *testing.T) {
 	}
 	log.Println("Dropped game", gid)
 }
+*/

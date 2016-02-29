@@ -46,8 +46,10 @@ func (d DB) MakeTables() (err error) {
 	name varchar(20) NOT NULL,
 	primaryfaction int,
 	primarypresence int NOT NULL,
+	primarypower int NOT NULL,
 	secondaryfaction int,
 	secondarypresence int NOT NULL,
+	secondarypower int NOT NULL,
 	antimatter int NOT NULL,
 	tachyons int NOT NULL,
 	UNIQUE(gid, name),
@@ -90,6 +92,7 @@ func (d DB) MakeTables() (err error) {
 	fid int NOT NULL,
 	sid SERIAL NOT NULL,
 	size int NOT NULL,
+	order int NOT NULL,
 	launched int NOT NULL,
 	path point[] NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
@@ -146,7 +149,7 @@ func (d DB) MakeTables() (err error) {
 	resultsecondaryfaction int,
 	resultsecondarypresence int NOT NULL,
 
-	betrayals int[]
+	betrayals int[],
 
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, shipfaction) REFERENCES factions ON DELETE CASCADE,
@@ -163,11 +166,11 @@ func (d DB) MakeTables() (err error) {
 	fid integer NOT NULL,
 	locx int NOT NULL,
 	locy int NOT NULL,
-	with int NOT NULL,
+	trucee int NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
-	FOREIGN KEY(gid, with) REFERENCES factions ON DELETE CASCADE,
+	FOREIGN KEY(gid, trucee) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, locx, locy, with)
+	PRIMARY KEY(gid, fid, locx, locy, trucee)
 );`)
 	queries = append(queries, `create table powerorders(
 	gid integer NOT NULL REFERENCES games ON DELETE CASCADE,
@@ -177,12 +180,12 @@ func (d DB) MakeTables() (err error) {
 	uppower bool NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
-	PRIMARY KEY(gid, fid, locx, locy)
+	PRIMARY KEY(gid, fid)
 );`)
 
 	for i, query := range queries {
 		_, err := d.db().Exec(query)
-		if my, bad := Check(err, "failed table creation", "index", i); bad {
+		if my, bad := Check(err, "failed table creation", "index", i, "query", query); bad {
 			return my
 		}
 		log.Println("Table update", i, "passed")

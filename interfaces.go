@@ -23,7 +23,7 @@ type Source interface {
 	NewMapView(int, hexagon.Coord) MapView
 	NewShip(int, int, int, hexagon.CoordList) Ship
 	NewShipView(Ship, int, int, hexagon.NullCoord, hexagon.NullCoord, hexagon.CoordList) ShipView
-	NewLaunchRecord(Order, Ship)
+	NewLaunchRecord(int, Order, Ship)
 	// ship, fid, turn, initPrFac, initPrPres, initSeFac, initSecPre, resPlanet
 	// droppedtruces
 	NewBattleRecord(Ship, int, int, int, int, int, int, Planet, [][2]int)
@@ -193,5 +193,5 @@ type Truce interface {
 	Gid() int
 	Fid() int
 	Loc() hexagon.Coord
-	With() int
+	Trucee() int
 }

@@ -66,7 +66,7 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 	case "factions":
 		h.apiJsonGETFactions(w, r)
 	// overpower/json/TABLE/gid/fid/....
-	case "orders", "shipviews", "launchrecords", "landingrecords", "planetviews", "fullviews":
+	case "powerorders", "truces", "orders", "shipviews", "launchrecords", "battlerecords", "planetviews", "fullviews":
 		if !h.LoggedIn {
 			jFail(w, 400, "authorization", "you are not authorized for that resource")
 			return
@@ -101,16 +101,76 @@ func apiJsonGET(w http.ResponseWriter, r *http.Request) {
 			h.apiJsonGETPlanetViews(w, r, ints[0], ints[1])
 		case "launchrecords":
 			h.apiJsonGETLaunchRecords(w, r, ints[0], ints[1])
-		case "landingrecords":
-			h.apiJsonGETLandingRecords(w, r, ints[0], ints[1])
+		case "battlerecords":
+			h.apiJsonGETBattleRecords(w, r, ints[0], ints[1])
 		case "fullviews":
 			h.apiJsonGETFullViews(w, r, searchF)
+		case "powerorders":
+			h.apiJsonGETPowerOrder(w, r, ints[0], ints[1])
+		case "truces":
+			h.apiJsonGETTruces(w, r, ints[0], ints[1])
 		}
 		return
 	default:
 		jFail(w, 404, "url", "unknown object type given")
 		return
 	}
+}
+
+// overpower/json/truces/gid/fid/locx/locy/trucee
+func (h *Handler) apiJsonGETTruces(w http.ResponseWriter, r *http.Request, gid, fid int) {
+	lastFull := h.LastFull()
+	if len(h.Path) > 9 {
+		jFail(w, 400, "url", "too many args for object specification")
+		return
+	}
+	args := []interface{}{"gid", gid, "fid", fid}
+	argCheck := []string{"locx", "locy", "trucee"}
+	for i, key := range argCheck {
+		val, ok := h.IntAt(6 + i)
+		if !ok && lastFull > 5+i {
+			jFail(w, 400, "url", "bad args for object specification")
+			return
+		} else if !ok {
+			list, err := OPDB.GetTruces(args...)
+			if my, bad := Check(err, "api json get truces records failure", "args", args); bad {
+				Kirk(my, w)
+				return
+			}
+			jsonList := json.LoadTruces(list)
+			jSuccess(w, jsonList)
+			return
+		} else {
+			args = append(args, key, val)
+		}
+	}
+	item, err := OPDB.GetTruce(args...)
+	if err == ErrNoneFound {
+		jFail(w, 400, "params", "id does not correspond to any existing object")
+		return
+	} else if my, bad := Check(err, "api json get truces failure", "args", args); bad {
+		Kirk(my, w)
+		return
+	}
+	jsonItem := json.LoadTruce(item)
+	jSuccess(w, jsonItem)
+}
+
+// overpower/json/powerorders/gid/fid
+func (h *Handler) apiJsonGETPowerOrder(w http.ResponseWriter, r *http.Request, gid, fid int) {
+	if len(h.Path) > 6 {
+		jFail(w, 400, "url", "too many args for object specification")
+		return
+	}
+	po, err := OPDB.GetPowerOrder("gid", gid, "fid", fid)
+	if err == ErrNoneFound {
+		jFail(w, 400, "params", "id does not correspond to any existing object")
+		return
+	} else if my, bad := Check(err, "json API get failure", "resource", "powerorder", "gid", gid, "fid", fid); bad {
+		Kirk(my, w)
+		return
+	}
+	jSuccess(w, po)
 }
 
 // overpower/json/launchrecords/gid/fid/turn/sourcex/sourcey/targetx/targety
@@ -153,8 +213,8 @@ func (h *Handler) apiJsonGETLaunchRecords(w http.ResponseWriter, r *http.Request
 	jSuccess(w, jsonItem)
 }
 
-// overpower/json/landingrecords/gid/fid/turn/index
-func (h *Handler) apiJsonGETLandingRecords(w http.ResponseWriter, r *http.Request, gid, fid int) {
+// overpower/json/battlerecords/gid/fid/turn/index
+func (h *Handler) apiJsonGETBattleRecords(w http.ResponseWriter, r *http.Request, gid, fid int) {
 	lastFull := h.LastFull()
 	if len(h.Path) > 8 {
 		jFail(w, 400, "url", "too many args for object specification")
@@ -168,28 +228,28 @@ func (h *Handler) apiJsonGETLandingRecords(w http.ResponseWriter, r *http.Reques
 			jFail(w, 400, "url", "bad args for object specification")
 			return
 		} else if !ok {
-			list, err := OPDB.GetLandingRecords(args...)
-			if my, bad := Check(err, "api json get landing records failure", "args", args); bad {
+			list, err := OPDB.GetBattleRecords(args...)
+			if my, bad := Check(err, "api json get battle records failure", "args", args); bad {
 				Kirk(my, w)
 				return
 			}
 			sortLDRecords(list)
-			jsonList := json.LoadLandingRecords(list)
+			jsonList := json.LoadBattleRecords(list)
 			jSuccess(w, jsonList)
 			return
 		} else {
 			args = append(args, key, val)
 		}
 	}
-	item, err := OPDB.GetLandingRecord(args...)
+	item, err := OPDB.GetBattleRecord(args...)
 	if err == ErrNoneFound {
 		jFail(w, 400, "params", "id does not correspond to any existing object")
 		return
-	} else if my, bad := Check(err, "api json get landingrecords failure", "args", args); bad {
+	} else if my, bad := Check(err, "api json get battlerecords failure", "args", args); bad {
 		Kirk(my, w)
 		return
 	}
-	jsonItem := json.LoadLandingRecord(item)
+	jsonItem := json.LoadBattleRecord(item)
 	jSuccess(w, jsonItem)
 }
 
@@ -471,15 +531,17 @@ func (h *Handler) apiJsonGETFactions(w http.ResponseWriter, r *http.Request) {
 }
 
 type FullView struct {
-	Game           *json.Game            `json:"game"`
-	Faction        *json.Faction         `json:"faction"`
-	Factions       []*json.Faction       `json:"factions"`
-	PlanetViews    []*json.PlanetView    `json:"planetviews"`
-	ShipViews      []*json.ShipView      `json:"shipviews"`
-	Orders         []*json.Order         `json:"orders"`
-	LaunchRecords  []*json.LaunchRecord  `json:"launchrecords"`
-	LandingRecords []*json.LandingRecord `json:"landingrecords"`
-	MapView        *json.MapView         `json:"mapview"`
+	Game          *json.Game           `json:"game"`
+	Faction       *json.Faction        `json:"faction"`
+	Factions      []*json.Faction      `json:"factions"`
+	PlanetViews   []*json.PlanetView   `json:"planetviews"`
+	ShipViews     []*json.ShipView     `json:"shipviews"`
+	Orders        []*json.Order        `json:"orders"`
+	PowerOrder    *json.PowerOrder     `json:"powerorder"`
+	LaunchRecords []*json.LaunchRecord `json:"launchrecords"`
+	BattleRecords []*json.BattleRecord `json:"battlerecords"`
+	MapView       *json.MapView        `json:"mapview"`
+	Truces        []*json.Truce        `json:"truces"`
 }
 
 func FillFullView(f overpower.Faction) (*FullView, error) {
@@ -495,25 +557,32 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 	orders, err5 := OPDB.GetOrders("gid", gid, "fid", fid)
 	mapview, err6 := OPDB.GetMapView("gid", gid, "fid", fid)
 	laRep, err7 := OPDB.GetLaunchRecords("gid", gid, "fid", fid, "turn", turn)
-	ldRep, err8 := OPDB.GetLandingRecords("gid", gid, "fid", fid, "turn", turn)
+	ldRep, err8 := OPDB.GetBattleRecords("gid", gid, "fid", fid, "turn", turn)
+	powOrd, err9 := OPDB.GetPowerOrder("gid", gid, "fid", fid)
+	if err9 == ErrNoneFound {
+		err9 = nil
+	}
+	truces, err10 := OPDB.GetTruces("gid", gid, "fid", fid)
 	sortLARecords(laRep)
 	sortLDRecords(ldRep)
 	sortFactions(facs)
-	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7, err8} {
+	for i, err := range []error{err1, err2, err3, err4, err5, err6, err7, err8, err9, err10} {
 		if my, bad := Check(err, "fill fullview failure", "index", i, "gid", gid, "fid", fid); bad {
 			return nil, my
 		}
 	}
 	fv := &FullView{
-		Game:           json.LoadGame(g),
-		Faction:        json.LoadFaction(f, fid),
-		Factions:       json.LoadFactions(facs, fid),
-		PlanetViews:    json.LoadPlanetViews(plVs),
-		ShipViews:      json.LoadShipViews(shVs),
-		Orders:         json.LoadOrders(orders),
-		MapView:        json.LoadMapView(mapview),
-		LaunchRecords:  json.LoadLaunchRecords(laRep),
-		LandingRecords: json.LoadLandingRecords(ldRep),
+		Game:          json.LoadGame(g),
+		Faction:       json.LoadFaction(f, fid),
+		Factions:      json.LoadFactions(facs, fid),
+		PlanetViews:   json.LoadPlanetViews(plVs),
+		ShipViews:     json.LoadShipViews(shVs),
+		Orders:        json.LoadOrders(orders),
+		PowerOrder:    json.LoadPowerOrder(powOrd),
+		Truces:        json.LoadTruces(truces),
+		MapView:       json.LoadMapView(mapview),
+		LaunchRecords: json.LoadLaunchRecords(laRep),
+		BattleRecords: json.LoadBattleRecords(ldRep),
 	}
 	return fv, nil
 }
@@ -521,7 +590,7 @@ func FillFullView(f overpower.Faction) (*FullView, error) {
 func sortLARecords(list []overpower.LaunchRecord) {
 	sort.Sort(sortLA(list))
 }
-func sortLDRecords(list []overpower.LandingRecord) {
+func sortLDRecords(list []overpower.BattleRecord) {
 	sort.Sort(sortLD(list))
 }
 func sortFactions(list []overpower.Faction) {
@@ -529,7 +598,7 @@ func sortFactions(list []overpower.Faction) {
 }
 
 type sortLA []overpower.LaunchRecord
-type sortLD []overpower.LandingRecord
+type sortLD []overpower.BattleRecord
 type sortFA []overpower.Faction
 
 func (s sortLA) Len() int {
@@ -554,7 +623,7 @@ func (s sortLD) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 func (s sortLD) Less(i, j int) bool {
-	sI, sJ := s[i].Target(), s[j].Target()
+	sI, sJ := s[i].Loc(), s[j].Loc()
 	if sI[0] != sJ[0] {
 		return sI[0] < sJ[0]
 	} else if sI[1] != sJ[1] {

@@ -10,6 +10,7 @@ type LaunchRecord struct {
 	turn   int
 	source hexagon.Coord
 	target hexagon.Coord
+	order  int
 	size   int
 }
 
@@ -34,11 +35,11 @@ func (o *LaunchRecord) Source() hexagon.Coord {
 func (o *LaunchRecord) Target() hexagon.Coord {
 	return o.target
 }
+func (o *LaunchRecord) Order() int {
+	return o.order
+}
 func (o *LaunchRecord) Size() int {
 	return o.size
-}
-func (o *LaunchRecord) SetSize(size int) {
-	o.size = size
 }
 func (item *LaunchRecord) SQLVal(name string) interface{} {
 	switch name {
@@ -56,6 +57,8 @@ func (item *LaunchRecord) SQLVal(name string) interface{} {
 		return item.target[0]
 	case "targety":
 		return item.target[1]
+	case "order":
+		return item.order
 	case "size":
 		return item.size
 	}
@@ -78,6 +81,8 @@ func (item *LaunchRecord) SQLPtr(name string) interface{} {
 		return &item.target[0]
 	case "targety":
 		return &item.target[1]
+	case "order":
+		return &item.order
 	case "size":
 		return &item.size
 	}
@@ -102,6 +107,7 @@ func (group *LaunchRecordGroup) SelectCols() []string {
 		"targetx",
 		"targety",
 		"size",
+		"order",
 	}
 }
 
@@ -131,6 +137,7 @@ func (group *LaunchRecordGroup) InsertCols() []string {
 		"targetx",
 		"targety",
 		"size",
+		"order",
 	}
 }
 

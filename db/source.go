@@ -1,7 +1,7 @@
 package db
 
 import (
-	//"database/sql"
+	"database/sql"
 	"mule/hexagon"
 	"mule/mydb"
 	"mule/overpower"
@@ -69,9 +69,21 @@ func (d DB) NewSource(gid int) *Source {
 func (s *Source) Commit() error {
 	var err error
 	// ------- DROP ------ //
+	if len(s.DroppedTruces) > 0 {
+		err = s.db.DropOPTruces(s.DroppedTruces...)
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "truces", "item", s.DroppedTruces); bad {
+			return my
+		}
+	}
 	if s.dropOrders {
 		err = s.db.dropItemsIf("orders", C{"gid", s.Gid})
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "orders"); bad {
+			return my
+		}
+	}
+	if s.dropPowerOrders {
+		err = s.db.dropItemsIf("powerorders", C{"gid", s.Gid})
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "powerorders"); bad {
 			return my
 		}
 	}
@@ -211,7 +223,7 @@ func (s *Source) Ships() ([]overpower.Ship, error) {
 	return s.db.GetShips("gid", s.Gid)
 }
 func (s *Source) PowerOrders() ([]overpower.PowerOrder, error) {
-	return nil, nil
+	return s.db.GetPowerOrders("gid", s.Gid)
 }
 func (s *Source) Truces() ([]overpower.Truce, error) {
 	return nil, nil
@@ -248,36 +260,6 @@ func (s *Source) NewShip(fid, size, turn int, path hexagon.CoordList) (ship over
 func (s *Source) DropShip(ship overpower.Ship) {
 	s.DroppedShips = append(s.DroppedShips, ship)
 }
-func (s *Source) DropTruce(pl overpower.Planet, trucer, trucee int) {
-	/*
-		tr := &Truce{
-			gid:  pl.Gid(),
-			fid:  trucer,
-			loc:  pl.Loc(),
-			with: trucee,
-		}
-		s.DroppedTruces = append(s.DroppedTruces, tr)
-	*/
-}
-
-func (s *Source) NewPlanet(name string, pp, ppF, ppP, sp, spF, spP, antiM, tach int, loc hexagon.Coord) (planet overpower.Planet) {
-	p := NewPlanet()
-	s.MadePlanets = append(s.MadePlanets, p)
-	return p
-}
-
-func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (planetview overpower.PlanetView) {
-	pv := NewPlanetView()
-	s.MadePlanetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
-	return pv
-}
-
-func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.PlanetView {
-	pv := NewPlanetView()
-	s.planetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
-	return pv
-}
-
 func (s *Source) DropOrders() {
 	s.dropOrders = true
 }
@@ -285,14 +267,152 @@ func (s *Source) DropPowerOrders() {
 	s.dropPowerOrders = true
 }
 
-func (s *Source) NewLaunchRecord(o overpower.Order, ship overpower.Ship) {
+func (s *Source) DropTruce(pl overpower.Planet, trucer, trucee int) {
+	tr := &Truce{
+		gid:    pl.Gid(),
+		fid:    trucer,
+		loc:    pl.Loc(),
+		trucee: trucee,
+	}
+	s.DroppedTruces = append(s.DroppedTruces, tr)
+}
+
+// name primaryFac, primaryPres, prPower, seFac, secondaryPres, sePower
+// antimatter, tachyons, loc
+func (s *Source) NewPlanet(name string, pF, pPr, pPw, sF, sPr, sPw, antiM, tach int, loc hexagon.Coord) (planet overpower.Planet) {
+	p := NewPlanet()
+	p.gid = s.Gid
+	p.loc = loc
+	if pF != 0 {
+		p.primaryfaction = sql.NullInt64{Valid: true, Int64: int64(pF)}
+	}
+	if sF != 0 {
+		p.secondaryfaction = sql.NullInt64{Valid: true, Int64: int64(sF)}
+	}
+	p.primarypresence = pPr
+	p.primarypower = pPw
+	p.secondarypresence = sPr
+	p.secondarypower = sPw
+	p.antimatter = antiM
+	p.tachyons = tach
+
+	s.MadePlanets = append(s.MadePlanets, p)
+	return p
+}
+
+func (s *Source) NewPlanetView(fid int, pl overpower.Planet, exodus bool) (planetview overpower.PlanetView) {
+	pv := NewPlanetView()
+
+	pv.gid = s.Gid
+	pv.loc = pl.Loc()
+	pv.name = pl.Name()
+	pv.fid = fid
+
+	if pl.PrimaryFaction() == fid || pl.SecondaryFaction() == fid {
+		pv.turn = 1
+		pF := pl.PrimaryFaction()
+		sF := pl.SecondaryFaction()
+		if pF != 0 {
+			pv.primaryfaction = sql.NullInt64{Valid: true, Int64: int64(pF)}
+		}
+		if sF != 0 {
+			pv.secondaryfaction = sql.NullInt64{Valid: true, Int64: int64(sF)}
+		}
+		pv.primarypresence = pl.PrimaryPresence()
+		pv.primarypower = pl.PrimaryPower()
+		pv.secondarypresence = pl.SecondaryPresence()
+		pv.secondarypower = pl.SecondaryPower()
+		pv.antimatter = pl.Antimatter()
+		pv.tachyons = pl.Tachyons()
+	}
+
+	s.MadePlanetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
+	return pv
+}
+
+func (s *Source) UpdatePlanetView(fid, turn int, pl overpower.Planet) overpower.PlanetView {
+	pv := NewPlanetView()
+	pv.gid = s.Gid
+	pv.fid = fid
+	pv.loc = pl.Loc()
+	pv.name = pl.Name()
+	pv.turn = turn
+	pF := pl.PrimaryFaction()
+	sF := pl.SecondaryFaction()
+	if pF != 0 {
+		pv.primaryfaction = sql.NullInt64{Valid: true, Int64: int64(pF)}
+	}
+	if sF != 0 {
+		pv.secondaryfaction = sql.NullInt64{Valid: true, Int64: int64(sF)}
+	}
+	pv.primarypresence = pl.PrimaryPresence()
+	pv.primarypower = pl.PrimaryPower()
+	pv.secondarypresence = pl.SecondaryPresence()
+	pv.secondarypower = pl.SecondaryPower()
+	pv.antimatter = pl.Antimatter()
+	pv.tachyons = pl.Tachyons()
+
+	s.planetViews[[3]int{pv.loc[0], pv.loc[1], pv.fid}] = pv
+	return pv
+}
+
+func (s *Source) NewLaunchRecord(turn int, o overpower.Order, ship overpower.Ship) {
 	lr := NewLaunchRecord()
+	lr.gid = s.Gid
+	lr.fid = o.Fid()
+	lr.turn = turn
+	lr.source = o.Source()
+	lr.target = o.Target()
+	lr.order = o.Size()
+	if ship != nil {
+		lr.size = ship.Size()
+	}
 	s.MadeLaunchRecords = append(s.MadeLaunchRecords, lr)
 }
 
-func (s *Source) NewBattleRecord(ship overpower.Ship, fid, turn, initPrFac, initPrPres, initSeFac, initSecPres int, pl overpower.Planet, betrayals [][2]int) {
+func (s *Source) NewBattleRecord(ship overpower.Ship, fid, turn, initPrFac, initPrPres, initSeFac, initSePres int, pl overpower.Planet, betrayals [][2]int) {
 	lr := NewBattleRecord()
 	list, ok := s.MadeBattleRecords[fid]
+
+	//shipfaction           sql.NullInt64
+	//shipsize              int
+	//initprimaryfaction    sql.NullInt64
+	//initprimarypresence   int
+	//initsecondaryfaction  sql.NullInt64
+	//initsecondarypresence int
+	//betrayals mydb.IntList
+	lr.gid = ship.Gid()
+	lr.fid = fid
+	lr.turn = turn
+	lr.loc = pl.Loc()
+	btr := make([]int, 0, len(betrayals)*2)
+	for _, pt := range betrayals {
+		btr = append(btr, pt[0], pt[1])
+	}
+	lr.betrayals = btr
+
+	if ship != nil {
+		lr.shipfaction = sql.NullInt64{Valid: true, Int64: int64(ship.Fid())}
+		lr.shipsize = ship.Size()
+	}
+	if initPrFac != 0 {
+		lr.initprimaryfaction = sql.NullInt64{Valid: true, Int64: int64(initPrFac)}
+	}
+	lr.initprimarypresence = initPrPres
+	if initSeFac != 0 {
+		lr.initsecondaryfaction = sql.NullInt64{Valid: true, Int64: int64(initSeFac)}
+	}
+	lr.initsecondarypresence = initSePres
+
+	if resPrFac := pl.PrimaryFaction(); resPrFac != 0 {
+		lr.primaryfaction = sql.NullInt64{Valid: true, Int64: int64(resPrFac)}
+	}
+	lr.primarypresence = pl.PrimaryPresence()
+	if resSeFac := pl.SecondaryFaction(); resSeFac != 0 {
+		lr.secondaryfaction = sql.NullInt64{Valid: true, Int64: int64(resSeFac)}
+	}
+	lr.secondarypresence = pl.SecondaryPresence()
+
 	if !ok {
 		s.MadeBattleRecords[fid] = []*BattleRecord{lr}
 	} else {

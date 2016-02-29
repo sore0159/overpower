@@ -191,8 +191,12 @@ func (p *MiniPlanet) SQLVal(name string) interface{} {
 		return p.primaryfaction
 	case "primarypresence":
 		return p.primarypresence
+	case "primarypower":
+		return p.primarypower
 	case "secondaryfaction":
 		return p.secondaryfaction
+	case "secondarypower":
+		return p.secondarypower
 	case "secondarypresence":
 		return p.secondarypresence
 	case "antimatter":
@@ -218,10 +222,14 @@ func (p *MiniPlanet) SQLPtr(name string) interface{} {
 		return &p.primaryfaction
 	case "primarypresence":
 		return &p.primarypresence
+	case "primarypower":
+		return &p.primarypower
 	case "secondaryfaction":
 		return &p.secondaryfaction
 	case "secondarypresence":
 		return &p.secondarypresence
+	case "secondarypower":
+		return &p.secondarypower
 	case "antimatter":
 		return &p.antimatter
 	case "tachyons":

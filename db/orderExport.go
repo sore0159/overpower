@@ -56,11 +56,11 @@ func (d DB) UpdateOrders(list ...overpower.Order) error {
 	return d.Transact(f)
 }
 
-func (d DB) GetOrdersBySource(gid int, source hexagon.Coord) ([]overpower.Order, error) {
-	return d.GetOrders("gid", gid, "sourcex", source[0], "sourcey", source[1])
+func (d DB) GetOrdersBySource(gid, fid int, source hexagon.Coord) ([]overpower.Order, error) {
+	return d.GetOrders("gid", gid, "fid", fid, "sourcex", source[0], "sourcey", source[1])
 }
-func (d DB) GetOrdersByST(gid int, source, target hexagon.Coord) (overpower.Order, error) {
-	list, err := d.GetOrders("gid", gid, "sourcex", source[0], "sourcey", source[1], "targetx", target[0], "targety", target[1])
+func (d DB) GetOrdersByST(gid, fid int, source, target hexagon.Coord) (overpower.Order, error) {
+	list, err := d.GetOrders("gid", gid, "fid", fid, "sourcex", source[0], "sourcey", source[1], "targetx", target[0], "targety", target[1])
 	if err != nil {
 		return nil, err
 	}

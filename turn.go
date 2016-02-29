@@ -47,9 +47,9 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	for _, tr := range truces {
 		loc := tr.Loc()
 		if mp, ok := truceMap[loc]; ok {
-			mp[[2]int{tr.Fid(), tr.With()}] = true
+			mp[[2]int{tr.Fid(), tr.Trucee()}] = true
 		} else {
-			truceMap[loc] = map[[2]int]bool{[2]int{tr.Fid(), tr.With()}: true}
+			truceMap[loc] = map[[2]int]bool{[2]int{tr.Fid(), tr.Trucee()}: true}
 		}
 	}
 	var atWar []Planet
@@ -156,9 +156,9 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			path := src.Loc().PathTo(tar.Loc())
 			sh := source.NewShip(src.PrimaryFaction(), size, turn, path)
 			ships = append(ships, sh)
-			source.NewLaunchRecord(o, sh)
+			source.NewLaunchRecord(turn, o, sh)
 		} else {
-			source.NewLaunchRecord(o, nil)
+			source.NewLaunchRecord(turn, o, nil)
 		}
 	}
 
@@ -200,9 +200,9 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			path := src.Loc().PathTo(tar.Loc())
 			sh := source.NewShip(src.SecondaryFaction(), size, turn, path)
 			ships = append(ships, sh)
-			source.NewLaunchRecord(o, sh)
+			source.NewLaunchRecord(turn, o, sh)
 		} else {
-			source.NewLaunchRecord(o, nil)
+			source.NewLaunchRecord(turn, o, nil)
 		}
 	}
 	source.DropOrders()

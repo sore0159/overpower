@@ -136,11 +136,24 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		jFail(w, 400, "bad specification", "bad planets found matching given order data")
 		return
 	}
-	if source.Controller() != f.Fid() {
+	var powDir int
+	if source.PrimaryFaction() == o.Fid {
+		powDir = source.PrimaryPower()
+	} else if source.SecondaryFaction() == o.Fid {
+		powDir = source.SecondaryPower()
+	} else {
 		jFail(w, 400, "authorization", "you are not authorized for that resource")
 		return
 	}
-	have := source.Parts()
+	var have int
+	if powDir == 0 {
+		jFail(w, 400, "game mechanics", "planets must be powered to launch ships")
+		return
+	} else if powDir == 1 {
+		have = source.Antimatter()
+	} else {
+		have = source.Tachyons()
+	}
 	using := 0
 	var curOrder overpower.Order
 	orders, err := OPDB.GetOrders("gid", o.Gid, "fid", o.Fid, "sourcex", o.Source[0], "sourcey", o.Source[1])
@@ -160,7 +173,7 @@ func (h *Handler) apiJsonPUTOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if o.Size > 0 && using+o.Size > have {
-		jFail(w, 400, "bad specification", "source planet has insufficient parts for order")
+		jFail(w, 400, "bad specification", "source planet has insufficient resources for order")
 		return
 	}
 	if curOrder != nil {
