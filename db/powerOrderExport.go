@@ -5,7 +5,7 @@ import (
 	"mule/overpower"
 )
 
-func (d DB) MakePowerOrder(gid, fid int, upPower bool, loc hexagon.Coord) (err error) {
+func (d DB) MakePowerOrder(gid, fid, upPower int, loc hexagon.Coord) (err error) {
 	item := &PowerOrder{gid: gid, fid: fid, loc: loc, uppower: upPower}
 	group := &PowerOrderGroup{[]*PowerOrder{item}}
 	return d.makeGroup(group)

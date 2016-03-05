@@ -34,19 +34,21 @@ type Source struct {
 	planets     []*Planet
 	factions    []*Faction
 	planetViews map[[3]int]*PlanetView
+	powerOrders []*PowerOrder
 	// ------- MAKE ------- //
 	MadePlanets       []*Planet
 	MadePlanetViews   map[[3]int]*PlanetView
 	MadeShips         []*Ship
 	MadeShipViews     map[overpower.Ship][]*ShipView
 	MadeMapViews      []*MapView
+	MadePowerOrders   []*PowerOrder
 	MadeLaunchRecords []*LaunchRecord
 	MadeBattleRecords map[int][]*BattleRecord
 	// ------- DROP ------ //
-	DroppedShips    []overpower.Ship
-	DroppedTruces   []overpower.Truce
-	dropOrders      bool
-	dropPowerOrders bool
+	DroppedShips     []overpower.Ship
+	DroppedTruces    []overpower.Truce
+	dropOrders       bool
+	clearPowerOrders bool
 }
 
 func (d DB) NewSource(gid int) *Source {
@@ -78,12 +80,6 @@ func (s *Source) Commit() error {
 	if s.dropOrders {
 		err = s.db.dropItemsIf("orders", C{"gid", s.Gid})
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "orders"); bad {
-			return my
-		}
-	}
-	if s.dropPowerOrders {
-		err = s.db.dropItemsIf("powerorders", C{"gid", s.Gid})
-		if my, bad := Check(err, "source commit error", "gid", s.Gid, "drop", "powerorders"); bad {
 			return my
 		}
 	}
@@ -161,6 +157,13 @@ func (s *Source) Commit() error {
 			return my
 		}
 	}
+	if len(s.MadePowerOrders) > 0 {
+		group := &PowerOrderGroup{s.MadePowerOrders}
+		err = s.db.makeGroup(group)
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "make", "PowerOrders", "list", s.MadePowerOrders); bad {
+			return my
+		}
+	}
 	// ------ CHANGE ------ //
 	plVs := make([]*PlanetView, 0, len(s.planetViews))
 	for _, item := range s.planetViews {
@@ -174,6 +177,17 @@ func (s *Source) Commit() error {
 	} {
 		err = s.db.updateGroup(group)
 		if my, bad := Check(err, "source commit error", "gid", s.Gid, "group", group); bad {
+			return my
+		}
+	}
+	if s.clearPowerOrders {
+		for _, po := range s.powerOrders {
+			po.loc = hexagon.Coord{0, 0}
+			po.uppower = 0
+		}
+		group := &PowerOrderGroup{s.powerOrders}
+		err = s.db.updateGroup(group)
+		if my, bad := Check(err, "source commit error", "gid", s.Gid, "clear", "powerorders"); bad {
 			return my
 		}
 	}
@@ -223,10 +237,23 @@ func (s *Source) Ships() ([]overpower.Ship, error) {
 	return s.db.GetShips("gid", s.Gid)
 }
 func (s *Source) PowerOrders() ([]overpower.PowerOrder, error) {
-	return s.db.GetPowerOrders("gid", s.Gid)
+	group := NewPowerOrderGroup()
+	err := s.db.getGroup(group, C{"gid", s.Gid})
+	if my, bad := Check(err, "source get PowerOrders failure", "gid", s.Gid); bad {
+		return nil, my
+	}
+	list := group.List
+	s.powerOrders = list
+	return convertPowerOrders2OP(list...), nil
 }
 func (s *Source) Truces() ([]overpower.Truce, error) {
 	return nil, nil
+}
+func (s *Source) NewPowerOrder(fid int) (powerOrder overpower.PowerOrder) {
+	po := NewPowerOrder()
+	po.gid, po.fid = s.Gid, fid
+	s.MadePowerOrders = append(s.MadePowerOrders, po)
+	return po
 }
 
 func (s *Source) NewMapView(fid int, center hexagon.Coord) (mapview overpower.MapView) {
@@ -263,8 +290,8 @@ func (s *Source) DropShip(ship overpower.Ship) {
 func (s *Source) DropOrders() {
 	s.dropOrders = true
 }
-func (s *Source) DropPowerOrders() {
-	s.dropPowerOrders = true
+func (s *Source) ClearPowerOrders() {
+	s.clearPowerOrders = true
 }
 
 func (s *Source) DropTruce(pl overpower.Planet, trucer, trucee int) {

@@ -27,6 +27,7 @@ type Source interface {
 	// ship, fid, turn, initPrFac, initPrPres, initSeFac, initSecPre, resPlanet
 	// droppedtruces
 	NewBattleRecord(Ship, int, int, int, int, int, int, Planet, [][2]int)
+	NewPowerOrder(int) PowerOrder
 	// ------ CHANGE ----- //
 
 	// viewer, turn, planet
@@ -34,7 +35,7 @@ type Source interface {
 	// ------- DROP ------ //
 	DropShip(Ship)
 	DropOrders()
-	DropPowerOrders()
+	ClearPowerOrders()
 	// planet trucer trucee
 	DropTruce(Planet, int, int)
 }
@@ -124,7 +125,7 @@ type PowerOrder interface {
 	Gid() int
 	Fid() int
 	Loc() hexagon.Coord
-	UpPower() bool
+	UpPower() int
 }
 
 type Order interface {

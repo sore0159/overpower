@@ -189,6 +189,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 		}
 		// TESTING //
 		source.NewMapView(fid, spot)
+		source.NewPowerOrder(fid)
 	}
 	// -------- VIEWS --------- //
 	for _, fid := range fids {

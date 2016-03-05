@@ -8,7 +8,7 @@ type PowerOrder struct {
 	gid     int
 	fid     int
 	loc     hexagon.Coord
-	uppower bool
+	uppower int
 }
 
 func NewPowerOrder() *PowerOrder {
@@ -29,10 +29,10 @@ func (o *PowerOrder) Loc() hexagon.Coord {
 func (o *PowerOrder) SetLoc(x hexagon.Coord) {
 	o.loc = x
 }
-func (o *PowerOrder) UpPower() bool {
+func (o *PowerOrder) UpPower() int {
 	return o.uppower
 }
-func (o *PowerOrder) SetUpPower(x bool) {
+func (o *PowerOrder) SetUpPower(x int) {
 	o.uppower = x
 }
 func (item *PowerOrder) SQLVal(name string) interface{} {

@@ -292,9 +292,13 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	for _, pO := range powerOrders {
 		pl := planetGrid[pO.Loc()]
 		fid := pO.Fid()
-		powNum := -1
-		if pO.UpPower() {
+		var powNum int
+		if upP := pO.UpPower(); upP > 0 {
 			powNum = 1
+		} else if upP < 0 {
+			powNum = -1
+		} else {
+			continue
 		}
 		if pl.PrimaryFaction() == fid {
 			pl.SetPrimaryPower(powNum)
@@ -304,7 +308,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			continue
 		}
 	}
-	source.DropPowerOrders()
+	source.ClearPowerOrders()
 	// ---- TURN STARTS ---- //
 	game.IncTurn()
 	turn = game.Turn()

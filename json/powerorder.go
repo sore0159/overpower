@@ -26,5 +26,5 @@ type PowerOrder struct {
 	Gid     int           `json:"gid"`
 	Fid     int           `json:"fid"`
 	Loc     hexagon.Coord `json:"loc"`
-	UpPower bool          `json:"uppower"`
+	UpPower int           `json:"uppower"`
 }

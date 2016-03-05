@@ -177,7 +177,7 @@ func (d DB) MakeTables() (err error) {
 	fid integer NOT NULL,
 	locx int NOT NULL,
 	locy int NOT NULL,
-	uppower bool NOT NULL,
+	uppower int NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES factions ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planets ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid)
