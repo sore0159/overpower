@@ -17,7 +17,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	if my, bad := Check(err, "run turn resource failure"); bad {
 		return my, nil
 	}
-	orders, err := source.Orders()
+	orders, err := source.LaunchOrders()
 	if my, bad := Check(err, "run turn resource failure"); bad {
 		return my, nil
 	}
@@ -33,6 +33,14 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	if my, bad := Check(err, "run turn resource failure"); bad {
 		return my, nil
 	}
+	err = source.ClearLaunchOrders()
+	if my, bad := Check(err, "run turn resource failure"); bad {
+		return my, nil
+	}
+	err = source.ClearPowerOrders()
+	if my, bad := Check(err, "run turn resource failure"); bad {
+		return my, nil
+	}
 	// --------- GAME ALREADY OVER -------- //
 	if game.HighScore() >= game.ToWin() {
 		return nil, nil
@@ -40,25 +48,25 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	// -------------------------------- //
 	var errOccured bool
 	loggerM, _ := Check(ErrIgnorable, "run turn problem")
-	planetGrid := make(map[hexagon.Coord]Planet, len(planets))
+	planetGrid := make(map[hexagon.Coord]PlanetDat, len(planets))
 	radar := make(map[int]hexagon.CoordList, len(factions))
 
-	truceMap := map[hexagon.Coord]map[[2]int]bool{}
+	truceMap := map[hexagon.Coord]map[[2]int]TruceDat{}
 	for _, tr := range truces {
 		loc := tr.Loc()
 		if mp, ok := truceMap[loc]; ok {
-			mp[[2]int{tr.Fid(), tr.Trucee()}] = true
+			mp[[2]int{tr.FID(), tr.Trucee()}] = tr
 		} else {
-			truceMap[loc] = map[[2]int]bool{[2]int{tr.Fid(), tr.Trucee()}: true}
+			truceMap[loc] = map[[2]int]TruceDat{[2]int{tr.FID(), tr.Trucee()}: tr}
 		}
 	}
-	var atWar []Planet
+	var atWar []PlanetDat
 	for _, p := range planets {
 		loc := p.Loc()
 		planetGrid[loc] = p
 		pFid, sFid := p.PrimaryFaction(), p.SecondaryFaction()
 		if pFid != 0 && sFid != 0 {
-			if mp := truceMap[loc]; mp == nil || !mp[[2]int{pFid, sFid}] || !mp[[2]int{sFid, pFid}] {
+			if mp := truceMap[loc]; mp == nil || mp[[2]int{pFid, sFid}] == nil || mp[[2]int{sFid, pFid}] == nil {
 				atWar = append(atWar, p)
 			}
 		}
@@ -73,7 +81,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			}
 		}
 	}
-	powerOrders := make([]PowerOrder, 0, len(dbPowerOrders))
+	powerOrders := make([]PowerOrderDat, 0, len(dbPowerOrders))
 	for _, pO := range dbPowerOrders {
 		pl, ok := planetGrid[pO.Loc()]
 		if !ok {
@@ -81,7 +89,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			loggerM.AddContext("bad powerorder", "planet not found", "powerorder", pO)
 			continue
 		}
-		fid := pO.Fid()
+		fid := pO.FID()
 		if pl.PrimaryFaction() != fid && pl.SecondaryFaction() != fid {
 			errOccured = true
 			loggerM.AddContext("bad powerorder", "planet not owner", "powerorder", pO)
@@ -108,7 +116,11 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		Battle(source, p, nil, turn, truceMap[p.Loc()])
 	}
 	// ---- SHIPS LAUNCH ---- //
-	var secondaryOrders []Order
+	var secondaryOrders []LaunchOrderDat
+	sidMap := make(map[int]bool, len(ships))
+	for _, sh := range ships {
+		sidMap[sh.SID()] = true
+	}
 
 	for _, o := range orders {
 		src, ok2 := planetGrid[o.Source()]
@@ -124,7 +136,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			loggerM.AddContext("bad order", "size <0", "order", o)
 			continue
 		}
-		if fid := o.Fid(); fid == src.SecondaryFaction() {
+		if fid := o.FID(); fid == src.SecondaryFaction() {
 			secondaryOrders = append(secondaryOrders, o)
 			continue
 		} else if fid != src.PrimaryFaction() {
@@ -154,7 +166,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		}
 		if size > 0 {
 			path := src.Loc().PathTo(tar.Loc())
-			sh := source.NewShip(src.PrimaryFaction(), size, turn, path)
+			sh := source.NewShip(src.PrimaryFaction(), GenSID(sidMap), size, turn, path)
 			ships = append(ships, sh)
 			source.NewLaunchRecord(turn, o, sh)
 		} else {
@@ -198,14 +210,13 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		}
 		if size > 0 {
 			path := src.Loc().PathTo(tar.Loc())
-			sh := source.NewShip(src.SecondaryFaction(), size, turn, path)
+			sh := source.NewShip(src.SecondaryFaction(), GenSID(sidMap), size, turn, path)
 			ships = append(ships, sh)
 			source.NewLaunchRecord(turn, o, sh)
 		} else {
 			source.NewLaunchRecord(turn, o, nil)
 		}
 	}
-	source.DropOrders()
 	// ---- SHIPS MOVE ---- //
 	// dist, ship index
 	landings := map[int][]int{}
@@ -214,7 +225,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		if len(travelled) < 1 {
 			errOccured = true
 			loggerM.AddContext("bad ship", "no travel dist", "ship", sh)
-			source.DropShip(sh)
+			sh.DELETE()
 			continue
 		}
 		at := travelled[len(travelled)-1]
@@ -222,7 +233,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		for fid, rList := range radar {
 			var destValid, spottedShip bool
 			var spotted hexagon.CoordList
-			if fid == sh.Fid() {
+			if fid == sh.FID() {
 				spotted, spottedShip = travelled, true
 				destValid = true
 			} else {
@@ -279,7 +290,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			} else {
 				Battle(source, p, sh, turn, truceMap[loc])
 			}
-			source.DropShip(sh)
+			sh.DELETE()
 		}
 		delete(landings, i)
 	}
@@ -291,7 +302,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	// ------- PLANETS CHANGE POWER -------- //
 	for _, pO := range powerOrders {
 		pl := planetGrid[pO.Loc()]
-		fid := pO.Fid()
+		fid := pO.FID()
 		var powNum int
 		if upP := pO.UpPower(); upP > 0 {
 			powNum = 1
@@ -308,7 +319,6 @@ func RunGameTurn(source Source) (breaker, logger error) {
 			continue
 		}
 	}
-	source.ClearPowerOrders()
 	// ---- TURN STARTS ---- //
 	game.IncTurn()
 	turn = game.Turn()
@@ -325,9 +335,9 @@ func RunGameTurn(source Source) (breaker, logger error) {
 	}
 	var highScore int
 	toWin := game.ToWin()
-	winners := make([]Faction, 0)
+	winners := make([]FactionDat, 0)
 	for _, f := range factions {
-		score := facScores[f.Fid()]
+		score := facScores[f.FID()]
 		if score > highScore {
 			highScore = score
 		}
@@ -344,5 +354,15 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		return nil, loggerM
 	} else {
 		return nil, nil
+	}
+}
+
+func GenSID(sidMap map[int]bool) int {
+	for {
+		sid := pick(10000)
+		if !sidMap[sid] {
+			sidMap[sid] = true
+			return sid
+		}
 	}
 }

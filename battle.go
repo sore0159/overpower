@@ -4,7 +4,7 @@ import (
 //	"mule/hexagon"
 )
 
-func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool) {
+func Battle(source Source, pl PlanetDat, sh ShipDat, turn int, truces map[[2]int]TruceDat) {
 	// if truce is broken (by trucee):
 	// delete(truces, [2]int{trucer, trucee}
 	// source.DropTrouce(pl.Loc, trucer, trucee)
@@ -14,7 +14,7 @@ func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool)
 	sePr := pl.SecondaryPresence()
 	var shFid, shSize int
 	if sh != nil {
-		shFid = sh.Fid()
+		shFid = sh.FID()
 		shSize = sh.Size()
 		if shSize < 1 {
 			return
@@ -25,7 +25,14 @@ func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool)
 	defer AllBattleRecords(source, sh, pl, turn, prFid, prPr, seFid, sePr, &betrayals)
 	// ------ GROUND FIGHT ---------- //
 	peace := func(fid1, fid2 int) bool {
-		return truces[[2]int{fid1, fid2}]
+		return truces[[2]int{fid1, fid2}] != nil
+	}
+	betrayedF := func(truster, betrayor int) {
+		pt := [2]int{truster, betrayor}
+		tr := truces[pt]
+		delete(truces, pt)
+		tr.DELETE()
+		betrayals = append(betrayals, [2]int{betrayor, truster})
 	}
 	if prFid != 0 && seFid != 0 {
 		prPeace := peace(prFid, seFid)
@@ -41,9 +48,7 @@ func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool)
 				[2]int{prFid, shFid}, [2]int{shFid, prFid},
 				[2]int{prFid, seFid}, [2]int{seFid, prFid},
 			} {
-				delete(truces, pair)
-				source.DropTruce(pl, pair[0], pair[1])
-				betrayals = append(betrayals, [2]int{pair[1], pair[0]})
+				betrayedF(pair[0], pair[1])
 			}
 			if prPr > 0 {
 				prPr -= 1
@@ -55,16 +60,12 @@ func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool)
 		}
 		if !prPeace || !sePeace {
 			if prPeace && !sePeace {
-				delete(truces, [2]int{prFid, seFid})
-				source.DropTruce(pl, prFid, seFid)
-				betrayals = append(betrayals, [2]int{seFid, prFid})
+				betrayedF(prFid, seFid)
 				if prPr > 0 {
 					prPr -= 1
 				}
 			} else if sePeace && !prPeace {
-				delete(truces, [2]int{seFid, prFid})
-				source.DropTruce(pl, seFid, prFid)
-				betrayals = append(betrayals, [2]int{prFid, seFid})
+				betrayedF(seFid, prFid)
 				if sePr > 0 {
 					sePr -= 1
 				}
@@ -84,34 +85,26 @@ func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool)
 		shSePeace := peace(shFid, seFid)
 		shPrPeace := peace(shFid, prFid)
 		if prShPeace && !shPrPeace {
-			delete(truces, [2]int{prFid, shFid})
-			source.DropTruce(pl, prFid, shFid)
-			betrayals = append(betrayals, [2]int{shFid, prFid})
+			betrayedF(prFid, shFid)
 			if prPr > 0 {
 				prPr -= 1
 			}
 			prShPeace = false
 		} else if shPrPeace && !prShPeace {
-			delete(truces, [2]int{shFid, prFid})
-			source.DropTruce(pl, shFid, prFid)
-			betrayals = append(betrayals, [2]int{prFid, shFid})
+			betrayedF(shFid, prFid)
 			if shSize > 0 {
 				shSize -= 1
 			}
 			shPrPeace = false
 		}
 		if seShPeace && !shSePeace {
-			delete(truces, [2]int{seFid, shFid})
-			source.DropTruce(pl, seFid, shFid)
-			betrayals = append(betrayals, [2]int{shFid, seFid})
+			betrayedF(seFid, shFid)
 			if sePr > 0 {
 				sePr -= 1
 			}
 			seShPeace = false
 		} else if shSePeace && !seShPeace {
-			delete(truces, [2]int{shFid, seFid})
-			source.DropTruce(pl, shFid, seFid)
-			betrayals = append(betrayals, [2]int{seFid, shFid})
+			betrayedF(shFid, seFid)
 			if shSize > 0 {
 				shSize -= 1
 			}
@@ -159,7 +152,7 @@ func Battle(source Source, pl Planet, sh Ship, turn int, truces map[[2]int]bool)
 	return
 }
 
-func AllSee(source Source, pl Planet, fid1, fid2, fid3, turn int) {
+func AllSee(source Source, pl PlanetDat, fid1, fid2, fid3, turn int) {
 	pFid, sFid := pl.PrimaryFaction(), pl.SecondaryFaction()
 	for _, fid := range []int{fid1, fid2, fid3} {
 		if fid == 0 || fid == pFid || fid == sFid {
@@ -169,10 +162,10 @@ func AllSee(source Source, pl Planet, fid1, fid2, fid3, turn int) {
 	}
 }
 
-func AllBattleRecords(source Source, lander Ship, planet Planet, turn, initPrF, initPrP, initSeF, initSeP int, betrayals *[][2]int) {
+func AllBattleRecords(source Source, lander ShipDat, planet PlanetDat, turn, initPrF, initPrP, initSeF, initSeP int, betrayals *[][2]int) {
 	var shFid int
 	if lander != nil {
-		shFid = lander.Fid()
+		shFid = lander.FID()
 	}
 	for _, fid := range []int{initPrF, initSeF, shFid} {
 		if fid == 0 {

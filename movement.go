@@ -4,7 +4,7 @@ import (
 	"mule/hexagon"
 )
 
-func Travelled(sh Ship, turn int) (travelled []hexagon.Coord, land bool) {
+func Travelled(sh ShipDat, turn int) (travelled []hexagon.Coord, land bool) {
 	l := sh.Launched()
 	if l > turn {
 		return []hexagon.Coord{}, false

@@ -16,7 +16,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 	}
 	fids := make([]int, len(factions))
 	for i, f := range factions {
-		fids[i] = f.Fid()
+		fids[i] = f.FID()
 		f.SetDoneBuffer(0)
 		f.SetScore(1)
 	}
@@ -46,7 +46,7 @@ func MakeGalaxy(source Source, exodus bool) error {
 		15, 15,
 		hexagon.Coord{0, 0},
 	)
-	planets := []Planet{borion}
+	planets := []PlanetDat{borion}
 	places := map[hexagon.Coord]bool{hexagon.Coord{0, 0}: true}
 	for _, pt := range borion.Loc().Ring(1) {
 		places[pt] = true
