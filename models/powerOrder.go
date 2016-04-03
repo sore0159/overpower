@@ -44,8 +44,10 @@ func (item *PowerOrder) SQLVal(name string) interface{} {
 		return item.GID
 	case "fid":
 		return item.FID
-	case "loc":
-		return item.Loc
+	case "locx":
+		return item.Loc[0]
+	case "locy":
+		return item.Loc[1]
 	case "uppower":
 		return item.UpPower
 	}
@@ -58,8 +60,10 @@ func (item *PowerOrder) SQLPtr(name string) interface{} {
 		return &item.GID
 	case "fid":
 		return &item.FID
-	case "loc":
-		return &item.Loc
+	case "locx":
+		return &item.Loc[0]
+	case "locy":
+		return &item.Loc[1]
 	case "uppower":
 		return &item.UpPower
 	}
@@ -164,7 +168,8 @@ func (group *PowerOrderGroup) InsertCols() []string {
 	return []string{
 		"gid",
 		"fid",
-		"loc",
+		"locx",
+		"locy",
 		"uppower",
 	}
 }
@@ -177,7 +182,8 @@ func (group *PowerOrderGroup) SelectCols() []string {
 	return []string{
 		"gid",
 		"fid",
-		"loc",
+		"locx",
+		"locy",
 		"uppower",
 	}
 }
@@ -186,7 +192,8 @@ func (group *PowerOrderGroup) UpdateCols() []string {
 	return []string{
 		"gid",
 		"fid",
-		"loc",
+		"locx",
+		"locy",
 		"uppower",
 	}
 }

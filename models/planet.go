@@ -143,6 +143,7 @@ func (i PlanetIntf) SetPrimaryFaction(x int) {
 		}
 		i.item.PrimaryFaction.Valid = false
 		i.item.PrimaryFaction.Int64 = 0
+		i.item.sql.UPDATE = true
 		return
 	}
 	x64 := int64(x)
@@ -192,6 +193,7 @@ func (i PlanetIntf) SetSecondaryFaction(x int) {
 		}
 		i.item.SecondaryFaction.Valid = false
 		i.item.SecondaryFaction.Int64 = 0
+		i.item.sql.UPDATE = true
 		return
 	}
 	x64 := int64(x)

@@ -7,6 +7,8 @@ import (
 	"mule/overpower"
 )
 
+//var sourceTest overpower.Source = &Source{}
+
 type Source struct {
 	GID        int
 	M          *Manager

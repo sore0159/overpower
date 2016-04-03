@@ -211,7 +211,7 @@ func (group *FactionGroup) PKCols() []string {
 func (group *FactionGroup) InsertCols() []string {
 	return []string{
 		"gid",
-		"fid",
+		//		"fid",
 		"owner",
 		"name",
 		"donebuffer",
@@ -220,7 +220,9 @@ func (group *FactionGroup) InsertCols() []string {
 }
 
 func (group *FactionGroup) InsertScanCols() []string {
-	return []string{}
+	return []string{
+		"fid",
+	}
 }
 
 func (group *FactionGroup) SelectCols() []string {
@@ -327,34 +329,4 @@ func FactionTableDelete(d db.DBer) error {
 	return nil
 }
 
-/*
-
-// Null <--> 0 convereter
-
-func (i FactionIntf) XXX() int {
-    if !i.item.XXX.Valid {
-        return 0
-    }
-    return int(i.item.XXX.Int64)
-}
-
-func (i FactionIntf) SetXXX(x int) {
-    if x == 0 {
-        if !i.item.XXX.Valid {
-            return
-        }
-        i.item.XXX.Valid = false
-        i.item.XXX.Int64 = 0
-        return
-    }
-    x64 := int64(x)
-    if i.item.XXX.Valid && i.item.XXX.Int64 == x64 {
-        return
-    }
-    i.item.XXX.Int64 = x64
-    i.item.XXX.Valid = true
-    i.item.sql.UPDATE = true
-}
-
-*/
 // --------- END UTILS ------------ //

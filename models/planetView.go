@@ -169,6 +169,7 @@ func (i PlanetViewIntf) SetPrimaryFaction(x int) {
 		}
 		i.item.PrimaryFaction.Valid = false
 		i.item.PrimaryFaction.Int64 = 0
+		i.item.sql.UPDATE = true
 		return
 	}
 	x64 := int64(x)
@@ -218,6 +219,7 @@ func (i PlanetViewIntf) SetSecondaryFaction(x int) {
 		}
 		i.item.SecondaryFaction.Valid = false
 		i.item.SecondaryFaction.Int64 = 0
+		i.item.sql.UPDATE = true
 		return
 	}
 	x64 := int64(x)
@@ -471,8 +473,10 @@ func PlanetViewTableCreate(d db.DBer) error {
 	turn int NOT NULL,
 	primaryfaction int,
 	primarypresence int NOT NULL,
+	primarypower int NOT NULL,
 	secondaryfaction int,
 	secondarypresence int NOT NULL,
+	secondarypower int NOT NULL,
 	antimatter int NOT NULL,
 	tachyons int NOT NULL,
 	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,

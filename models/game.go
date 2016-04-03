@@ -20,6 +20,7 @@ type Game struct {
 	Password  sql.NullString `json:"-"`
 	ToWin     int            `json:"towin"`
 	HighScore int            `json:"highscore"`
+	Winner    sql.NullString `json:"winner,omitempty"`
 	sql       gp.SQLStruct
 }
 
@@ -63,6 +64,8 @@ func (item *Game) SQLVal(name string) interface{} {
 		return item.ToWin
 	case "highscore":
 		return item.HighScore
+	case "winner":
+		return item.Winner
 	}
 	return nil
 }
@@ -87,6 +90,8 @@ func (item *Game) SQLPtr(name string) interface{} {
 		return &item.ToWin
 	case "highscore":
 		return &item.HighScore
+	case "winner":
+		return &item.Winner
 	}
 	return nil
 }
@@ -99,10 +104,12 @@ func (i GameIntf) MarshalJSON() ([]byte, error) {
 		*Game
 		HasPassword bool    `json:"haspassword"`
 		AutoDays    [7]bool `json:"autodays"`
+		Winner      string  `json:"winner,omitempty"`
 	}{
 		Game:        i.item,
 		HasPassword: i.HasPassword(),
 		AutoDays:    i.AutoDays(),
+		Winner:      i.Winner(),
 	})
 }
 func (i GameIntf) UnmarshalJSON(data []byte) error {
@@ -238,6 +245,30 @@ func (i GameIntf) SetHighScore(x int) {
 	i.item.sql.UPDATE = true
 }
 
+func (i GameIntf) Winner() string {
+	if !i.item.Winner.Valid {
+		return ""
+	}
+	return i.item.Winner.String
+}
+func (i GameIntf) SetWinner(x string) {
+	if x == "" {
+		if !i.item.Winner.Valid {
+			return
+		}
+		i.item.Winner.Valid = false
+		i.item.Winner.String = ""
+		i.item.sql.UPDATE = true
+		return
+	}
+	if i.item.Winner.Valid && i.item.Winner.String == x {
+		return
+	}
+	i.item.Winner.String = x
+	i.item.Winner.Valid = true
+	i.item.sql.UPDATE = true
+}
+
 // --------- END GENERIC METHODS ------------ //
 // --------- BEGIN CUSTOM METHODS ------------ //
 
@@ -334,6 +365,7 @@ func (group *GameGroup) SelectCols() []string {
 		"password",
 		"towin",
 		"highscore",
+		"winner",
 	}
 }
 
@@ -347,6 +379,7 @@ func (group *GameGroup) UpdateCols() []string {
 		"password",
 		"towin",
 		"highscore",
+		"winner",
 	}
 }
 

@@ -116,6 +116,7 @@ type GameGet interface {
 	IsPassword(string) bool
 	ToWin() int
 	HighScore() int
+	Winner() string
 }
 type GameSet interface {
 	UnmarshalJSON([]byte) error
