@@ -87,6 +87,7 @@ type FactionGet interface {
 	Name() string
 	DoneBuffer() int
 	Score() int
+	IsDone() bool
 }
 type FactionSet interface {
 	UnmarshalJSON([]byte) error

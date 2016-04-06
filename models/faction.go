@@ -117,6 +117,10 @@ func (i FactionIntf) Name() string {
 	return i.item.Name
 }
 
+func (i FactionIntf) IsDone() bool {
+	return i.item.DoneBuffer != 0
+}
+
 func (i FactionIntf) DoneBuffer() int {
 	return i.item.DoneBuffer
 }

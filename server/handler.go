@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"html/template"
+	sq "mule/mydb/sql"
 	"mule/myweb"
 	"mule/overpower"
+	"mule/overpower/models"
 	"mule/users"
 	"net/http"
 )
@@ -15,6 +17,7 @@ type Handler struct {
 	LoggedIn    bool
 	Error       string
 	CommandData [2]int
+	M           *models.Manager
 	*myweb.Handler
 }
 
@@ -26,7 +29,7 @@ func MakeHandler(w http.ResponseWriter, r *http.Request) *Handler {
 	} else if ok {
 		user = test
 	}
-	return &Handler{TitleBar: true, User: user, LoggedIn: ok, Handler: myweb.MakeHandler(r)}
+	return &Handler{TitleBar: true, User: user, LoggedIn: ok, M: OPDB.NewManager(), Handler: myweb.MakeHandler(r)}
 }
 
 func (h *Handler) Apply(t *template.Template, w http.ResponseWriter) {
@@ -39,8 +42,8 @@ func (h *Handler) Apply(t *template.Template, w http.ResponseWriter) {
 	}
 }
 
-func (h *Handler) SetCommand(g overpower.Game) {
-	h.CommandData[0] = g.Gid()
+func (h *Handler) SetCommand(g overpower.GameDat) {
+	h.CommandData[0] = g.GID()
 	h.CommandData[1] = g.Turn()
 }
 
@@ -50,4 +53,11 @@ func (h *Handler) Command(str string) string {
 
 func (h *Handler) SetError(args ...interface{}) {
 	h.Error = fmt.Sprintln(args...)
+}
+
+func (h *Handler) GID(gid int) sq.Condition {
+	return sq.EQ("gid", gid)
+}
+func (h *Handler) FID(gid, fid int) sq.Condition {
+	return sq.AND(sq.EQ("gid", gid), sq.EQ("fid", fid))
 }

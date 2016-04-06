@@ -3,7 +3,7 @@
 {{define "body"}}
 OVERPOWER GAMES LIST PAGE GOES HERE<br>
 {{ range . }}
-GAME: [ <a href="/overpower/view/{{ .Gid }}">{{ .Name }}</a> ] (Owner: {{ .Owner }} &bull; Turn: {{ .Turn }}) <br>
+GAME: [ <a href="/overpower/view/{{ .GID }}">{{ .Name }}</a> ] (Owner: {{ .Owner }} &bull; Turn: {{ .Turn }}) <br>
 {{ else }}
 NO GAMES FOUND<br>
 {{ end }}

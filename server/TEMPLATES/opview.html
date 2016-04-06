@@ -1,4 +1,4 @@
-{{ define "title"}}Overpower Game Page{{end}}
+{{ define "title"}}Overpower Game Data Page{{end}}
 {{ define "css"}}overpower{{end}}
 {{define "body"}}
 <div class="blocker" id="fullscreenblock"><div class="blockertext"><span id="blockertext">Loading game...</span><br> 
@@ -30,10 +30,10 @@ None! &bull;<br>
 <div class="box">
 {{ if $active }}
  <div style="text-align:center;float:right;margin:10px 10px 10px 10px;">
-         [ <a href="/overpower/quit/{{ $g.Gid }}">Quit Game?</a> ]<br>
+         [ <a href="/overpower/quit/{{ $g.GID }}">Quit Game?</a> ]<br>
          ( will ask for confirmation )
  </div>
-YOUR FAC:  <a href="{{ link "play" }}">{{ $ownedf.Name }}</a> 
+ YOUR FAC:  <a href="/overpower/play/{{ $g.GID }}">{{ $ownedf.Name }}</a> 
 {{ if $ownedf.IsDone }}
 (Turn Complete)
 <form action="" method="post" class="noblock">
@@ -90,7 +90,7 @@ NO OTHER FACTIONS
 
 <script type="text/javascript">
 var curTurn = {{ $g.Turn }};
-var curGame = {{ $g.Gid }};
+var curGame = {{ $g.GID }};
 </script>
 <script src="/static/js/getdata.js" type="text/javascript"></script>
 <script src="/static/js/turncheck.js" type="text/javascript"></script>

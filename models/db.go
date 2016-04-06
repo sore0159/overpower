@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"mule/mydb/db"
+	"mule/overpower"
 )
 
 var (
@@ -43,6 +44,28 @@ func (d *DB) Transact(f func(*Manager) (error, error)) (logErr, failed error) {
 	}
 	err := db.Transact(d.DB, g)
 	if my, bad := Check(err, "managar transaction failed on db transact"); bad {
+		return logErr, my
+	}
+	return logErr, nil
+}
+
+func (d *DB) SourceTransact(gid int, f func(overpower.Source) (error, error)) (logErr, failErr error) {
+	g := func(d db.DBer) error {
+		m := NewManager(d)
+		s := NewSource(m, gid)
+		var revertE error
+		logErr, revertE = f(s)
+		if my, bad := Check(revertE, "source transaction failure on execution"); bad {
+			return my
+		}
+		revertE = m.Close()
+		if my, bad := Check(revertE, "source transaction failure on closure"); bad {
+			return my
+		}
+		return nil
+	}
+	err := db.Transact(d.DB, g)
+	if my, bad := Check(err, "source transaction failed on db transact"); bad {
 		return logErr, my
 	}
 	return logErr, nil

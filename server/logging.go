@@ -3,7 +3,7 @@ package main
 import (
 	"mule/mybad"
 	"mule/mylog"
-	"mule/overpower/db"
+	"mule/overpower/models"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ var (
 	InfoLogger   = mylog.Must(mylog.StockInfoLogger().AddFiles(DATADIR + "info.txt"))
 	Ping         = WarnLogger.Ping
 	Announce     = InfoLogger.Println
-	ErrNoneFound = db.ErrNoneFound
+	ErrNoneFound = models.ErrNoneFound
 )
 
 func Log(err error) {
