@@ -32,7 +32,7 @@ func pageAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		_, ok, err := USERREG.Login(w, r)
 		if my, bad := Check(err, "login failure"); bad {
-			Bail(w, my)
+			h.HandleServerError(w, my)
 			return
 		}
 		if ok {
@@ -69,9 +69,9 @@ func pageAuthCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if my, bad := Check(err, "auth create failure"); bad {
-			Log(my)
-			h.SetError("DATABASE ERROR")
-			m["username"], m["password"] = r.FormValue("username"), r.FormValue("password")
+			h.HandleServerError(w, my)
+			return
+			//m["username"], m["password"] = r.FormValue("username"), r.FormValue("password")
 		} else {
 			if !passOk && !nameOk {
 				h.SetError("BAD USERNAME AND PASSWORD")

@@ -2,6 +2,7 @@ package main
 
 import (
 	//"mule/overpower"
+	"fmt"
 	"net/http"
 )
 
@@ -19,11 +20,22 @@ func SetupMux() {
 	http.HandleFunc("/overpower/list/", pageOPList)
 	http.HandleFunc("/overpower/view/", pageOPView)
 	http.HandleFunc("/overpower/home", pageOPHome)
-	//http.HandleFunc("/overpower/quit/", pageOPQuit)
-	//http.HandleFunc("/overpower/play/", pageOPPlay)
+	http.HandleFunc("/overpower/quit/", pageOPQuit)
+	http.HandleFunc("/overpower/play/", pageOPPlay)
 
-	//http.HandleFunc("/overpower/json/", apiJson)
+	http.HandleFunc("/overpower/json/", apiJSON)
 
+}
+
+func apiJSON(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		apiJSONget(w, r)
+	case "PUT":
+		apiJSONput(w, r)
+	default:
+		fmt.Fprint(w, "TODO")
+	}
 }
 
 func imgFavIcon(w http.ResponseWriter, r *http.Request) {

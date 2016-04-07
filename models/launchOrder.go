@@ -79,7 +79,7 @@ func (item *LaunchOrder) SQLPtr(name string) interface{} {
 	return nil
 }
 func (item *LaunchOrder) SQLTable() string {
-	return "launchorders"
+	return "launchorder"
 }
 
 func (i LaunchOrderIntf) MarshalJSON() ([]byte, error) {
@@ -175,7 +175,7 @@ func (group *LaunchOrderGroup) DeleteList() []gp.SQLer {
 }
 
 func (group *LaunchOrderGroup) SQLTable() string {
-	return "launchorders"
+	return "launchorder"
 }
 
 func (group *LaunchOrderGroup) PKCols() []string {

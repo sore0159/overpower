@@ -13,21 +13,21 @@ var (
 func pageOPView(w http.ResponseWriter, r *http.Request) {
 	h := MakeHandler(w, r)
 	if len(h.Path) != 4 {
-		http.Error(w, "INVALID PATH", http.StatusBadRequest)
+		h.HandleUserError(w, "INVALID PATH")
 		return
 	}
 	gid, ok := h.IntAt(3)
 	if !ok {
-		http.Error(w, "UNPARSABLE GAMEID", http.StatusBadRequest)
+		h.HandleUserError(w, "UNPARSABLE GAMEID")
 		return
 	}
 	games, err := h.M.Game().SelectWhere(h.GID(gid))
 	if my, bad := Check(err, "resource failure on OP view page", "resource", "game", "gid", gid); bad {
-		Bail(w, my)
+		h.HandleServerError(w, my)
 		return
 	}
 	if len(games) == 0 {
-		http.Error(w, "NO GAME MATCHING GAMEID", http.StatusBadRequest)
+		h.HandleUserError(w, "NO GAME MATCHING GAMEID")
 		return
 	}
 	g := games[0]
@@ -35,7 +35,7 @@ func pageOPView(w http.ResponseWriter, r *http.Request) {
 	m := h.DefaultApp()
 	facs, err := h.M.Faction().SelectWhere(h.GID(gid))
 	if my, bad := Check(err, "resource failure", "page", "opview", "resource", "factions", "gid", gid); bad {
-		Bail(w, my)
+		h.HandleServerError(w, my)
 		return
 	}
 	m["factions"] = facs
@@ -58,71 +58,28 @@ func pageOPView(w http.ResponseWriter, r *http.Request) {
 	m["game"] = g
 	if r.Method == "POST" {
 		if !h.LoggedIn {
-			http.Error(w, "NOT LOGGED IN", http.StatusBadRequest)
+			h.HandleUserError(w, "NOT LOGGED IN")
 			return
 		}
+		var errS, errU error
 		action := r.FormValue("action")
 		switch action {
 		case "setdone":
-			//if ok := h.SetTurnDone(w, r, g, ownedF); !ok {
-			//return
-			//}
+			errS, errU = h.CommandSetTurnDone(g, facs, ownedF)
 		case "dropfac":
-			/*
-				if g.Turn() > 0 {
-					http.Error(w, "GAME IN PROGRESS", http.StatusBadRequest)
-					return
-				}
-				if ownedF == nil {
-					http.Error(w, "USER HAS NO FACTION FOR THIS GAME", http.StatusBadRequest)
-					return
-				}
-				err = OPDB.DropFactions("gid", g.Gid(), "fid", ownedF.Fid())
-				if my, bad := Check(err, "data update failure", "data", ownedF, "page", "opviewgame"); bad {
-					Bail(w, my)
-					return
-				}
-			*/
+			errS, errU = h.CommandDropFaction(g, ownedF)
 		case "newfac":
-			/*
-				if g.Turn() > 0 {
-					http.Error(w, "GAME IN PROGRESS", http.StatusBadRequest)
-					return
-				}
-				if ownedF != nil {
-					http.Error(w, "USER ALREADY HAS FACTION FOR THIS GAME", http.StatusBadRequest)
-					return
-				}
-				if g.HasPW() {
-					passwd := r.FormValue("password")
-					if !ValidText(passwd) || !g.IsPwd(passwd) {
-						http.Error(w, "BAD PASSWORD", http.StatusBadRequest)
-						return
-					}
-				}
-				facName := r.FormValue("facname")
-				if !ValidText(facName) {
-					http.Error(w, "BAD FACTION NAME", http.StatusBadRequest)
-					return
-				}
-				lwFName := strings.ToLower(facName)
-				for _, f := range facs {
-					if strings.ToLower(f.Name()) == lwFName {
-						http.Error(w, "FACTION NAME ALREADY IN USE FOR THIS GAME", http.StatusBadRequest)
-						return
-					}
-				}
-				err = OPDB.MakeFaction(g.Gid(), h.User.String(), facName)
-				if my, bad := Check(err, "data creation error", "type", "faction", "gid", g.Gid(), "user", h.User, "facname", facName); bad {
-					Bail(w, my)
-					return
-				}
-			*/
+			errS, errU = h.CommandNewFaction(g, facs, ownedF, r.FormValue("password"), r.FormValue("facname"))
 		default:
-			http.Error(w, "UNKNOWN ACTION TYPE", http.StatusBadRequest)
-			return
+			errU = NewError("UNKNOWN ACTION TYPE")
 		}
-		http.Redirect(w, r, r.URL.Path, http.StatusFound)
+		if my, bad := Check(errS, "page op view action failure", "action", action, "game", g); bad {
+			h.HandleServerError(w, my)
+		} else if errU != nil {
+			h.HandleUserError(w, errU.Error())
+		} else {
+			http.Redirect(w, r, r.URL.Path, http.StatusFound)
+		}
 		return
 	}
 	days := g.AutoDays()

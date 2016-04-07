@@ -4,42 +4,42 @@ import (
 	"mule/hexagon"
 )
 
-func RunGameTurn(source Source) (breaker, logger error) {
+func RunGameTurn(source Source) (logger, breaker error) {
 	game, err := source.Game()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	planets, err := source.Planets()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	factions, err := source.Factions()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	orders, err := source.LaunchOrders()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	ships, err := source.Ships()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	truces, err := source.Truces()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	dbPowerOrders, err := source.PowerOrders()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	err = source.ClearLaunchOrders()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	err = source.ClearPowerOrders()
 	if my, bad := Check(err, "run turn resource failure"); bad {
-		return my, nil
+		return nil, my
 	}
 	// --------- GAME ALREADY OVER -------- //
 	if game.HighScore() >= game.ToWin() {
@@ -351,7 +351,7 @@ func RunGameTurn(source Source) (breaker, logger error) {
 		Ping("TODO: WINNING!", winners)
 	}
 	if errOccured {
-		return nil, loggerM
+		return loggerM, nil
 	} else {
 		return nil, nil
 	}

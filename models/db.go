@@ -49,7 +49,7 @@ func (d *DB) Transact(f func(*Manager) (error, error)) (logErr, failed error) {
 	return logErr, nil
 }
 
-func (d *DB) SourceTransact(gid int, f func(overpower.Source) (error, error)) (logErr, failErr error) {
+func (d *DB) SourceTransact(gid int, f func(overpower.Source) (logE, revertE error)) (logErr, failErr error) {
 	g := func(d db.DBer) error {
 		m := NewManager(d)
 		s := NewSource(m, gid)
