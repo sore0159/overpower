@@ -34,23 +34,92 @@ None! &bull;<br>
          ( will ask for confirmation )
  </div>
  YOUR FAC:  <a href="/overpower/play/{{ $g.GID }}">{{ $ownedf.Name }}</a> 
-{{ if $ownedf.IsDone }}
-(Turn Complete)
+ {{ $db := $ownedf.DoneBuffer }}
+ &bull;
+ {{ if eq $db -1 }}
+ <b>Turn Complete</b> (All turns set to auto-complete)
+ &bull;
 <form action="" method="post" class="noblock">
 <input type="hidden" name="action" value="setdone">
-<input type="hidden" name="done" value="false">
+<input type="hidden" name="donebuffer" value=0>
 <input type="hidden" name="turn" value="{{ $g.Turn }}">
 <input type="submit" value="Cancel Turn Complete" class="noblock">
 </form>
-{{ else }}
-(Turn In Progress)
+ &bull;
+
 <form action="" method="post" class="noblock">
 <input type="hidden" name="action" value="setdone">
-<input type="hidden" name="done" value="true">
 <input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Change Turn Auto-Complete Buffer" class="noblock">
+New Buffer Size: <input type="text" size=3 name="donebuffer" value=1>
+</form>
+
+ {{ else if not $db }}
+ <b>Turn In Progress</b>
+
+ &bull;
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="hidden" name="donebuffer" value=1>
 <input type="submit" value="Set Turn Complete" class="noblock">
 </form>
-{{ end }}
+
+ {{ else if eq $db 1 }}
+ <b>Turn Complete</b>
+ &bull;
+
+
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="donebuffer" value=0>
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Cancel Turn Complete" class="noblock">
+</form>
+ &bull;
+
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Set Future Turns to Auto-Complete" class="noblock">
+Buffer Size: <input type="text" size=3 name="donebuffer" value=1>
+</form>
+
+ &bull;
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="donebuffer" value=-1>
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Set All Turns Complete" class="noblock">
+</form>
+
+ {{ else }}
+ <b>Turn Complete</b> ({{ $db }} turns set complete)
+ &bull;
+
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="donebuffer" value=0>
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Set No Turns Complete" class="noblock">
+</form>
+
+ &bull;
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Change Auto-Complete Buffer" class="noblock">
+Buffer Size: <input type="text" size=3 name="donebuffer" value={{ $db }}>
+</form>
+
+ &bull;
+<form action="" method="post" class="noblock">
+<input type="hidden" name="action" value="setdone">
+<input type="hidden" name="donebuffer" value=-1>
+<input type="hidden" name="turn" value="{{ $g.Turn }}">
+<input type="submit" value="Set All Turns Complete" class="noblock">
+</form>
+ {{ end }}
 <br>
 {{ else }}
 YOUR FAC: {{ $ownedf.Name }}<br>
@@ -69,7 +138,7 @@ YOUR FAC: {{ $ownedf.Name }}<br>
 <form action="" method="post">
 <input type="hidden" name="action" value="newfac">
 Faction Name: <input name="facname" type="text">
-{{ if $g.HasPW }} Password: <input name="password" type="text"> {{ end }}
+{{ if $g.HasPassword }} Password: <input name="password" type="text"> {{ end }}
 <input type="submit" value="JOIN GAME" class="noblock">
 </form>
 </div>

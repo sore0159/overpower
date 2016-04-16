@@ -285,13 +285,12 @@ func convertLaunchOrder2Intf(list ...*LaunchOrder) []overpower.LaunchOrderDat {
 func LaunchOrderTableCreate(d db.DBer) error {
 	query := `create table launchorder(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	sourcex integer NOT NULL,
 	sourcey integer NOT NULL,
 	targetx integer NOT NULL,
 	targety integer NOT NULL,
 	size integer NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	FOREIGN KEY(gid, sourcex, sourcey) REFERENCES planet ON DELETE CASCADE,
 	FOREIGN KEY(gid, targetx, targety) REFERENCES planet ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, sourcex, sourcey, targetx, targety)

@@ -315,16 +315,14 @@ func convertShipView2Intf(list ...*ShipView) []overpower.ShipViewDat {
 func ShipViewTableCreate(d db.DBer) error {
 	query := `create table shipview(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
-	controller integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
+	controller integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	sid integer NOT NULL,
 	turn integer NOT NULL,
 	loc point,
 	dest point,
 	trail point[] NOT NULL,
 	size int NOT NULL,
-	FOREIGN KEY(gid, controller) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, sid)
 );`
 	err := db.Exec(d, false, query)

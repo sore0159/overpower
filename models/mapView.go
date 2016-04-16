@@ -247,9 +247,8 @@ func convertMapView2Intf(list ...*MapView) []overpower.MapViewDat {
 func MapViewTableCreate(d db.DBer) error {
 	query := `create table mapview(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	center point NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	PRIMARY KEY (gid, fid)
 );`
 

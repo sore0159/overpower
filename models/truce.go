@@ -251,12 +251,10 @@ func convertTruce2Intf(list ...*Truce) []overpower.TruceDat {
 func TruceTableCreate(d db.DBer) error {
 	query := `create table truce(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	locx int NOT NULL,
 	locy int NOT NULL,
-	trucee int NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, trucee) REFERENCES faction ON DELETE CASCADE,
+	trucee int NOT NULL REFERENCES faction ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planet ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, locx, locy, trucee)
 );`

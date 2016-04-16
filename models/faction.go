@@ -17,6 +17,7 @@ type Faction struct {
 	DoneBuffer int    `json:"donebuffer"`
 	Score      int    `json:"score"`
 	sql        gp.SQLStruct
+	FullJSON   bool `json:"-"`
 }
 
 // --------- BEGIN GENERIC METHODS ------------ //
@@ -78,23 +79,33 @@ func (item *Faction) SQLTable() string {
 	return "faction"
 }
 
-func (i FactionIntf) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.item)
+func (i FactionIntf) SetFullJSON() {
+	i.item.FullJSON = true
 }
-func (i FactionIntf) MarshalPublicJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		GID      int    `json:"gid"`
-		FID      int    `json:"fid"`
-		Owner    string `json:"owner"`
-		Name     string `json:"name"`
-		TurnDone bool   `json:"turndone"`
-	}{
-		GID:      i.GID(),
-		FID:      i.FID(),
-		Owner:    i.Owner(),
-		Name:     i.Name(),
-		TurnDone: i.DoneBuffer() != 0,
-	})
+func (i FactionIntf) MarshalJSON() ([]byte, error) {
+	if i.item.FullJSON {
+		return json.Marshal(struct {
+			*Faction
+			TurnDone bool `json:"turndone"`
+		}{
+			Faction:  i.item,
+			TurnDone: i.DoneBuffer() != 0,
+		})
+	} else {
+		return json.Marshal(struct {
+			GID      int    `json:"gid"`
+			FID      int    `json:"fid"`
+			Owner    string `json:"owner"`
+			Name     string `json:"name"`
+			TurnDone bool   `json:"turndone"`
+		}{
+			GID:      i.GID(),
+			FID:      i.FID(),
+			Owner:    i.Owner(),
+			Name:     i.Name(),
+			TurnDone: i.DoneBuffer() != 0,
+		})
+	}
 }
 func (i FactionIntf) UnmarshalJSON(data []byte) error {
 	i.item = &Faction{}
@@ -207,7 +218,6 @@ func (group *FactionGroup) SQLTable() string {
 
 func (group *FactionGroup) PKCols() []string {
 	return []string{
-		"gid",
 		"fid",
 	}
 }
@@ -309,13 +319,12 @@ func convertFaction2Intf(list ...*Faction) []overpower.FactionDat {
 func FactionTableCreate(d db.DBer) error {
 	query := `create table faction(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid SERIAL NOT NULL,
+	fid SERIAL PRIMARY KEY,
 	owner varchar(20) NOT NULL,
 	name varchar(20) NOT NULL,
 	donebuffer int NOT NULL DEFAULT 0,
 	score int NOT NULL DEFAULT 0,
-	UNIQUE(gid, owner),
-	PRIMARY KEY(gid, fid)
+	UNIQUE(gid, owner)
 );`
 	err := db.Exec(d, false, query)
 	if my, bad := Check(err, "failed Faction table creation", "query", query); bad {

@@ -437,18 +437,16 @@ func PlanetTableCreate(d db.DBer) error {
 	locx int NOT NULL,
 	locy int NOT NULL,
 	name varchar(20) NOT NULL,
-	primaryfaction int,
+	primaryfaction int REFERENCES faction ON DELETE SET NULL,
 	primarypresence int NOT NULL,
 	primarypower int NOT NULL,
-	secondaryfaction int,
+	secondaryfaction int REFERENCES faction ON DELETE SET NULL,
 	secondarypresence int NOT NULL,
 	secondarypower int NOT NULL,
 	antimatter int NOT NULL,
 	tachyons int NOT NULL,
 	UNIQUE(gid, name),
-	PRIMARY KEY(gid, locx, locy),
-	FOREIGN KEY(gid, primaryfaction) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, secondaryfaction) REFERENCES faction ON DELETE CASCADE
+	PRIMARY KEY(gid, locx, locy)
 );`
 	err := db.Exec(d, false, query)
 	if my, bad := Check(err, "failed Planet table creation", "query", query); bad {

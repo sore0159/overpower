@@ -61,3 +61,29 @@ func (h *Handler) GID(gid int) sq.Condition {
 func (h *Handler) FID(gid, fid int) sq.Condition {
 	return sq.AND(sq.EQ("gid", gid), sq.EQ("fid", fid))
 }
+func (h *Handler) TURN(gid, fid, turn int) sq.Condition {
+	return sq.AND(sq.EQ("gid", gid), sq.EQ("fid", fid), sq.EQ("turn", turn))
+}
+
+func (h *Handler) FetchBasicData(gid int) (g overpower.GameDat, f overpower.FactionDat, facs []overpower.FactionDat, err error) {
+	games, err := h.M.Game().SelectWhere(h.GID(gid))
+	if my, bad := Check(err, "handler basic fetch failure on resource aquisition", "resource", "games", "gid", gid); bad {
+		return nil, nil, nil, my
+	}
+	if len(games) != 0 {
+		g = games[0]
+	}
+	facs, err = h.M.Faction().SelectWhere(h.GID(gid))
+	if my, bad := Check(err, "handler basic fetch failure on resource aquisition", "resource", "factions", "gid", gid, "owner"); bad {
+		return nil, nil, nil, my
+	}
+	if h.LoggedIn {
+		for _, testF := range facs {
+			if testF.Owner() == h.User.String() {
+				f = testF
+				break
+			}
+		}
+	}
+	return g, f, facs, nil
+}

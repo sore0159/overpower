@@ -2,7 +2,6 @@ package main
 
 import (
 	//"mule/overpower"
-	"fmt"
 	"net/http"
 )
 
@@ -25,17 +24,6 @@ func SetupMux() {
 
 	http.HandleFunc("/overpower/json/", apiJSON)
 
-}
-
-func apiJSON(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		apiJSONget(w, r)
-	case "PUT":
-		apiJSONput(w, r)
-	default:
-		fmt.Fprint(w, "TODO")
-	}
 }
 
 func imgFavIcon(w http.ResponseWriter, r *http.Request) {

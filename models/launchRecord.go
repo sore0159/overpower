@@ -292,7 +292,7 @@ func convertLaunchRecord2Intf(list ...*LaunchRecord) []overpower.LaunchRecordDat
 func LaunchRecordTableCreate(d db.DBer) error {
 	query := `create table launchrecord(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	turn int NOT NULL,
 	sourcex integer NOT NULL,
 	sourcey integer NOT NULL,
@@ -300,7 +300,6 @@ func LaunchRecordTableCreate(d db.DBer) error {
 	targety integer NOT NULL,
 	ordersize integer NOT NULL,
 	size integer NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	FOREIGN KEY(gid, sourcex, sourcey) REFERENCES planet ON DELETE CASCADE,
 	FOREIGN KEY(gid, targetx, targety) REFERENCES planet ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, sourcex, sourcey, targetx, targety)

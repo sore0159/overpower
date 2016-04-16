@@ -33,7 +33,7 @@ type Source interface {
 		result PlanetDat,
 		betrayals [][2]int,
 	)
-	NewPowerOrder(fid int) PowerOrderDat
+	NewPowerOrder(fid int, planet PlanetDat) PowerOrderDat
 	// ------ CHANGE ----- //
 	UpdatePlanetView(fid, turn int, planet PlanetDat) PlanetViewDat
 	// ------- DROP ------ //
@@ -49,22 +49,16 @@ type BattleRecordGet interface {
 	Loc() hexagon.Coord
 	Turn() int
 	Index() int
-	Name() string
 	PrimaryFaction() int
 	PrimaryPresence() int
-	PrimaryPower() int
 	SecondaryFaction() int
 	SecondaryPresence() int
-	SecondaryPower() int
-	Antimatter() int
-	Tachyons() int
 	ShipFaction() int
 	ShipSize() int
 	InitPrimaryFaction() int
 	InitPrimaryPresence() int
 	InitSecondaryFaction() int
 	InitSecondaryPresence() int
-	//Betrayals() db.IntList
 	Betrayals() [][2]int
 }
 type BattleRecordSet interface {
@@ -79,7 +73,7 @@ type BattleRecordDat interface {
 
 type FactionGet interface {
 	MarshalJSON() ([]byte, error)
-	MarshalPublicJSON() ([]byte, error)
+	SetFullJSON() // They say to never go full JSON...
 
 	GID() int
 	FID() int
@@ -280,6 +274,7 @@ type PowerOrderGet interface {
 	Loc() hexagon.Coord
 	UpPower() int
 }
+
 type PowerOrderSet interface {
 	UnmarshalJSON([]byte) error
 	DELETE()

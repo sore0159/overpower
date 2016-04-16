@@ -1,0 +1,18 @@
+{{ define "title"}}Overpower Error Page{{end}}
+{{ define "css"}}overpower{{end}}
+{{define "body"}}
+{{ if .ServerError }}
+<h1>SERVER ERROR</h1>
+ERROR PAGE GOES HERE<br>
+<b>{{ .ServerError }}</b>
+{{ end }}
+{{ if .UserError }}
+<h1>USER ERROR</h1>
+ERROR PAGE GOES HERE<br>
+<b>{{ .UserError }}</b>
+{{ end }}
+<br>
+<br>
+<a href="{{ .Back }}">Go Back</a>
+{{ end }}
+

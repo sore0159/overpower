@@ -12,28 +12,27 @@ import (
 )
 
 type BattleRecord struct {
-	GID                   int           `json:"gid"`
-	FID                   int           `json:"fid"`
-	Loc                   hexagon.Coord `json:"loc"`
-	Turn                  int           `json:"turn"`
-	Index                 int           `json:"index"`
-	Name                  string        `json:"name"`
-	PrimaryFaction        sql.NullInt64 `json:"primaryfaction"`
-	PrimaryPresence       int           `json:"primarypresence"`
-	PrimaryPower          int           `json:"primarypower"`
-	SecondaryFaction      sql.NullInt64 `json:"secondaryfaction"`
-	SecondaryPresence     int           `json:"secondarypresence"`
-	SecondaryPower        int           `json:"secondarypower"`
-	Antimatter            int           `json:"antimatter"`
-	Tachyons              int           `json:"tachyons"`
-	ShipFaction           sql.NullInt64 `json:"shipfaction"`
-	ShipSize              int           `json:"shipsize"`
+	GID   int           `json:"gid"`
+	FID   int           `json:"fid"`
+	Loc   hexagon.Coord `json:"loc"`
+	Turn  int           `json:"turn"`
+	Index int           `json:"index"`
+	//Name                  string        `json:"name"`
+
 	InitPrimaryFaction    sql.NullInt64 `json:"initprimaryfaction"`
 	InitPrimaryPresence   int           `json:"initprimarypresence"`
 	InitSecondaryFaction  sql.NullInt64 `json:"initsecondaryfaction"`
 	InitSecondaryPresence int           `json:"initsecondarypresence"`
-	Betrayals             db.IntList    `json:"betrayals"`
-	sql                   gp.SQLStruct
+	ShipFaction           sql.NullInt64 `json:"shipfaction"`
+	ShipSize              int           `json:"shipsize"`
+
+	Betrayals db.IntList `json:"betrayals"`
+
+	PrimaryFaction    sql.NullInt64 `json:"primaryfaction"`
+	PrimaryPresence   int           `json:"primarypresence"`
+	SecondaryFaction  sql.NullInt64 `json:"secondaryfaction"`
+	SecondaryPresence int           `json:"secondarypresence"`
+	sql               gp.SQLStruct
 }
 
 // --------- BEGIN GENERIC METHODS ------------ //
@@ -70,24 +69,14 @@ func (item *BattleRecord) SQLVal(name string) interface{} {
 		return item.Turn
 	case "index":
 		return item.Index
-	case "name":
-		return item.Name
 	case "primaryfaction":
 		return item.PrimaryFaction
 	case "primarypresence":
 		return item.PrimaryPresence
-	case "primarypower":
-		return item.PrimaryPower
 	case "secondaryfaction":
 		return item.SecondaryFaction
 	case "secondarypresence":
 		return item.SecondaryPresence
-	case "secondarypower":
-		return item.SecondaryPower
-	case "antimatter":
-		return item.Antimatter
-	case "tachyons":
-		return item.Tachyons
 	case "shipfaction":
 		return item.ShipFaction
 	case "shipsize":
@@ -120,24 +109,14 @@ func (item *BattleRecord) SQLPtr(name string) interface{} {
 		return &item.Turn
 	case "index":
 		return &item.Index
-	case "name":
-		return &item.Name
 	case "primaryfaction":
 		return &item.PrimaryFaction
 	case "primarypresence":
 		return &item.PrimaryPresence
-	case "primarypower":
-		return &item.PrimaryPower
 	case "secondaryfaction":
 		return &item.SecondaryFaction
 	case "secondarypresence":
 		return &item.SecondaryPresence
-	case "secondarypower":
-		return &item.SecondaryPower
-	case "antimatter":
-		return &item.Antimatter
-	case "tachyons":
-		return &item.Tachyons
 	case "shipfaction":
 		return &item.ShipFaction
 	case "shipsize":
@@ -160,7 +139,22 @@ func (item *BattleRecord) SQLTable() string {
 }
 
 func (i BattleRecordIntf) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.item)
+	s := struct {
+		*BattleRecord
+		InitPrimaryFaction   int `json:"initprimaryfaction"`
+		InitSecondaryFaction int `json:"initsecondaryfaction"`
+		PrimaryFaction       int `json:"primaryfaction"`
+		SecondaryFaction     int `json:"secondaryfaction"`
+		ShipFaction          int `json:"shipfaction"`
+	}{
+		BattleRecord:         i.item,
+		InitPrimaryFaction:   i.InitPrimaryFaction(),
+		InitSecondaryFaction: i.InitSecondaryFaction(),
+		PrimaryFaction:       i.PrimaryFaction(),
+		SecondaryFaction:     i.SecondaryFaction(),
+		ShipFaction:          i.ShipFaction(),
+	}
+	return json.Marshal(s)
 }
 func (i BattleRecordIntf) UnmarshalJSON(data []byte) error {
 	i.item = &BattleRecord{}
@@ -185,10 +179,6 @@ func (i BattleRecordIntf) Turn() int {
 
 func (i BattleRecordIntf) Index() int {
 	return i.item.Index
-}
-
-func (i BattleRecordIntf) Name() string {
-	return i.item.Name
 }
 
 func (i BattleRecordIntf) PrimaryFaction() int {
@@ -220,10 +210,6 @@ func (i BattleRecordIntf) PrimaryPresence() int {
 	return i.item.PrimaryPresence
 }
 
-func (i BattleRecordIntf) PrimaryPower() int {
-	return i.item.PrimaryPower
-}
-
 func (i BattleRecordIntf) SecondaryFaction() int {
 	if !i.item.SecondaryFaction.Valid {
 		return 0
@@ -251,18 +237,6 @@ func (i BattleRecordIntf) SetSecondaryFaction(x int) {
 
 func (i BattleRecordIntf) SecondaryPresence() int {
 	return i.item.SecondaryPresence
-}
-
-func (i BattleRecordIntf) SecondaryPower() int {
-	return i.item.SecondaryPower
-}
-
-func (i BattleRecordIntf) Antimatter() int {
-	return i.item.Antimatter
-}
-
-func (i BattleRecordIntf) Tachyons() int {
-	return i.item.Tachyons
 }
 
 func (i BattleRecordIntf) ShipFaction() int {
@@ -434,15 +408,10 @@ func (group *BattleRecordGroup) InsertCols() []string {
 		"locy",
 		"turn",
 		"index",
-		"name",
 		"primaryfaction",
 		"primarypresence",
-		"primarypower",
 		"secondaryfaction",
 		"secondarypresence",
-		"secondarypower",
-		"antimatter",
-		"tachyons",
 		"shipfaction",
 		"shipsize",
 		"initprimaryfaction",
@@ -465,15 +434,10 @@ func (group *BattleRecordGroup) SelectCols() []string {
 		"locy",
 		"turn",
 		"index",
-		"name",
 		"primaryfaction",
 		"primarypresence",
-		"primarypower",
 		"secondaryfaction",
 		"secondarypresence",
-		"secondarypower",
-		"antimatter",
-		"tachyons",
 		"shipfaction",
 		"shipsize",
 		"initprimaryfaction",
@@ -554,31 +518,25 @@ func BattleRecordTableCreate(d db.DBer) error {
 	turn int NOT NULL,
 	index int NOT NULL,
 
-	targetx integer NOT NULL,
-	targety integer NOT NULL,
+	locx integer NOT NULL,
+	locy integer NOT NULL,
 
-	shipfaction int,
+	shipfaction int REFERENCES faction ON DELETE SET NULL,
 	shipsize int NOT NULL,
 
-	initprimaryfaction int,
+	initprimaryfaction int REFERENCES faction ON DELETE SET NULL,
 	initprimarypresence int NOT NULL,
-	initsecondaryfaction int,
+	initsecondaryfaction int REFERENCES faction ON DELETE SET NULL,
 	initsecondarypresence int NOT NULL,
 
-	resultprimaryfaction int,
-	resultprimarypresence int NOT NULL,
-	resultsecondaryfaction int,
-	resultsecondarypresence int NOT NULL,
+	primaryfaction int REFERENCES faction ON DELETE SET NULL,
+	primarypresence int NOT NULL,
+	secondaryfaction int REFERENCES faction ON DELETE SET NULL,
+	secondarypresence int NOT NULL,
 
 	betrayals int[],
 
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, shipfaction) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, initprimaryfaction) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, resultprimaryfaction) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, initprimaryfaction) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, initsecondaryfaction) REFERENCES faction ON DELETE CASCADE,
-	FOREIGN KEY(gid, targetx, targety) REFERENCES planet ON DELETE CASCADE,
+	FOREIGN KEY(gid, locx, locy) REFERENCES planet ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, turn, index)
 );`
 	err := db.Exec(d, false, query)

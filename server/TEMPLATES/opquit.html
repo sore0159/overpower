@@ -8,6 +8,7 @@ Back to [ <a href="/overpower/view/{{ .game.GID }}">Game {{ .game.Name }}</a> ]
 <div class="box" style="border-color:#FF0000;text-align:center;">Really Quit?<br>
 <form action="" method="post">
 <input type="hidden" name="confirm" value="true">
+<input type="hidden" name="turn" value="{{ .game.Turn }}">
 <input type="submit" value="CONFIRM QUIT GAME">
  </form>
 {{ end }}

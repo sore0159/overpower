@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var RUNUPDATE byte = 0
+var RUNUPDATE byte = 1
 
 func TestUpdateTables(t *testing.T) {
 	if RUNUPDATE == 1 {

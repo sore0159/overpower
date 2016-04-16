@@ -120,7 +120,16 @@ func (item *PlanetView) SQLTable() string {
 }
 
 func (i PlanetViewIntf) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.item)
+	s := struct {
+		*PlanetView
+		PrimaryFaction   int `json:"primaryfaction"`
+		SecondaryFaction int `json:"secondaryfaction"`
+	}{
+		PlanetView:       i.item,
+		PrimaryFaction:   i.PrimaryFaction(),
+		SecondaryFaction: i.SecondaryFaction(),
+	}
+	return json.Marshal(s)
 }
 func (i PlanetViewIntf) UnmarshalJSON(data []byte) error {
 	i.item = &PlanetView{}
@@ -466,20 +475,19 @@ func convertPlanetView2Intf(list ...*PlanetView) []overpower.PlanetViewDat {
 func PlanetViewTableCreate(d db.DBer) error {
 	query := `create table planetview(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	locx int NOT NULL,
 	locy int NOT NULL,
 	name varchar(20) NOT NULL,
 	turn int NOT NULL,
-	primaryfaction int,
+	primaryfaction int REFERENCES faction ON DELETE SET NULL,
 	primarypresence int NOT NULL,
 	primarypower int NOT NULL,
-	secondaryfaction int,
+	secondaryfaction int REFERENCES faction ON DELETE SET NULL,
 	secondarypresence int NOT NULL,
 	secondarypower int NOT NULL,
 	antimatter int NOT NULL,
 	tachyons int NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planet ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, locx, locy)
 );`

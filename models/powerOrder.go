@@ -260,11 +260,10 @@ func convertPowerOrder2Intf(list ...*PowerOrder) []overpower.PowerOrderDat {
 func PowerOrderTableCreate(d db.DBer) error {
 	query := `create table powerorder(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid integer NOT NULL,
+	fid integer NOT NULL REFERENCES faction ON DELETE CASCADE,
 	locx int NOT NULL,
 	locy int NOT NULL,
 	uppower int NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	FOREIGN KEY(gid, locx, locy) REFERENCES planet ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid)
 );`

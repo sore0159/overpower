@@ -301,10 +301,10 @@ func RunGameTurn(source Source) (logger, breaker error) {
 	//
 	// ------- PLANETS CHANGE POWER -------- //
 	for _, pO := range powerOrders {
-		pl := planetGrid[pO.Loc()]
-		fid := pO.FID()
+		pLoc, upP, fid := pO.Loc(), pO.UpPower(), pO.FID()
+		pl := planetGrid[pLoc]
 		var powNum int
-		if upP := pO.UpPower(); upP > 0 {
+		if upP > 0 {
 			powNum = 1
 		} else if upP < 0 {
 			powNum = -1

@@ -11,59 +11,53 @@ var (
 
 // /overpower/quit/GID
 func pageOPQuit(w http.ResponseWriter, r *http.Request) {
+	h := MakeHandler(w, r)
 	if DBLOCK {
-		http.Error(w, "GAME DOWN FOR DAYLY MAINT: 10-20MIN", http.StatusInternalServerError)
+		h.HandleUserError(w, r, "GAME DOWN FOR DAYLY MAINT: 10-20MIN")
 		return
 	}
-	h := MakeHandler(w, r)
 	if h.LastFull() > 3 {
 		http.Redirect(w, r, h.NewPath(4), http.StatusFound)
 		return
 	}
 	if !h.LoggedIn {
-		h.HandleUserError(w, "NOT LOGGED IN")
+		h.HandleUserError(w, r, "USER NOT LOGGED IN")
 		return
 	}
-	gid, ok := h.IntAt(3)
+	gid, ok := h.IntAt(4)
 	if !ok {
-		h.HandleUserError(w, "BAD GID IN URL")
+		h.HandleUserError(w, r, "NO/BAD GAME ID SPECIFIED")
 		return
 	}
-	games, err := h.M.Game().SelectWhere(h.GID(gid))
-	if my, bad := Check(err, "resource failure", "page", "opquit", "resource", "game", "gid", gid); bad {
-		h.HandleServerError(w, my)
+	g, f, _, err := h.FetchBasicData(gid)
+	if my, bad := Check(err, "page quit failure on resource aquisition", "gid", gid); bad {
+		h.HandleServerError(w, r, my)
 		return
 	}
-	if len(games) == 0 {
-		h.HandleUserError(w, "NO GAME FOUND FOR GID")
+	if g == nil {
+		h.HandleUserError(w, r, "NO GAME FOUND")
 		return
 	}
-	g := games[0]
+	if f == nil {
+		h.HandleUserError(w, r, "USER HAS NO FACTION FOR THIS GAME")
+		return
+	}
 	if g.Turn() < 1 {
-		h.HandleUserError(w, "GAME NOT IN PROGRESS")
-		return
-	}
-	facs, err := h.M.Faction().Select("gid", gid, "owner", h.User.String())
-	if my, bad := Check(err, "resource failure", "page", "opquit", "resource", "faction", "gid", gid, "user", h.User); bad {
-		h.HandleServerError(w, my)
-		return
-	}
-	if len(facs) == 0 {
-		h.HandleUserError(w, "NO FACTION FOUND FOR THIS USER FOR THIS GAME")
+		h.HandleUserError(w, r, "GAME HAS NOT YET BEGUN")
 		return
 	}
 	if r.Method == "POST" {
 		confirm := r.FormValue("confirm")
 		var errS, errU error
 		if confirm == "true" {
-			errS, errU = h.CommandQuitGame(g, facs[0])
+			errS, errU = h.CommandQuitGame(g, f, r.FormValue("turn"))
 		}
-		if my, bad := Check(errS, "quitgame execute failure", "game", g, "fac", facs[0]); bad {
-			h.HandleServerError(w, my)
+		if my, bad := Check(errS, "quitgame execute failure", "game", g, "fac", f); bad {
+			h.HandleServerError(w, r, my)
 			return
 		}
 		if errU != nil {
-			h.HandleUserError(w, errU.Error())
+			h.HandleUserError(w, r, errU.Error())
 			return
 		}
 		http.Redirect(w, r, fmt.Sprintf("/overpower/view/%d", g.GID()), http.StatusFound)
@@ -71,6 +65,6 @@ func pageOPQuit(w http.ResponseWriter, r *http.Request) {
 	}
 	m := h.DefaultApp()
 	m["game"] = g
-	m["faction"] = facs[0]
+	m["faction"] = f
 	h.Apply(TPOPQUIT, w)
 }

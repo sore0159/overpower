@@ -7,27 +7,6 @@ import (
 	"strings"
 )
 
-func (h *Handler) CommandForceTurn(g overpower.GameDat, turnStr string) (errServer, errUser error) {
-	if g == nil {
-		return nil, NewError("USER HAS NO GAME TO PROGRESS")
-	}
-	if g.Turn() < 1 {
-		return nil, NewError("GAME HAS NOT YET BEGUN")
-	}
-	turnI, err := strconv.Atoi(turnStr)
-	if err != nil || turnI != g.Turn() {
-		return nil, NewError("FORM SUBMISSION TURN DOES NOT MATCH GAME TURN")
-	}
-	logE, failE := OPDB.SourceTransact(g.GID(), overpower.RunGameTurn)
-	if my, bad := Check(failE, "failure on running turn", "gid", g.GID()); bad {
-		return my, nil
-	}
-	if logE != nil {
-		Log(logE)
-	}
-	return nil, nil
-}
-
 func (h *Handler) CommandStartGame(g overpower.GameDat, facs []overpower.FactionDat, exodus bool) (errServer, errUser error) {
 	if g == nil {
 		return nil, NewError("USER HAS NO GAME TO START")
@@ -90,7 +69,7 @@ func (h *Handler) CommandNewGame(g overpower.GameDat, password, gamename, facnam
 	}
 	winI, ok := strconv.Atoi(towin)
 	if ok != nil || winI < 2 {
-		return nil, NewError("INVALID GAME WINPERCENT")
+		return nil, NewError("INVALID GAME WIN THRESHOLD")
 	}
 	newG := &models.Game{
 		Owner: h.User.String(),
@@ -171,17 +150,86 @@ func (h *Handler) CommandNewFaction(g overpower.GameDat, facs []overpower.Factio
 	return nil, nil
 }
 
-func (h *Handler) CommandQuitGame(g overpower.GameDat, f overpower.FactionDat) (errServer, errUser error) {
-	return NewError("TODO"), nil
-	// g, f, already error checked
-	//
-	// f.DELETE()
-	// return h.M.Close(), nil
-	// THIS DELETES ALL REFERENCES TO THE FACTION: NOT GOOD
+func (h *Handler) CommandQuitGame(g overpower.GameDat, f overpower.FactionDat, turnStr string) (errServer, errUser error) {
+	turnI, err := strconv.Atoi(turnStr)
+	if err != nil || turnI != g.Turn() {
+		return nil, NewError("FORM SUBMISSION TURN DOES NOT MATCH GAME TURN")
+	}
+	f.DELETE()
+	return h.M.Close(), nil
+}
+
+func (h *Handler) CommandSetDoneBuffer(g overpower.GameDat, facs []overpower.FactionDat, f overpower.FactionDat, turnStr, buffStr string) (errServer, errUser error) {
+	if g.Turn() < 1 {
+		return nil, NewError("GAME HAS NOT YET BEGUN")
+	}
+	turnI, err := strconv.Atoi(turnStr)
+	if err != nil || turnI != g.Turn() {
+		return nil, NewError("FORM SUBMISSION TURN DOES NOT MATCH GAME TURN")
+	}
+	buffI, err := strconv.Atoi(buffStr)
+	if err != nil {
+		return nil, NewError("UNPARSABLE TURN BUFFER VALUE")
+	}
+	if buffI < 0 {
+		buffI = -1
+	}
+	curBuff := f.DoneBuffer()
+	if buffI == curBuff {
+		return nil, nil
+	}
+	f.SetDoneBuffer(buffI)
+	err = h.M.Close()
+	if my, bad := Check(err, "command set turnbuffer failure on updating faction", "faction", f); bad {
+		return my, nil
+	}
+	var allDone bool
+	if curBuff == 0 {
+		allDone = true
+		for _, testF := range facs {
+			if testF == nil {
+				continue
+			}
+			if testF.FID() != f.FID() && testF.DoneBuffer() == 0 {
+				allDone = false
+				break
+			}
+		}
+	}
+
+	if allDone {
+		// TODO: Run multiple turns if all players have done buffers > 1
+		fRun := func(source overpower.Source) (logE, failE error) {
+			return overpower.RunGameTurn(source)
+		}
+		logE, failE := OPDB.SourceTransact(g.GID(), fRun)
+		if my, bad := Check(failE, "command setturn done rungame failure", "gid", g.GID()); bad {
+			return my, nil
+		}
+		if logE != nil {
+			Log(logE)
+		}
+	}
 	return nil, nil
 }
 
-func (h *Handler) CommandSetTurnDone(g overpower.GameDat, facs []overpower.FactionDat, f overpower.FactionDat) (errServer, errUser error) {
-	return NewError("TODO"), nil
+func (h *Handler) CommandForceTurn(g overpower.GameDat, turnStr string) (errServer, errUser error) {
+	if g == nil {
+		return nil, NewError("USER HAS NO GAME TO PROGRESS")
+	}
+	if g.Turn() < 1 {
+		return nil, NewError("GAME HAS NOT YET BEGUN")
+	}
+	turnI, err := strconv.Atoi(turnStr)
+	if err != nil || turnI != g.Turn() {
+		return nil, NewError("FORM SUBMISSION TURN DOES NOT MATCH GAME TURN")
+	}
+	logE, failE := OPDB.SourceTransact(g.GID(), overpower.RunGameTurn)
+	if my, bad := Check(failE, "failure on running turn", "gid", g.GID()); bad {
+		return my, nil
+	}
+	if logE != nil {
+		Log(logE)
+	}
 	return nil, nil
 }

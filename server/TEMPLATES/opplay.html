@@ -23,7 +23,7 @@
 <canvas class="screen" id="starscreen" width=800 height=600></canvas>
 <canvas class="screen" id="mainscreen" width=800 height=600></canvas>
 </div>
-<b>Game:</b> [ <a href="/overpower/view/{{ .game.Gid }}">{{ .game.Name }}</a> ] &bull; <b>Faction:</b> {{ .faction.Name }}<br>
+<b>Game:</b> [ <a href="/overpower/view/{{ .game.GID }}">{{ .game.Name }}</a> ] &bull; <b>Faction:</b> {{ .faction.Name }}<br>
 
 <b>Score:</b> <span id="scoretext"></span> &bull; <b>To win:</b> {{ .game.ToWin }} &bull;  <b>Leader:</b> <span id="highscoretext"></span>
 
@@ -58,6 +58,7 @@
 <div class="clearer"></div>
 </div>
 
+<!--
 <script src="/static/js/stars.js" type="text/javascript"></script>
 <script src="/static/js/grid.js" type="text/javascript"></script>
 
@@ -71,7 +72,8 @@
 <script src="/static/js/reports.js" type="text/javascript"></script>
 <script type="text/javascript"> (function() {
 var canvas = document.getElementById('mainscreen');
-canvas.fetchFullView({{ .game.Gid }}, {{ .faction.Fid }});
+canvas.fetchFullView({{ .game.GID }}, {{ .faction.FID }});
 })(); </script>
+-->
 
 {{ end }}

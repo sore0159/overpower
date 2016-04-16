@@ -13,21 +13,21 @@ var (
 func pageOPView(w http.ResponseWriter, r *http.Request) {
 	h := MakeHandler(w, r)
 	if len(h.Path) != 4 {
-		h.HandleUserError(w, "INVALID PATH")
+		h.HandleUserError(w, r, "INVALID PATH")
 		return
 	}
 	gid, ok := h.IntAt(3)
 	if !ok {
-		h.HandleUserError(w, "UNPARSABLE GAMEID")
+		h.HandleUserError(w, r, "UNPARSABLE GAMEID")
 		return
 	}
 	games, err := h.M.Game().SelectWhere(h.GID(gid))
 	if my, bad := Check(err, "resource failure on OP view page", "resource", "game", "gid", gid); bad {
-		h.HandleServerError(w, my)
+		h.HandleServerError(w, r, my)
 		return
 	}
 	if len(games) == 0 {
-		h.HandleUserError(w, "NO GAME MATCHING GAMEID")
+		h.HandleUserError(w, r, "NO GAME MATCHING GAMEID")
 		return
 	}
 	g := games[0]
@@ -35,7 +35,7 @@ func pageOPView(w http.ResponseWriter, r *http.Request) {
 	m := h.DefaultApp()
 	facs, err := h.M.Faction().SelectWhere(h.GID(gid))
 	if my, bad := Check(err, "resource failure", "page", "opview", "resource", "factions", "gid", gid); bad {
-		h.HandleServerError(w, my)
+		h.HandleServerError(w, r, my)
 		return
 	}
 	m["factions"] = facs
@@ -57,15 +57,19 @@ func pageOPView(w http.ResponseWriter, r *http.Request) {
 	}
 	m["game"] = g
 	if r.Method == "POST" {
+		if DBLOCK {
+			h.HandleUserError(w, r, "GAME DOWN FOR DAYLY MAINT: 10-20MIN")
+			return
+		}
 		if !h.LoggedIn {
-			h.HandleUserError(w, "NOT LOGGED IN")
+			h.HandleUserError(w, r, "NOT LOGGED IN")
 			return
 		}
 		var errS, errU error
 		action := r.FormValue("action")
 		switch action {
 		case "setdone":
-			errS, errU = h.CommandSetTurnDone(g, facs, ownedF)
+			errS, errU = h.CommandSetDoneBuffer(g, facs, ownedF, r.FormValue("turn"), r.FormValue("donebuffer"))
 		case "dropfac":
 			errS, errU = h.CommandDropFaction(g, ownedF)
 		case "newfac":
@@ -74,9 +78,9 @@ func pageOPView(w http.ResponseWriter, r *http.Request) {
 			errU = NewError("UNKNOWN ACTION TYPE")
 		}
 		if my, bad := Check(errS, "page op view action failure", "action", action, "game", g); bad {
-			h.HandleServerError(w, my)
+			h.HandleServerError(w, r, my)
 		} else if errU != nil {
-			h.HandleUserError(w, errU.Error())
+			h.HandleUserError(w, r, errU.Error())
 		} else {
 			http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		}

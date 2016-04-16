@@ -265,12 +265,11 @@ func convertShip2Intf(list ...*Ship) []overpower.ShipDat {
 func ShipTableCreate(d db.DBer) error {
 	query := `create table ship(
 	gid integer NOT NULL REFERENCES game ON DELETE CASCADE,
-	fid int NOT NULL,
+	fid int NOT NULL REFERENCES faction ON DELETE CASCADE,
 	sid int NOT NULL,
 	size int NOT NULL,
 	launched int NOT NULL,
 	path point[] NOT NULL,
-	FOREIGN KEY(gid, fid) REFERENCES faction ON DELETE CASCADE,
 	PRIMARY KEY(gid, fid, sid)
 );`
 

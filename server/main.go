@@ -37,7 +37,7 @@ func main() {
 		panic(my)
 	}
 	defer OPDB.Close()
-	//go AutoTimer()
+	go AutoTimer()
 	SetupMux()
 	Announce("STARTING SERVER AT", SERVPORT)
 	err = http.ListenAndServe(SERVPORT, nil)

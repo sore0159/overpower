@@ -24,7 +24,7 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 
 	games, err := h.M.Game().Select("owner", h.User.String())
 	if my, bad := Check(err, "resource failure on OP home page", "resource", "game", "owner", h.User.String()); bad {
-		h.HandleServerError(w, my)
+		h.HandleServerError(w, r, my)
 		return
 	}
 	if len(games) != 0 {
@@ -37,14 +37,14 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 	if hasG {
 		gFacs, err = h.M.Faction().SelectWhere(h.GID(g.GID()))
 		if my, bad := Check(err, "resource error in homepage", "resource", "faction", "user", h.User, "gid", g.GID()); bad {
-			h.HandleServerError(w, my)
+			h.HandleServerError(w, r, my)
 			return
 		}
 		gHasF = len(gFacs) > 0
 	}
 	if r.Method == "POST" {
 		if DBLOCK {
-			http.Error(w, "GAME DOWN FOR DAYLY MAINT: 10-20MIN", http.StatusInternalServerError)
+			h.HandleUserError(w, r, "GAME DOWN FOR DAYLY MAINT: 10-20MIN")
 			return
 		}
 		action := r.FormValue("action")
@@ -78,9 +78,9 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 			errU = NewError("UNKNOWN ACTION TYPE")
 		}
 		if my, bad := Check(errS, "page op home action failure", "action", action, "user", h.User.String(), "game", g); bad {
-			h.HandleServerError(w, my)
+			h.HandleServerError(w, r, my)
 		} else if errU != nil {
-			h.HandleUserError(w, errU.Error())
+			h.HandleUserError(w, r, errU.Error())
 		} else {
 			http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		}
@@ -108,7 +108,7 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 	}
 	oFacs, err := h.M.Faction().Select("owner", h.User.String())
 	if my, bad := Check(err, "resource error in homepage", "resource", "faction", "owner", h.User); bad {
-		h.HandleServerError(w, my)
+		h.HandleServerError(w, r, my)
 		return
 	}
 	oHasF := len(oFacs) > 0
@@ -117,7 +117,7 @@ func pageOPHome(w http.ResponseWriter, r *http.Request) {
 		for _, f := range oFacs {
 			games, err := h.M.Game().SelectWhere(h.GID(f.GID()))
 			if my, bad := Check(err, "resource error in homepage", "gid", f.GID(), "fac", f, "owner", h.User); bad {
-				h.HandleServerError(w, my)
+				h.HandleServerError(w, r, my)
 				return
 			} else {
 				facGames = append(facGames, games...)

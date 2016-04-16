@@ -252,10 +252,11 @@ func (s *Source) NewBattleRecord(ship overpower.ShipDat, fid, turn,
 	s.M.CreateBattleRecord(br)
 }
 
-func (s *Source) NewPowerOrder(fid int) overpower.PowerOrderDat {
+func (s *Source) NewPowerOrder(fid int, planet overpower.PlanetDat) overpower.PowerOrderDat {
 	po := &PowerOrder{
 		GID: s.GID,
 		FID: fid,
+		Loc: planet.Loc(),
 	}
 	s.M.CreatePowerOrder(po)
 	return po.Intf()

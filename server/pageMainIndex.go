@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	TPINDEX   = MixTemp("frame", "titlebar", "index")
+	TPINDEX   = MixTemp("frame", "titlebar", "mainindex")
 	TPOPINDEX = MixTemp("frame", "titlebar", "opindex")
 )
 
