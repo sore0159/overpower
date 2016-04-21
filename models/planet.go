@@ -404,6 +404,14 @@ func (s *PlanetSession) SelectWhere(where sq.Condition) ([]overpower.PlanetDat, 
 	}
 	return convertPlanet2Intf(s.PlanetGroup.List[cur:]...), nil
 }
+func (s *PlanetSession) SelectByLocs(gid int, locations ...hexagon.Coord) ([]overpower.PlanetDat, error) {
+	coordWhere := make([]sq.Condition, len(locations))
+	for i, loc := range locations {
+		coordWhere[i] = sq.AND(sq.EQ("locx", loc[0]), sq.EQ("locy", loc[1]))
+	}
+	where := sq.AND(sq.EQ("gid", gid), sq.OR(coordWhere...))
+	return s.SelectWhere(where)
+}
 
 // --------- END SESSION  ------------ //
 // --------- BEGIN UTILS ------------ //

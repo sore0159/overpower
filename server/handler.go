@@ -87,3 +87,28 @@ func (h *Handler) FetchBasicData(gid int) (g overpower.GameDat, f overpower.Fact
 	}
 	return g, f, facs, nil
 }
+
+func (h *Handler) Validate(gid int, fids ...int) (f overpower.FactionDat, ok bool, err error) {
+	if !h.LoggedIn {
+		return nil, false, nil
+	}
+	if len(fids) == 0 {
+		facs, err := h.M.Faction().Select("gid", gid, "owner", h.User.String())
+		if err != nil {
+			return nil, false, err
+		}
+		if len(facs) == 0 {
+			return nil, false, nil
+		}
+		return facs[0], true, nil
+	}
+	fid := fids[0]
+	facs, err := h.M.Faction().SelectWhere(h.FID(gid, fid))
+	if err != nil {
+		return nil, false, err
+	}
+	if len(facs) == 0 || facs[0].Owner() != h.User.String() {
+		return nil, false, nil
+	}
+	return facs[0], true, nil
+}

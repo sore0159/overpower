@@ -255,6 +255,12 @@ func (s *LaunchOrderSession) SelectWhere(where sq.Condition) ([]overpower.Launch
 	}
 	return convertLaunchOrder2Intf(s.LaunchOrderGroup.List[cur:]...), nil
 }
+func (s *LaunchOrderSession) SelectBySource(gid, fid int, source hexagon.Coord) ([]overpower.LaunchOrderDat, error) {
+	where := sq.AND(sq.EQ("gid", gid), sq.EQ("fid", fid),
+		sq.AND(sq.EQ("sourcex", source[0]), sq.EQ("sourcey", source[1])),
+	)
+	return s.SelectWhere(where)
+}
 
 // --------- END SESSION  ------------ //
 // --------- BEGIN UTILS ------------ //

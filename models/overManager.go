@@ -3,6 +3,7 @@ package models
 import (
 	"mule/mybad"
 	"mule/mydb/db"
+	sq "mule/mydb/sql"
 )
 
 var (
@@ -27,6 +28,16 @@ type Manager struct {
 
 func NewManager(d db.DBer) *Manager {
 	return &Manager{D: d}
+}
+
+func (m *Manager) GID(gid int) sq.Condition {
+	return sq.EQ("gid", gid)
+}
+func (m *Manager) FID(gid, fid int) sq.Condition {
+	return sq.AND(sq.EQ("gid", gid), sq.EQ("fid", fid))
+}
+func (m *Manager) TURN(gid, fid, turn int) sq.Condition {
+	return sq.AND(sq.EQ("gid", gid), sq.EQ("fid", fid), sq.EQ("turn", turn))
 }
 
 func (m *Manager) BattleRecord() *BattleRecordSession {

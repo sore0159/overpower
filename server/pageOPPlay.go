@@ -45,5 +45,6 @@ func pageOPPlay(w http.ResponseWriter, r *http.Request) {
 	m := h.DefaultApp()
 	m["game"] = g
 	m["faction"] = f
+	TPPLAY := MixTemp("frame", "titlebar", "opplay")
 	h.Apply(TPPLAY, w)
 }

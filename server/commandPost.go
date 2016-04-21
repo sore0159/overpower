@@ -159,7 +159,7 @@ func (h *Handler) CommandQuitGame(g overpower.GameDat, f overpower.FactionDat, t
 	return h.M.Close(), nil
 }
 
-func (h *Handler) CommandSetDoneBuffer(g overpower.GameDat, facs []overpower.FactionDat, f overpower.FactionDat, turnStr, buffStr string) (errServer, errUser error) {
+func (h *Handler) CommandSetDoneBuffer(g overpower.GameDat, f overpower.FactionDat, turnStr, buffStr string) (errServer, errUser error) {
 	if g.Turn() < 1 {
 		return nil, NewError("GAME HAS NOT YET BEGUN")
 	}
@@ -174,43 +174,10 @@ func (h *Handler) CommandSetDoneBuffer(g overpower.GameDat, facs []overpower.Fac
 	if buffI < 0 {
 		buffI = -1
 	}
-	curBuff := f.DoneBuffer()
-	if buffI == curBuff {
+	if buffI == f.DoneBuffer() {
 		return nil, nil
 	}
-	f.SetDoneBuffer(buffI)
-	err = h.M.Close()
-	if my, bad := Check(err, "command set turnbuffer failure on updating faction", "faction", f); bad {
-		return my, nil
-	}
-	var allDone bool
-	if curBuff == 0 {
-		allDone = true
-		for _, testF := range facs {
-			if testF == nil {
-				continue
-			}
-			if testF.FID() != f.FID() && testF.DoneBuffer() == 0 {
-				allDone = false
-				break
-			}
-		}
-	}
-
-	if allDone {
-		// TODO: Run multiple turns if all players have done buffers > 1
-		fRun := func(source overpower.Source) (logE, failE error) {
-			return overpower.RunGameTurn(source)
-		}
-		logE, failE := OPDB.SourceTransact(g.GID(), fRun)
-		if my, bad := Check(failE, "command setturn done rungame failure", "gid", g.GID()); bad {
-			return my, nil
-		}
-		if logE != nil {
-			Log(logE)
-		}
-	}
-	return nil, nil
+	return InternalSetDoneBuffer(f.GID(), f.FID(), buffI)
 }
 
 func (h *Handler) CommandForceTurn(g overpower.GameDat, turnStr string) (errServer, errUser error) {

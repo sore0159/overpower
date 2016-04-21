@@ -69,7 +69,7 @@ func pageOPView(w http.ResponseWriter, r *http.Request) {
 		action := r.FormValue("action")
 		switch action {
 		case "setdone":
-			errS, errU = h.CommandSetDoneBuffer(g, facs, ownedF, r.FormValue("turn"), r.FormValue("donebuffer"))
+			errS, errU = h.CommandSetDoneBuffer(g, ownedF, r.FormValue("turn"), r.FormValue("donebuffer"))
 		case "dropfac":
 			errS, errU = h.CommandDropFaction(g, ownedF)
 		case "newfac":

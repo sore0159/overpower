@@ -92,7 +92,7 @@ func RunGameTurn(source Source) (logger, breaker error) {
 		fid := pO.FID()
 		if pl.PrimaryFaction() != fid && pl.SecondaryFaction() != fid {
 			errOccured = true
-			loggerM.AddContext("bad powerorder", "planet not owner", "powerorder", pO)
+			loggerM.AddContext("bad powerorder", "planet not owner", "powerorder", pO, "fid", fid, "plPF", pl.PrimaryFaction(), "plSF", pl.SecondaryFaction())
 			continue
 		}
 		powerOrders = append(powerOrders, pO)
@@ -145,14 +145,14 @@ func RunGameTurn(source Source) (logger, breaker error) {
 			continue
 		}
 		switch src.PrimaryPower() {
-		case -1:
+		case TACHYONS:
 			if have := src.Tachyons(); size > have {
 				size = have
 				src.SetTachyons(0)
 			} else {
 				src.SetTachyons(have - size)
 			}
-		case 1:
+		case ANTIMATTER:
 			if have := src.Antimatter(); size > have {
 				size = have
 				src.SetAntimatter(0)
@@ -189,14 +189,14 @@ func RunGameTurn(source Source) (logger, breaker error) {
 			continue
 		}
 		switch src.SecondaryPower() {
-		case -1:
+		case TACHYONS:
 			if have := src.Tachyons(); size > have {
 				size = have
 				src.SetTachyons(0)
 			} else {
 				src.SetTachyons(have - size)
 			}
-		case 1:
+		case ANTIMATTER:
 			if have := src.Antimatter(); size > have {
 				size = have
 				src.SetAntimatter(0)
