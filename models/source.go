@@ -95,9 +95,10 @@ func (s *Source) UpdatePlanetView(fid, turn int, planet overpower.PlanetDat) ove
 func (s *Source) ClearLaunchOrders() error {
 	return s.M.LaunchOrder().Delete(s.Where)
 }
-func (s *Source) ClearPowerOrders() error {
-	return s.M.PowerOrder().Delete(s.Where)
-}
+
+//func (s *Source) ClearPowerOrders() error {
+//return s.M.PowerOrder().Delete(s.Where)
+//}
 
 func (s *Source) NewPlanet(name string,
 	primaryFac, prPres, prPower,

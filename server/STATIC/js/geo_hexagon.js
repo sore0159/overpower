@@ -16,16 +16,8 @@ if (!muleObj.geometry) {
 
 
 function Hex(x, y) {
-   if (x) {
-       this.x = x;
-   } else {
-       this.x = 0;
-   }
-   if (y) {
-       this.y = y;
-   } else {
-       this.y = 0;
-   }
+    this.x = x || 0;
+    this.y = y || 0;
 }
 Hex.prototype.eq = function(hex) {
     return (hex.x === this.x) && (hex.y === this.y);
@@ -43,17 +35,8 @@ Hex.prototype.addHex = function(hex) {
     return this.add(hex.x, hex.y);
 };
 Hex.prototype.add = function(x, y) {
-    var dx, dy;
-    if (x) {
-        dx = x;
-    } else {
-        dx = 0;
-    }
-    if (y) {
-        dy = y;
-    } else {
-        dy = 0;
-    }
+    var dx = x || 0;
+    var dy = y || 0;
     var pt = new Hex(this.x + dx, this.y+dy);
     return pt;
 };
@@ -96,14 +79,19 @@ Hex.prototype.cornerPts = function() {
     return pts;
 };
 
-Point.prototype.hexAt = function() {
+function HexGrid(transform) {
+    this.transform = transform;
+}
+
+HexGrid.prototype.hexAt = function(pt) {
+    var inPt = this.transform.out2in(pt);
 	//       __
 	//      | \|  width =  1.5
 	//box = |_/|  height = sqrt(3) = 2*hexTriH;
     //
     var hexTriH = 0.86602540378;
-    var x = this.x + 0.5;
-    var y = this.y + hexTriH;
+    var x = inPt.x + 0.5;
+    var y = inPt.y + hexTriH;
     var hx = Math.floor(x / 1.5);
     //var hy = Math.floor((y-hx*hexTriH)/ (2*hexTriH));
     var hy = Math.floor(0.5*((y/hexTriH)-hx));
@@ -127,5 +115,79 @@ Point.prototype.hexAt = function() {
     var hex = new Hex(hx, hy);
     return hex;
 };
+
+HexGrid.prototype.centerPt = function(hex) {
+    var inPt = hex.centerPt();
+    return this.transform.in2out(inPt);
+};
+HexGrid.prototype.cornerPts = function(hex) {
+    var inPts = hex.cornerPts();
+    var outPts = [];
+    for (var i = 0; i < inPts.length; i++) {
+        outPts[i] = this.transform.in2out(inPts[i]);
+    }
+    return outPts;
+};
+
+HexGrid.prototype.hexesIn = function(minX, minY, maxX, maxY) {
+    var minObj = {};
+    var maxObj = {};
+    var grid = this;
+    function xChecker(x, y) {
+        var pt = new Point(x, y);
+        var hex = grid.hexAt(pt);
+        var key = ""+hex.x;
+        if (!minObj[key] || minObj[key].y > hex.y) {
+            minObj[key] = hex;
+        }
+        if (!maxObj[key] || maxObj[key].y < hex.y) {
+            maxObj[key] = hex;
+        }
+    }
+    var y = 0;
+    var x = minX;
+    for (y = minY; y <=maxY; y+=1) {
+        xChecker(x,y);
+    }
+    x = maxX;
+    for (y = minY; y <=maxY; y+=1) {
+        xChecker(x,y);
+    }
+    y = minY;
+    for (x = minX; x <=maxX; x+=1) {
+        xChecker(x,y);
+    }
+    y = maxY;
+    for (x = minX; x <=maxX; x+=1) {
+        xChecker(x,y);
+    }
+    var hexList = [];
+    var hexMap = new Map();
+    hexMap.hasHex = function(hex) {
+        var hexSet = this.get(hex.x);
+        if (!hexSet) {
+            return false;
+        }
+        return hexSet.has(hex.y);
+    };
+    Object.keys(minObj).forEach(function(key) {
+        var minHex = minObj[key];
+        var maxHex = maxObj[key];
+        var hexSet = hexMap.get(minHex.x);
+        if (!hexSet) {
+            hexSet = new Set();
+            hexMap.set(minHex.x, hexSet);
+        }
+        for (i = minHex[1]; i<=maxHex[1];i++) {
+            var hex = new Hex(minHex.x, i);
+            hexList.push(hex);
+            hexSet.add(i);
+        }
+    });
+    hexMap.list = hexList;
+    return hexMap;
+};
+
+muleObj.geometry.HexGrid = HexGrid;
 
 })(muleObj);

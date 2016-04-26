@@ -5,16 +5,8 @@ if (!muleObj.geometry) {
 }
 
 function Point(x, y) {
-    if(x) {
-        this.x = x;
-    } else {
-        this.x = 0;
-    }
-    if (y) {
-        this.y = y;
-    } else {
-        this.y = 0;
-    }
+    this.x = x || 0;
+    this.y = y || 0;
 }
 
 Point.prototype.eq = function(point) {
@@ -30,17 +22,8 @@ Point.prototype.addPoint = function(point) {
     return this.add(point.x, point.y);
 };
 Point.prototype.add = function(x, y) {
-    var dx, dy;
-    if (x) {
-        dx = x;
-    } else {
-        dx = 0;
-    }
-    if (y) {
-        dy = y;
-    } else {
-        dy = 0;
-    }
+    var dx = x || 0;
+    var dy = y || 0;
     var pt = new Point(this.x + dx, this.y+dy);
     return pt;
 };
@@ -52,7 +35,7 @@ Point.prototype.scale = function(s) {
     return pt;
 };
 Point.prototype.addPolar = function(r, theta) {
-    theta = Math.pi * theta;
+    theta = Math.PI * theta;
     var dx = r * Math.cos(theta);
     var dy = r * Math.sin(theta);
     var pt = new Point(this.x+dx, this.y+dy);
@@ -64,7 +47,7 @@ Point.prototype.polarTo = function(point) {
     }
     var r = this.dist(point);
     var cosT = (point.x - this.x) / r;
-    var theta = Math.acos(cosT)/ Math.pi;
+    var theta = Math.acos(cosT)/ Math.PI;
     if (point.y < this.y) {
         theta = 2 - theta;
     }
@@ -75,40 +58,16 @@ Point.prototype.polarTo = function(point) {
 muleObj.geometry.Point = Point;
 
 
-function GridTransform(scale, originX, originY, theta, squashY, noMirrorY) {
-    if (scale) {
-        this.scale = scale;
-    } else {
-        this.scale = 1;
-    }
-    if (originX) {
-        this.originX = originX;
-    } else {
-        this.originX = 0;
-    }
-    if (originY) {
-        this.originY = originY;
-    } else {
-        this.originY = 0;
-    }
-    if (theta) {
-        this.theta = theta;
-    } else {
-        this.theta = 0;
-    }
-    if (noMirrorY) {
-        this.mirrorY = false;
-    } else {
-        this.mirrorY = true;
-    }
-    if (squashY) {
-        this.squashY = squashY;
-    } else {
-        this.squashY = 1;
-    }
+function Transform(scale, originX, originY, theta, squashY, noMirrorY) {
+    this.scale = scale || 1;
+    this.originX = originX || 0;
+    this.originY = originY || 0;
+    this.theta = theta || 0;
+    this.mirrorY = !(noMirrorY);
+    this.squashY = squashY || 1;
 }
 
-GridTransform.prototype.out2in = function(outPt) {
+Transform.prototype.out2in = function(outPt) {
     var x = outPt.x - this.originX;
     var y = outPt.y - this.originY;
     if (this.mirrorY) {
@@ -122,7 +81,7 @@ GridTransform.prototype.out2in = function(outPt) {
     var inPt = new Point(rotatedX, rotatedY);
     return inPt;
 };
-GridTransform.prototype.in2out = function(inPt) {
+Transform.prototype.in2out = function(inPt) {
     var x = inPt.x;
     var y = inPt.y;
     var theta = -1*this.theta * Math.PI;
@@ -138,7 +97,7 @@ GridTransform.prototype.in2out = function(inPt) {
     var outPt = new Point(rotatedX, rotatedY);
     return outPt;
 };
-GridTransform.prototype.shift = function(dx, dy) {
+Transform.prototype.shift = function(dx, dy) {
     if (dx) {
         this.originX += dx;
     }
@@ -146,12 +105,12 @@ GridTransform.prototype.shift = function(dx, dy) {
         this.originY += dy;
     }
 };
-GridTransform.prototype.setInAtOut = function(inPt, outPt) {
+Transform.prototype.setInAtOut = function(inPt, outPt) {
     var curPt = this.in2out(inPt);
     this.shift(outPt.x - curPt.x, outPt.y - curPt.y);
     //this.shift(setPt[0]-curPt[0], setPt[1]-curPt[1]);
 };
-GridTransform.prototype.rotateAround = function(theta, outPt) {
+Transform.prototype.rotateAround = function(theta, outPt) {
     if (!theta) {
         return;
     }
@@ -164,7 +123,7 @@ GridTransform.prototype.rotateAround = function(theta, outPt) {
         this.setInAtOut(inPt, outPt);
     }
 };
-GridTransform.prototype.scaleAround = function(dScale, outPt) {
+Transform.prototype.scaleAround = function(dScale, outPt) {
     if (!dScale || this.scale+dScale < 0) {
         return;
     }
@@ -178,6 +137,6 @@ GridTransform.prototype.scaleAround = function(dScale, outPt) {
     }
 };
 
-muleObj.geometry.GridTransform = GridTransform;
+muleObj.geometry.Transform = Transform;
 
 })(muleObj);

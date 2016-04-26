@@ -1,11 +1,38 @@
 {{ define "title"}}Overpower Play Page{{end}}
 {{ define "css"}}overpower{{end}}
+
 {{define "body"}}
 <div id="MULEELEMENT" hidden></div>
+
 <div class="blocker" id="fullscreenblock"><div class="blockertext">
         <span id="blockertext">Loading game...</span><br> 
         <button id="blockbutton"></button>
 </div></div>
+{{ template "reports" . }}
+
+<div class="canvasspacer">
+<canvas class="screen" id="starscreen" width=800 height=600></canvas>
+<canvas class="screen" id="mainscreen" width=800 height=600></canvas>
+</div>
+
+{{ template "maininfo" . }}
+
+{{ template "targetinfo" . }}
+
+<script src="/static/js/muleobj.js" type="text/javascript"></script>
+<script type="text/javascript"> (function() {
+        muleObj.overpower = { GID: {{ .game.GID }}, FID: {{ .faction.FID }} };
+})(); </script>
+<script src="/static/js/geo_point.js" type="text/javascript"></script>
+<script src="/static/js/geo_hexagon.js" type="text/javascript"></script>
+<script src="/static/js/net_ajax.js" type="text/javascript"></script>
+<script src="/static/js/net_html.js" type="text/javascript"></script>
+<script src="/static/js/op_stars.js" type="text/javascript"></script>
+<script src="/static/js/op_ajax.js" type="text/javascript"></script>
+
+{{ end }}
+
+{{ define "reports" }}
 <div id="reportscreen0"></div> <div id="reportscreen1">
         <div id="reportmenu">
         <button class="reportclicker" id="reportclose">Close Reports</button>
@@ -15,19 +42,16 @@
         <button class ="reportclicker" id="reportfilterlanding">View Only Landing Reports</button>
         </div>
         <div id="reportdisplay"><b>Reports for turn <span id="reportturntext"></span></b><div id="reportdisplaybody">
-                        <div id="launchbody"></div>
-                        <div id="landingbody"></div>
-                </div>
+        <div id="launchbody"></div>
+        <div id="landingbody"></div>
         </div>
-</div>
-<div class="canvasspacer">
-<canvas class="screen" id="starscreen" width=800 height=600></canvas>
-<canvas class="screen" id="mainscreen" width=800 height=600></canvas>
-</div>
+</div> </div>
+{{ end }}
+
+
+{{ define "maininfo" }}
 <b>Game:</b> [ <a href="/overpower/view/{{ .game.GID }}">{{ .game.Name }}</a> ] &bull; <b>Faction:</b> {{ .faction.Name }}<br>
-
 <b>Score:</b> <span id="scoretext"></span> &bull; <b>To win:</b> {{ .game.ToWin }} &bull;  <b>Leader:</b> <span id="highscoretext"></span>
-
 <br>
 <b>Turn:</b> <span id="turntext"></span> &bull;
         <span id="turncompletetext"></span> &bull;
@@ -39,14 +63,18 @@
 
 <br><b>Reports:</b> <span id="reporttext"></span> &bull;
 <button class="clicker" id="reportbutton">View Reports</button>
+{{ end }}
 
+
+{{ define "targetinfo" }}
 <div class="targetframe">
 <div class="rightframe">
         <b>Secondary Target: </b><span id="secondtargettext"></span>
         <div id="secondtargetbox"></div>
         <button class="clicker" id="swapbutton">Swap Main/Secondary Targets</button>
 </div>
-<div class="leftframe"> <div class="center"> <b>Main Target: </b> <span id="maintargettext"></span>
+<div class="leftframe"> <div class="center"> 
+        <b>Main Target: </b> <span id="maintargettext"></span>
         <div id="maintargetbox">
                 <div id="planetinfobox"> </div>
                 <div id="orderinfobox"></div>
@@ -58,26 +86,6 @@
 <button class="redclicker" id="orderconfirm"><b>Confirm Order</b></button>
 <div class="clearer"></div>
 </div>
-
-<script src="/static/js/muleobj.js" type="text/javascript"></script>
-<script src="/static/js/point.js" type="text/javascript"></script>
-<script src="/static/js/hexagon.js" type="text/javascript"></script>
-<!--
-<script src="/static/js/stars.js" type="text/javascript"></script>
-<script src="/static/js/grid.js" type="text/javascript"></script>
-
-<script src="/static/js/gamedata.js" type="text/javascript"></script>
-<script src="/static/js/map.js" type="text/javascript"></script>
-<script src="/static/js/infobox.js" type="text/javascript"></script>
-
-<script src="/static/js/input.js" type="text/javascript"></script>
-<script src="/static/js/getdata.js" type="text/javascript"></script>
-<script src="/static/js/turnbuffer.js" type="text/javascript"></script>
-<script src="/static/js/reports.js" type="text/javascript"></script>
-<script type="text/javascript"> (function() {
-var canvas = document.getElementById('mainscreen');
-canvas.fetchFullView({{ .game.GID }}, {{ .faction.FID }});
-})(); </script>
--->
-
 {{ end }}
+
+

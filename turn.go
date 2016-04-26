@@ -37,10 +37,10 @@ func RunGameTurn(source Source) (logger, breaker error) {
 	if my, bad := Check(err, "run turn resource failure"); bad {
 		return nil, my
 	}
-	err = source.ClearPowerOrders()
-	if my, bad := Check(err, "run turn resource failure"); bad {
-		return nil, my
-	}
+	//err = source.ClearPowerOrders()
+	//if my, bad := Check(err, "run turn resource failure"); bad {
+	//return nil, my
+	//}
 	// --------- GAME ALREADY OVER -------- //
 	if game.HighScore() >= game.ToWin() {
 		return nil, nil

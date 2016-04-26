@@ -38,7 +38,7 @@ type Source interface {
 	UpdatePlanetView(fid, turn int, planet PlanetDat) PlanetViewDat
 	// ------- DROP ------ //
 	ClearLaunchOrders() error
-	ClearPowerOrders() error
+	//ClearPowerOrders() error
 }
 
 type BattleRecordGet interface {

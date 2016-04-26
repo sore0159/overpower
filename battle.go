@@ -10,8 +10,10 @@ func Battle(source Source, pl PlanetDat, sh ShipDat, turn int, truces map[[2]int
 	// source.DropTrouce(pl.Loc, trucer, trucee)
 	prFid := pl.PrimaryFaction()
 	prPr := pl.PrimaryPresence()
+	prPW := pl.PrimaryPower()
 	seFid := pl.SecondaryFaction()
 	sePr := pl.SecondaryPresence()
+	sePW := pl.SecondaryPower()
 	var shFid, shSize int
 	if sh != nil {
 		shFid = sh.FID()
@@ -74,9 +76,11 @@ func Battle(source Source, pl PlanetDat, sh ShipDat, turn int, truces map[[2]int
 			if sePr > 0 {
 				prPr = sePr
 				prFid = seFid
+				prPW = sePW
 			}
 			seFid = 0
 			sePr = 0
+			sePW = 0
 		}
 	}
 	if shFid != 0 {
@@ -130,25 +134,32 @@ func Battle(source Source, pl PlanetDat, sh ShipDat, turn int, truces map[[2]int
 			if !shSePeace && !shPrPeace {
 				prFid = shFid
 				prPr = shSize
+				prPW = sePW
 				seFid = 0
 				sePr = 0
+				sePW = 0
 			} else if shSePeace {
 				prFid = shFid
 				prPr = shSize
+				prPW = 0
 			} else {
 				seFid = shFid
 				sePr = shSize
+				sePW = 0
 			}
 		}
 		if seFid != 0 && sePr > prPr {
 			seFid, prFid = prFid, seFid
 			sePr, prPr = prPr, sePr
+			sePW, prPW = prPW, sePW
 		}
 	}
 	pl.SetPrimaryFaction(prFid)
 	pl.SetPrimaryPresence(prPr)
+	pl.SetPrimaryPower(prPW)
 	pl.SetSecondaryFaction(prFid)
 	pl.SetSecondaryPresence(prPr)
+	pl.SetSecondaryPower(sePW)
 	return
 }
 
