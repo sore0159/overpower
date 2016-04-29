@@ -21,6 +21,9 @@ Point.prototype.dist = function(point) {
 Point.prototype.addPoint = function(point) {
     return this.add(point.x, point.y);
 };
+Point.prototype.subPoint = function(point) {
+    return this.add(-point.x, -point.y);
+};
 Point.prototype.add = function(x, y) {
     var dx = x || 0;
     var dy = y || 0;
@@ -59,13 +62,26 @@ muleObj.geometry.Point = Point;
 
 
 function Transform(scale, originX, originY, theta, squashY, noMirrorY) {
+    console.log("T CREATE", scale, originX, originY, theta, squashY, noMirrorY);
     this.scale = scale || 1;
     this.originX = originX || 0;
     this.originY = originY || 0;
-    this.theta = theta || 0;
+    theta = theta || 0;
+    this.theta = theta;
     this.mirrorY = !(noMirrorY);
     this.squashY = squashY || 1;
+    this.cosTIn = Math.cos(theta*Math.PI);
+    this.sinTIn = Math.sin(theta*Math.PI);
+    this.cosTOut = Math.cos(-1*theta*Math.PI);
+    this.sinTOut = Math.sin(-1*theta*Math.PI);
 }
+Transform.prototype.setTheta = function(theta) {
+    this.theta = theta;
+    this.cosTIn = Math.cos(theta*Math.PI);
+    this.sinTIn = Math.sin(theta*Math.PI);
+    this.cosTOut = Math.cos(-1*theta*Math.PI);
+    this.sinTOut = Math.sin(-1*theta*Math.PI);
+};
 
 Transform.prototype.out2in = function(outPt) {
     var x = outPt.x - this.originX;
@@ -75,18 +91,19 @@ Transform.prototype.out2in = function(outPt) {
     }
     x = x/this.scale;
     y = y/(this.scale*this.squashY);
-    var theta = this.theta * Math.PI;
-    var rotatedX = Math.cos(theta)*x - Math.sin(theta)*y;
-    var rotatedY = Math.sin(theta)*x + Math.cos(theta)*y;
+    var rotatedX = this.cosTIn*x - this.sinTIn*y;
+    var rotatedY = this.sinTIn*x + this.cosTIn*y;
     var inPt = new Point(rotatedX, rotatedY);
     return inPt;
 };
 Transform.prototype.in2out = function(inPt) {
     var x = inPt.x;
     var y = inPt.y;
-    var theta = -1*this.theta * Math.PI;
-    var rotatedX = Math.cos(theta)*x - Math.sin(theta)*y;
-    var rotatedY = Math.sin(theta)*x + Math.cos(theta)*y;
+    //var theta = -1*this.theta * Math.PI;
+    var rotatedX = this.cosTOut*x - this.sinTOut*y;
+    var rotatedY = this.sinTOut*x + this.cosTOut*y;
+    //var rotatedX = Math.cos(theta)*x - Math.sin(theta)*y;
+    //var rotatedY = Math.sin(theta)*x + Math.cos(theta)*y;
     if (this.mirrorY) {
         rotatedY = -rotatedY;
     }
@@ -118,7 +135,8 @@ Transform.prototype.rotateAround = function(theta, outPt) {
     if (outPt) {
         inPt = this.out2in(outPt);
     }
-    this.theta += theta;
+    this.setTheta(this.theta + theta);
+    //this.theta += theta;
     if (inPt) {
         this.setInAtOut(inPt, outPt);
     }

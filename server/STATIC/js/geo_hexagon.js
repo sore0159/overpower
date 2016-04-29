@@ -55,6 +55,37 @@ if (!Point) {
     console.log("NO POINT FUNCTION FOUND, NOT INCLUDING HEXAGON/POINT FEATURES");
     return;
 }
+Point.prototype.hexAt = function() {
+	//       __
+	//      | \|  width =  1.5
+	//box = |_/|  height = sqrt(3) = 2*hexTriH;
+    //
+    var hexTriH = 0.86602540378;
+    var x = this.x + 0.5;
+    var y = this.y + hexTriH;
+    var hx = Math.floor(x / 1.5);
+    //var hy = Math.floor((y-hx*hexTriH)/ (2*hexTriH));
+    var hy = Math.floor(0.5*((y/hexTriH)-hx));
+    var boxX = x - 1.5*hx;
+    var hex = new Hex(hx, hy);
+    if (boxX < 1) {
+        return hex;
+    }
+    boxX -= 1;
+    var boxY = y - (2*hy+hx)*hexTriH;
+    var slope = 2*hexTriH;
+    if (boxY > hexTriH) {
+        boxY -= 2*hexTriH;
+        if (boxX*-slope < boxY) {
+            return hex.add(1);
+        }
+        return hex;
+    }
+    if (boxX*slope > boxY) {
+        return hex.add(1,-1);
+    }
+    return hex;
+};
 
 Hex.prototype.centerPt = function() {
     var px = 1.5 * this.x;
@@ -85,35 +116,8 @@ function HexGrid(transform) {
 
 HexGrid.prototype.hexAt = function(pt) {
     var inPt = this.transform.out2in(pt);
-	//       __
-	//      | \|  width =  1.5
-	//box = |_/|  height = sqrt(3) = 2*hexTriH;
-    //
-    var hexTriH = 0.86602540378;
-    var x = inPt.x + 0.5;
-    var y = inPt.y + hexTriH;
-    var hx = Math.floor(x / 1.5);
-    //var hy = Math.floor((y-hx*hexTriH)/ (2*hexTriH));
-    var hy = Math.floor(0.5*((y/hexTriH)-hx));
-    var boxX = x - 1.5*hx;
-    if (boxX < 1) {
-        return [hx, hy];
-    }
-    boxX -= 1;
-    var boxY = y - (2*hy+hx)*hexTriH;
-    var slope = 2*hexTriH;
-    if (boxY > hexTriH) {
-        boxY -= 2*hexTriH;
-        if (boxX*-slope < boxY) {
-            return [hx+1, hy];
-        }
-        return [hx, hy];
-    }
-    if (boxX*slope > boxY) {
-        return [hx+1, hy-1];
-    }
-    var hex = new Hex(hx, hy);
-    return hex;
+    return inPt.hexAt();
+
 };
 
 HexGrid.prototype.centerPt = function(hex) {
@@ -130,21 +134,33 @@ HexGrid.prototype.cornerPts = function(hex) {
 };
 
 HexGrid.prototype.hexesIn = function(minX, minY, maxX, maxY) {
-    var minObj = {};
-    var maxObj = {};
+    return hexesIn(minX, minY, maxX, maxY, this.transform);
+};
+
+function hexesIn(minX, minY, maxX, maxY, transform) {
+    var xMap = new Map();
     var grid = this;
     function xChecker(x, y) {
         var pt = new Point(x, y);
-        var hex = grid.hexAt(pt);
-        var key = ""+hex.x;
-        if (!minObj[key] || minObj[key].y > hex.y) {
-            minObj[key] = hex;
+        if (transform) {
+            pt = transform(pt);
         }
-        if (!maxObj[key] || maxObj[key].y < hex.y) {
-            maxObj[key] = hex;
+        var hex = pt.hexAt();
+        var yDat = xMap.get(hex.x);
+        if (!yDat) {
+            xMap.set(hex.x, {x: hex.x,  min: hex.y, max: hex.y });
+            return;
+        }
+        if (yDat.min > hex.y) {
+            yDat.min = hex.y;
+            return;
+        }
+        if (yDat.max < hex.y) {
+            yDat.max = hex.y;
+            return;
         }
     }
-    var y = 0;
+    var y = minY;
     var x = minX;
     for (y = minY; y <=maxY; y+=1) {
         xChecker(x,y);
@@ -170,24 +186,23 @@ HexGrid.prototype.hexesIn = function(minX, minY, maxX, maxY) {
         }
         return hexSet.has(hex.y);
     };
-    Object.keys(minObj).forEach(function(key) {
-        var minHex = minObj[key];
-        var maxHex = maxObj[key];
-        var hexSet = hexMap.get(minHex.x);
+    xMap.forEach(function(yDat) {
+        var hexSet = hexMap.get(yDat.x);
         if (!hexSet) {
             hexSet = new Set();
-            hexMap.set(minHex.x, hexSet);
+            hexMap.set(yDat.x, hexSet);
         }
-        for (i = minHex[1]; i<=maxHex[1];i++) {
-            var hex = new Hex(minHex.x, i);
-            hexList.push(hex);
+        for (i = yDat.min ; i<=yDat.max ; i++) {
+            var newHex = new Hex(yDat.x, i);
+            hexList.push(newHex);
             hexSet.add(i);
         }
     });
     hexMap.list = hexList;
     return hexMap;
-};
+}
 
 muleObj.geometry.HexGrid = HexGrid;
+muleObj.geometry.hexesIn = hexesIn;
 
 })(muleObj);

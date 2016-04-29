@@ -18,8 +18,14 @@ var overpower = muleObj.overpower;
 overpower.getFullView = function() {
     var url = "/overpower/json/fullviews/"+overpower.GID+"/"+overpower.FID;
     var callbacks = {};
+    callbacks.success = successFV;
     ajax.getJSEND(url, callbacks);
 };
+
+function successFV(data) {
+    overpower.parse.fullview(data);
+    overpower.render.map();
+}
 
 
 

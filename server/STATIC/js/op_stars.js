@@ -1,94 +1,107 @@
 (function(muleObj) {
 
-if (!muleObj.overpower) {
-    muleObj.overpower = {};
-}
-if (!muleObj.geometry) {
-    console.log("OP STARTS FAILED: REQUIRES GEOMETRY");
-    return;
-}
+var html = muleObj.html;
+var geometry = muleObj.geometry;
 
 var stars = {};
-muleObj.overpower.starfield = stars;
+muleObj.overpower.stars = stars;
 
-stars.canvas = document.getElementById('starscreen');
+var canvas = document.getElementById('starscreen');
+stars.screen = new html.ScreenTransform(canvas, 0,0, 0, 1, 0.55);
 stars.locations = [[],[],[],[]];
-for (var j = 0; j < 4; j++ ) {
-    var numStars;
-    if (j === 0) {
-        numStars = 12000;
-    } else if (j === 1) {
-        numStars = 6000;
-    } else if (j === 2) {
-        numStars = 3000;
-    } else if (j === 3) {
-        numStars = 1500;
+stars.sizeFilled = 0;
+
+stars.moreStars = function() {
+    var starW = (stars.screen.canvas.width > stars.screen.canvas.height) ? stars.screen.canvas.width : stars.screen.canvas.height;
+    starW = 2 * starW;
+    if (starW <= stars.sizeFilled) {
+        return;
     }
-    for (var i = 0; i< numStars; i++) {
-        x = stars.canvas.width*(1 - 2*Math.random());
-        y = stars.canvas.height*(1 - 2*Math.random());
-        stars.locations[j].push(new muleObj.geometry.Point(x,y));
+    var newRad = starW - stars.sizeFilled;
+    var newArea = (starW * starW) - (stars.sizeFilled * stars.sizeFilled);
+    var density;
+    for (var j = 0; j < 4; j++ ) {
+        if (j === 0) {
+            density = 0.00625;
+        } else if (j === 1) {
+            density = 0.003125;
+        } else if (j === 2) {
+            density = 0.0015625;
+        } else if (j === 3) {
+            density = 0.00038125;
+            //density = 0.00078125;
+        }
+        density *= 4;
+        var numStars = density * newArea;
+        for (var i = 0; i< numStars; i++) {
+            var x, y;
+            x = newRad * 2 * (Math.random() - 0.5);
+            y = newRad * 2 * (Math.random() - 0.5);
+            if (x > 0) {
+                x += stars.sizeFilled;
+            } else {
+                x -= stars.sizeFilled;
+            }
+            if (y > 0) {
+                y += stars.sizeFilled;
+            } else {
+                y -= stars.sizeFilled;
+            }
+            stars.locations[j].push(new geometry.Point(x,y));
+        }
     }
-}
-stars.transform = new muleObj.geometry.Transform(1, stars.canvas.width/2, stars.canvas.height/2, 0, 0.55);
-stars.draw = function() {
-    var canvas = stars.canvas;
+    stars.sizeFilled = starW;
+};
+
+
+stars.render = function() {
+    stars.moreStars();
+    var canvas = stars.screen.canvas;
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = "rgb(0,0,0)";
     ctx.fillRect(0,0,canvas.width, canvas.height);
-    //
-    var path = new Path2D();
+    var img = ctx.getImageData(0,0,canvas.width, canvas.height);
+    var bright;
     function drawStar(starPt) {
-        var drawPt = stars.transform.in2out(starPt);
+        var drawPt = stars.screen.in2out(starPt);
         if (drawPt.x < 0 || drawPt.x > canvas.width) {
             return;
         }
         if (drawPt.y < 0 || drawPt.y > canvas.height) {
             return;
         }
-        path.moveTo(drawPt.x, drawPt.y);
-        path.arc(drawPt.x + 0.5, drawPt.y, 0.5, 0, 2*Math.PI);
+        var index = (Math.floor(drawPt.x) + Math.floor(drawPt.y) * canvas.width) * 4;
+        var bUse = Math.floor( bright * (0.25 + 0.75*Math.random()) );
+        bUse += 10;
+        img.data[index] = bUse;
+        img.data[index+1] = bUse;
+        img.data[index+2] = bUse;
+        img.data[index+3] = 255;
     }
     var list = stars.locations[0];
-    ctx.fillStyle = "rgb(25,25,25)";
+    bright = 25;
     list.forEach(drawStar);
-    ctx.fill(path);
-
-    path = new Path2D();
     list = stars.locations[1];
-    ctx.fillStyle = "rgb(50,50,50)";
+    bright = 50;
     list.forEach(drawStar);
-    ctx.fill(path);
-
-    path = new Path2D();
     list = stars.locations[2];
-    ctx.fillStyle = "rgb(100,100,100)";
+    bright = 100;
     list.forEach(drawStar);
-    ctx.fill(path);
-
-    path = new Path2D();
     list = stars.locations[3];
-    ctx.fillStyle = "rgb(200,200,200)";
+    bright = 200;
     list.forEach(drawStar);
-    ctx.fill(path);
+    ctx.putImageData(img, 0, 0);
 };
-
-stars.rotate = function(clockwise, scale) {
-    var dTheta = (clockwise) ? 1: -1;
-    scale = (scale) ? scale : 1;
-    dTheta *= scale * 0.01;
-    var center = new muleObj.geometry.Point(stars.canvas.width/2, stars.canvas.height/2);
-    stars.transform.rotateAround(dTheta, center);
-};
-
-stars.draw();
 
 function animateStars() {
-    stars.rotate(true, 0.05);
-    stars.draw();
+    var stars = muleObj.overpower.stars;
+    //stars.screen.rotate(0.0005);
+    stars.screen.rotate(0.00005);
+    //stars.screen.resize(stars.screen.canvas.width+1, stars.screen.canvas.height+1);
+    stars.render();
     window.requestAnimationFrame(animateStars);
 }
-//animateStars();
+
+animateStars();
 
 })(muleObj);
-

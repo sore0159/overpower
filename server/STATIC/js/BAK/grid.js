@@ -294,7 +294,7 @@ canvas.drawGrid = function(hexList) {
 
 canvas.hexPath = function(hex) {
     var path = new Path2D();
-    var corners = this.muleGrid.h2Corners(hex);
+    var corners = this.muleGrid.cornerPts(hex);
     path.moveTo(corners[5][0], corners[5][1]);
     corners.forEach(function(pt) {
         path.lineTo(pt[0], pt[1]);

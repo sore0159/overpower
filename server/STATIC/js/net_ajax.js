@@ -9,12 +9,12 @@ var ajax = muleObj.ajax;
 // callbacks can contain:
 //         .success .error .netError .serverError .fail
 ajax.getJSEND = function(url, callbacks) {
-    ajax.promiseJSEND(fetch(url, { method: 'get', credentials: 'include'}));
+    ajax.promiseJSEND(fetch(url, { method: 'get', credentials: 'include'}), callbacks);
 };
 
 
 ajax.putJSEND = function(url, obj, callbacks) {
-    ajax.promiseJSEND(fetch(url, { method: 'put', credentials: 'include', body: JSON.stringify(obj) }));
+    ajax.promiseJSEND(fetch(url, { method: 'put', credentials: 'include', body: JSON.stringify(obj) }), callbacks);
 };
 
 ajax.promiseJSEND = function(promise, callbacks) {
@@ -84,9 +84,9 @@ ajax.promiseJSEND = function(promise, callbacks) {
             return;
         }).catch(function(error) {
             if (callbacks.netError) {
-                callbacks.netError("error parsing JSON data: "+error);
+                callbacks.netError("error handling data recieved: "+error);
             } else if (callbacks.error) {
-                callbacks.error("error parsing JSON data: "+error);
+                callbacks.error("error handling data recieved: "+error);
             }
         });
     }).catch(function(error) {

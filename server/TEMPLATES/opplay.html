@@ -11,8 +11,8 @@
 {{ template "reports" . }}
 
 <div class="canvasspacer">
-<canvas class="screen" id="starscreen" width=800 height=600></canvas>
-<canvas class="screen" id="mainscreen" width=800 height=600></canvas>
+<canvas class="screen" id="starscreen" height=600 width=800></canvas>
+<canvas class="screen" id="mainscreen" height=600 width=800></canvas>
 </div>
 
 {{ template "maininfo" . }}
@@ -27,8 +27,16 @@
 <script src="/static/js/geo_hexagon.js" type="text/javascript"></script>
 <script src="/static/js/net_ajax.js" type="text/javascript"></script>
 <script src="/static/js/net_html.js" type="text/javascript"></script>
-<script src="/static/js/op_stars.js" type="text/javascript"></script>
+
 <script src="/static/js/op_ajax.js" type="text/javascript"></script>
+
+<script src="/static/js/op_stars.js" type="text/javascript"></script>
+<!--
+<script src="/static/js/op_parse.js" type="text/javascript"></script>
+<script src="/static/js/op_render.js" type="text/javascript"></script>
+<script src="/static/js/op_input.js" type="text/javascript"></script>
+<script src="/static/js/op_startup.js" type="text/javascript"></script>
+-->
 
 {{ end }}
 
