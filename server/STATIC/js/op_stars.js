@@ -63,7 +63,7 @@ stars.render = function() {
     var img = ctx.getImageData(0,0,canvas.width, canvas.height);
     var bright;
     function drawStar(starPt) {
-        var drawPt = stars.screen.in2out(starPt);
+        var drawPt = stars.screen.transform.in2out(starPt);
         if (drawPt.x < 0 || drawPt.x > canvas.width) {
             return;
         }
@@ -99,7 +99,9 @@ function animateStars() {
     stars.screen.rotate(0.00005);
     //stars.screen.resize(stars.screen.canvas.width+1, stars.screen.canvas.height+1);
     stars.render();
-    window.requestAnimationFrame(animateStars);
+    if (!stars.stopAnimation) {
+        window.requestAnimationFrame(animateStars);
+    }
 }
 
 animateStars();

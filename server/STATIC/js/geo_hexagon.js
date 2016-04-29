@@ -134,7 +134,11 @@ HexGrid.prototype.cornerPts = function(hex) {
 };
 
 HexGrid.prototype.hexesIn = function(minX, minY, maxX, maxY) {
-    return hexesIn(minX, minY, maxX, maxY, this.transform);
+    var transform = this.transform;
+    var f = function(pt) {
+        return transform.out2in(pt);
+    };
+    return hexesIn(minX, minY, maxX, maxY, f);
 };
 
 function hexesIn(minX, minY, maxX, maxY, transform) {

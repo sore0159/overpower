@@ -41,7 +41,7 @@ button.clicker {
         font-weight: bold;
 }
 
-div.canvasspacer {
+#canvasspacer {
         padding: 0px; margin: 0px;
         margin-top: -5px;
         margin-right:10px;
@@ -216,7 +216,7 @@ form.noblock {
         display:inline;
 }
 
-div.targetframe {
+#targetframe {
         margin: 0px; padding: 0px;
         margin-left: 810px;
         margin-top: 10px;

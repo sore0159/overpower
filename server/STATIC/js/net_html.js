@@ -138,6 +138,20 @@ ScreenTransform.prototype.resize = function(width, height) {
     this.canvas.height = height;
     this.transform.setInAtOut(curCenter, this.center());
 };
+ScreenTransform.prototype.setClick = function(f) {
+    muleObj.html.setPointClick(this.canvas, f);
+};
+ScreenTransform.prototype.setInClick = function(f) {
+    var transform = this.transform;
+    var g = function(pt, button, shift) {
+        var inPt = transform.out2in(pt);
+        return f(inPt, button, shift);
+    };
+    muleObj.html.setPointClick(this.canvas, g);
+};
+ScreenTransform.prototype.setWheel = function(f) {
+    muleObj.html.setWheel(this.canvas, f);
+};
 
 muleObj.html.ScreenTransform = ScreenTransform;
 

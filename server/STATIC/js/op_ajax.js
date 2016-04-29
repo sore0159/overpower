@@ -23,8 +23,9 @@ overpower.getFullView = function() {
 };
 
 function successFV(data) {
-    overpower.parse.fullview(data);
-    overpower.render.map();
+    console.log("GOT", JSON.stringify(data));
+    //overpower.parse.fullview(data);
+    //overpower.render.map();
 }
 
 

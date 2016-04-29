@@ -62,7 +62,6 @@ muleObj.geometry.Point = Point;
 
 
 function Transform(scale, originX, originY, theta, squashY, noMirrorY) {
-    console.log("T CREATE", scale, originX, originY, theta, squashY, noMirrorY);
     this.scale = scale || 1;
     this.originX = originX || 0;
     this.originY = originY || 0;
