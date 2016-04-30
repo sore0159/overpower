@@ -55,7 +55,6 @@ stars.moreStars = function() {
 
 
 stars.render = function() {
-    stars.moreStars();
     var canvas = stars.screen.canvas;
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = "rgb(0,0,0)";
@@ -93,17 +92,16 @@ stars.render = function() {
     ctx.putImageData(img, 0, 0);
 };
 
-function animateStars() {
+stars.animate = function() {
     var stars = muleObj.overpower.stars;
-    //stars.screen.rotate(0.0005);
     stars.screen.rotate(0.00005);
-    //stars.screen.resize(stars.screen.canvas.width+1, stars.screen.canvas.height+1);
     stars.render();
     if (!stars.stopAnimation) {
-        window.requestAnimationFrame(animateStars);
+        window.requestAnimationFrame(stars.animate);
     }
-}
+};
 
-animateStars();
+stars.moreStars();
+stars.animate();
 
 })(muleObj);

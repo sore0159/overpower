@@ -73,10 +73,17 @@ data.parseFullView = function(fullView) {
         pv.hex = new geometry.Hex(pv.loc[0], pv.loc[1]);
         data.planetGrid.setHex(pv.hex, pv);
     });
-    data.planetGrid.forEach(function(pv, hex) {
-        //console.log("PV", pv, "AT", hex);
-    });
 
+    data.factions = {};
+    fullView.factions.forEach(function(fac) {
+        data.factions[fac.fid] = fac;
+    });
+    data.mapView = fullView.mapview;
+    overpower.map.snapTo(new geometry.Hex(fullView.mapview.center[0], fullView.mapview.center[1]));
+    overpower.map.redraw = true;
+    //
+    overpower.map.screen.shift(200);
+    console.log("DIST:", overpower.map.distToCenter());
 };
 
 

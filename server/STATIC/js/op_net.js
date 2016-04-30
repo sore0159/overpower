@@ -28,7 +28,6 @@ net.getFullView = function() {
 
 function successFV(data) {
     overpower.data.parseFullView(data);
-    overpower.map.render();
 }
 
 

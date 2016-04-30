@@ -11,27 +11,12 @@ if (!overpower.map) {
 var map = overpower.map;
 
 var canvas = document.getElementById('mainscreen');
-map.screen = new html.ScreenTransform(canvas, 0,0, 0.25, 35, 0.55);
+map.screen = new html.ScreenTransform(canvas, 0,0, 0.25, 15, 0.55);
 map.hexGrid = new geometry.HexGrid(map.screen.transform);
 map.getScale = function() {
     return this.screen.transform.scale;
 };
 
-map.hexPath = function(hex, path) {
-    if (!path) {
-        path = new Path2D();
-    }
-    var corners = map.hexGrid.cornerPts(hex);
-    path.moveTo(corners[5].x, corners[5].y);
-    corners.forEach(function(pt) {
-        path.lineTo(pt.x, pt.y);
-    });
-    return path;
-};
-map.visibleHexes = function() {
-    //return map.hexGrid.hexesIn(map.screen.canvas.width * 0.25, map.screen.canvas.height * 0.25 , map.screen.canvas.width * 0.75, map.screen.canvas.height * 0.75);
-    return map.hexGrid.hexesIn(0,0, map.screen.canvas.width, map.screen.canvas.height);
-};
 map.setFrame = function(width, height) {
     var spacer = document.getElementById('canvasspacer');
     spacer.style.width = width+'px';
@@ -70,19 +55,51 @@ map.scaleStep = function(zoomIn) {
     map.screen.setScale(dScale);
     return true;
 };
+map.snapTo = function(hex) {
+    map.center = hex;
+    map.screen.setCenter(hex.centerPt());
+};
+map.distToCenter = function() {
+    if (!map.center) {
+        return 0;
+    }
+    var centerAt = map.hexGrid.centerPt(map.center);
+    return centerAt.dist(map.screen.center());
+};
+map.moveTowardCenter = function(distLeft) {
+    var endpt;
+    if (distLeft <= 10) {
+        endpt = map.center.centerPt();
+    } else {
+        var speed;
+        if (distLeft <= 20) {
+            speed = 10;
+        } else {
+            //speed = 10 + Math.pow((distLeft-20), 3);
+            speed = 10 + Math.pow((distLeft - 20)/25, 1.25);
+        }
+        var startPt = map.screen.center();
+        var towardPt = map.hexGrid.centerPt(map.center);
+        var polarDat = startPt.polarTo(towardPt);
+        endpt = startPt.addPolar(speed, polarDat[1]);
+        endpt = map.screen.out2in(endpt);
+    }
+    map.screen.setCenter(endpt);
+};
 
 function mapClick(inPoint, button, shift) {
     var hex = inPoint.hexAt();
     console.log("MAPCLICK", inPoint, hex, button, shift);
-    if (!overpower.data.targets) {
-        overpower.data.targets = {};
-    }
     if (button === 0) { 
-        overpower.data.targets.setT1(hex);
-        map.render();
+        if (shift) {
+            overpower.map.center = hex;
+        } else {
+            overpower.data.targets.setT1(hex);
+            map.redraw = true;
+        }
     } else if (button === 2) {
         overpower.data.targets.setT2(hex, shift);
-        map.render();
+        map.redraw = true;
     }
 }
 map.screen.setInClick(mapClick);
@@ -93,7 +110,7 @@ function mapWheel(up, shift, ctrl) {
         var theta = (up > 0) ? 1: -1;
         theta *= 0.015;
         map.screen.rotate(theta);
-        map.render();
+        map.redraw = true;
         overpower.stars.screen.rotate(theta*0.5);
         return;
     }
@@ -101,15 +118,32 @@ function mapWheel(up, shift, ctrl) {
         var delta = (up > 0) ? 1: -1;
         delta *= 10;
         map.setFrame(map.screen.canvas.width + delta, map.screen.canvas.height + delta);
-        map.render();
+        //map.render();
+        map.redraw = true;
         return;
     }
     if (map.scaleStep(up > 0)) {
-        map.render();
+        map.redraw = true;
     }
 }
 
 map.screen.setWheel(mapWheel);
+
+map.hexPath = function(hex, path) {
+    if (!path) {
+        path = new Path2D();
+    }
+    var corners = map.hexGrid.cornerPts(hex);
+    path.moveTo(corners[5].x, corners[5].y);
+    corners.forEach(function(pt) {
+        path.lineTo(pt.x, pt.y);
+    });
+    return path;
+};
+map.visibleHexes = function() {
+    //return map.hexGrid.hexesIn(map.screen.canvas.width * 0.25, map.screen.canvas.height * 0.25 , map.screen.canvas.width * 0.75, map.screen.canvas.height * 0.75);
+    return map.hexGrid.hexesIn(0,0, map.screen.canvas.width, map.screen.canvas.height);
+};
 
 map.renderGrid = function(ctx, list) {
     map.setLineWidth(ctx);
@@ -205,7 +239,8 @@ map.isShowGrid = function() {
     return map.getScale() >= 15;
 };
 
-map.render = function() {
+//map.render = function() {
+function renderMap(timestamp) {
     var data = overpower.data;
     var canvas = map.screen.canvas;
     var ctx = canvas.getContext('2d');
@@ -279,8 +314,25 @@ map.render = function() {
             map.renderPlanet(ctx, later.t1, planetRad, showGrid);
         }
     }
+}
+
+map.animate = function(timestamp) {
+    var redraw = map.redraw;
+    if (redraw !== false) {
+        redraw = true;
+    }
+    map.redraw = false;
+    var dist = map.distToCenter();
+    if (dist > 1) {
+        map.moveTowardCenter(dist);
+        redraw = true;
+    }
+    if (redraw) {
+        renderMap(timestamp);
+    }
+    window.requestAnimationFrame(map.animate);
 };
 
-map.render();
+map.animate();
 
 })(muleObj);
