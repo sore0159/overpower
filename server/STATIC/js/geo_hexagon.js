@@ -20,7 +20,7 @@ function Hex(x, y) {
     this.y = y || 0;
 }
 Hex.prototype.eq = function(hex) {
-    return (hex.x === this.x) && (hex.y === this.y);
+    return (hex) && (hex.x === this.x) && (hex.y === this.y);
 };
 Hex.prototype.stepsTo = function(target) {
     var thisZ = - (this.x + this.y);
@@ -46,6 +46,40 @@ Hex.prototype.scale = function(s) {
     }
     var pt = new Hex(this.x * s, this.y*s);
     return pt;
+};
+Hex.prototype.ring = function(r) {
+    var hex;
+    if (r < 1) {
+        hex = new Hex(this.x, this.y);
+        return [hex];
+    }
+    hex = this.add(r, 0);
+    var list = [];
+    for (var i = 0; i<r; i+=1) {
+        hex = hex.add(-1, 1);
+        list.push(hex);
+    }
+    for (i = 0; i<r; i+=1) {
+        hex = hex.add(-1, 0);
+        list.push(hex);
+    }
+    for (i = 0; i<r; i+=1) {
+        hex = hex.add(0, -1);
+        list.push(hex);
+    }
+    for (i = 0; i<r; i+=1) {
+        hex = hex.add(1, -1);
+        list.push(hex);
+    }
+    for (i = 0; i<r; i+=1) {
+        hex = hex.add(1, 0);
+        list.push(hex);
+    }
+    for (i = 0; i<r; i+=1) {
+        hex = hex.add(0, 1);
+        list.push(hex);
+    }
+    return list;
 };
 
 muleObj.geometry.Hex = Hex;
@@ -109,6 +143,46 @@ Hex.prototype.cornerPts = function() {
     ];
     return pts;
 };
+
+function HexMap() {
+    this.xMap = new Map();
+}
+HexMap.prototype.setHex = function(hex, obj) {
+    var yMap = this.xMap.get(hex.x);
+    if (!yMap) {
+        yMap = new Map();
+        this.xMap.set(hex.x, yMap);
+    }
+    yMap.set(hex.y, obj);
+};
+HexMap.prototype.getHex = function(hex) {
+    var yMap = this.xMap.get(hex.x);
+    if (!yMap) {
+        return;
+    }
+    return yMap.get(hex.y);
+};
+HexMap.prototype.clear = function() {
+    this.xMap.clear();
+};
+HexMap.prototype.deleteHex = function(hex) {
+    var yMap = this.xMap.get(hex.x);
+    if (!yMap) {
+        return false;
+    }
+    return yMap.delete(hex.y);
+};
+HexMap.prototype.forEach = function(callback, thisObj) {
+    var map = this;
+    this.xMap.forEach(function(yMap, x) {
+        yMap.forEach(function(obj, y) {
+            var hex = new Hex(x,y);
+            callback.call(thisObj, obj, hex, map);
+        });
+    });
+};
+
+muleObj.geometry.HexMap = HexMap;
 
 function HexGrid(transform) {
     this.transform = transform;

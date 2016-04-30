@@ -20,24 +20,21 @@
 {{ template "targetinfo" . }}
 
 <script src="/static/js/muleobj.js" type="text/javascript"></script>
-<script type="text/javascript"> (function() {
-        muleObj.overpower = { GID: {{ .game.GID }}, FID: {{ .faction.FID }} };
-})(); </script>
 <script src="/static/js/geo_point.js" type="text/javascript"></script>
 <script src="/static/js/geo_hexagon.js" type="text/javascript"></script>
 <script src="/static/js/net_ajax.js" type="text/javascript"></script>
 <script src="/static/js/net_html.js" type="text/javascript"></script>
 
-<script src="/static/js/op_ajax.js" type="text/javascript"></script>
-
+<script type="text/javascript"> (function() {
+        muleObj.overpower = { GID: {{ .game.GID }}, FID: {{ .faction.FID }} };
+})(); </script>
+<script src="/static/js/op_data.js" type="text/javascript"></script>
+<script src="/static/js/op_net.js" type="text/javascript"></script>
 <script src="/static/js/op_stars.js" type="text/javascript"></script>
 <script src="/static/js/op_map.js" type="text/javascript"></script>
-<!--
-<script src="/static/js/op_parse.js" type="text/javascript"></script>
-<script src="/static/js/op_render.js" type="text/javascript"></script>
-<script src="/static/js/op_input.js" type="text/javascript"></script>
-<script src="/static/js/op_startup.js" type="text/javascript"></script>
--->
+<script type="text/javascript"> (function() {
+        muleObj.overpower.net.getFullView();
+})(); </script>
 
 {{ end }}
 

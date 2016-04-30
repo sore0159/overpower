@@ -46,7 +46,7 @@ Point.prototype.addPolar = function(r, theta) {
 };
 Point.prototype.polarTo = function(point) {
     if (this.eq(point)) {
-        return [0, 0];
+        return [0, 0];  // Not point values!  r, theta  -- not x,y
     }
     var r = this.dist(point);
     var cosT = (point.x - this.x) / r;
@@ -54,7 +54,7 @@ Point.prototype.polarTo = function(point) {
     if (point.y < this.y) {
         theta = 2 - theta;
     }
-    return [r, theta];
+    return [r, theta];  // Not point values!  r, theta  -- not x,y
 };
 
 

@@ -14,8 +14,12 @@ if (!muleObj.overpower) {
 //ajax.putJSEND = function(url, obj, callbacks) {
 var ajax = muleObj.ajax;
 var overpower = muleObj.overpower;
+if (!overpower.net) {
+    overpower.net = {};
+}
+var net = overpower.net;
 
-overpower.getFullView = function() {
+net.getFullView = function() {
     var url = "/overpower/json/fullviews/"+overpower.GID+"/"+overpower.FID;
     var callbacks = {};
     callbacks.success = successFV;
@@ -23,9 +27,8 @@ overpower.getFullView = function() {
 };
 
 function successFV(data) {
-    console.log("GOT", JSON.stringify(data));
-    //overpower.parse.fullview(data);
-    //overpower.render.map();
+    overpower.data.parseFullView(data);
+    overpower.map.render();
 }
 
 
