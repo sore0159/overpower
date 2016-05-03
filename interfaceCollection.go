@@ -209,6 +209,12 @@ type PlanetGet interface {
 	SecondaryPower() int
 	Antimatter() int
 	Tachyons() int
+	//
+	ControlLevel(fid int) (level int)
+	PowerType(fid int) (kind int)
+	PresenceLevel(fid int) (amount int)
+	ResourceCount(kind int) (amount int)
+	LaunchAvail(fid int) (amount int)
 }
 type PlanetSet interface {
 	UnmarshalJSON([]byte) error
@@ -277,6 +283,8 @@ type PowerOrderGet interface {
 
 type PowerOrderSet interface {
 	UnmarshalJSON([]byte) error
+	SetLoc(hexagon.Coord)
+	SetUpPower(int)
 	DELETE()
 }
 

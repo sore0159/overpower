@@ -111,12 +111,9 @@ func RunGameTurn(source Source) (logger, breaker error) {
 	if !auto {
 		game.SetFreeAutos(game.FreeAutos() + 1)
 	}
-	// ---- PLANETS AT WAR ---- //
-	for _, p := range atWar {
-		Battle(source, p, nil, turn, truceMap[p.Loc()])
-	}
 	// ---- SHIPS LAUNCH ---- //
 	var secondaryOrders []LaunchOrderDat
+	launched := map[hexagon.Coord][2]int{}
 	sidMap := make(map[int]bool, len(ships))
 	for _, sh := range ships {
 		sidMap[sh.SID()] = true
@@ -144,6 +141,14 @@ func RunGameTurn(source Source) (logger, breaker error) {
 			loggerM.AddContext("bad order", "bad controller", "order", o)
 			continue
 		}
+		lCount := launched[o.Source()]
+		diff := src.PrimaryPresence() - lCount[0]
+		if diff < size {
+			size = diff
+		}
+		if size < 0 {
+			size = 0
+		}
 		switch src.PrimaryPower() {
 		case TACHYONS:
 			if have := src.Tachyons(); size > have {
@@ -169,6 +174,7 @@ func RunGameTurn(source Source) (logger, breaker error) {
 			sh := source.NewShip(src.PrimaryFaction(), GenSID(sidMap), size, turn, path)
 			ships = append(ships, sh)
 			source.NewLaunchRecord(turn, o, sh)
+			launched[o.Source()] = [2]int{lCount[0] + size, lCount[1]}
 		} else {
 			source.NewLaunchRecord(turn, o, nil)
 		}
@@ -187,6 +193,14 @@ func RunGameTurn(source Source) (logger, breaker error) {
 			errOccured = true
 			loggerM.AddContext("bad order", "size <0", "order", o)
 			continue
+		}
+		lCount := launched[o.Source()]
+		diff := src.SecondaryPresence() - lCount[1]
+		if diff < size {
+			size = diff
+		}
+		if size < 0 {
+			size = 0
 		}
 		switch src.SecondaryPower() {
 		case TACHYONS:
@@ -213,9 +227,14 @@ func RunGameTurn(source Source) (logger, breaker error) {
 			sh := source.NewShip(src.SecondaryFaction(), GenSID(sidMap), size, turn, path)
 			ships = append(ships, sh)
 			source.NewLaunchRecord(turn, o, sh)
+			launched[o.Source()] = [2]int{lCount[0], lCount[1] + size}
 		} else {
 			source.NewLaunchRecord(turn, o, nil)
 		}
+	}
+	// ---- PLANETS AT WAR ---- //
+	for _, p := range atWar {
+		Battle(source, p, nil, turn, truceMap[p.Loc()])
 	}
 	// ---- SHIPS MOVE ---- //
 	// dist, ship index

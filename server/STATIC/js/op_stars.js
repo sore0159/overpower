@@ -3,7 +3,7 @@
 var html = muleObj.html;
 var geometry = muleObj.geometry;
 
-var stars = {};
+var stars = { stopAnimation: false };
 muleObj.overpower.stars = stars;
 
 var canvas = document.getElementById('starscreen');
@@ -51,6 +51,14 @@ stars.moreStars = function() {
         }
     }
     stars.sizeFilled = starW;
+};
+
+stars.stop = function() {
+    stars.stopAnimation = true;
+};
+stars.start = function() {
+    stars.stopAnimation = false;
+    stars.animate();
 };
 
 

@@ -256,6 +256,54 @@ func (i PlanetIntf) SetTachyons(x int) {
 // --------- END GENERIC METHODS ------------ //
 // --------- BEGIN CUSTOM METHODS ------------ //
 
+func (i PlanetIntf) ControlLevel(fid int) (level int) {
+	if fid == 0 {
+		return 0
+	}
+	if i.PrimaryFaction() == fid {
+		return 1
+	}
+	if i.SecondaryFaction() == fid {
+		return 2
+	}
+	return 0
+}
+func (i PlanetIntf) PresenceLevel(fid int) (amount int) {
+	ctrl := i.ControlLevel(fid)
+	if ctrl == 1 {
+		return i.item.PrimaryPresence
+	} else if ctrl == 2 {
+		return i.item.SecondaryPresence
+	}
+	return 0
+}
+func (i PlanetIntf) PowerType(fid int) (kind int) {
+	lvl := i.ControlLevel(fid)
+	if lvl == 1 {
+		return i.item.PrimaryPower
+	} else if lvl == 2 {
+		return i.item.SecondaryPower
+	}
+	return 0
+}
+func (i PlanetIntf) ResourceCount(kind int) (amount int) {
+	if kind == 1 {
+		return i.item.Antimatter
+	}
+	if kind == -1 {
+		return i.item.Tachyons
+	}
+	return 0
+}
+func (i PlanetIntf) LaunchAvail(fid int) (amount int) {
+	lvl := i.ResourceCount(i.PowerType(fid))
+	pres := i.PresenceLevel(fid)
+	if pres < lvl {
+		return pres
+	}
+	return lvl
+}
+
 // --------- END CUSTOM METHODS ------------ //
 // --------- BEGIN GROUP ------------ //
 

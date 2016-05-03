@@ -22,6 +22,10 @@ func (h *Handler) ApiJSONput(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch resource {
+	case "truces":
+		h.apiJSONputTruces(w, r)
+	case "powerorders":
+		h.apiJSONputPowerOrders(w, r)
 	case "launchorders":
 		h.apiJSONputLaunchOrders(w, r)
 	case "factions":
@@ -31,6 +35,68 @@ func (h *Handler) ApiJSONput(w http.ResponseWriter, r *http.Request) {
 	default:
 		JSONUserError(w, "UNKNOWN RESOURCE REQUESTED", KV{"resource", resource})
 	}
+}
+
+func (h *Handler) apiJSONputTruces(w http.ResponseWriter, r *http.Request) {
+	item := struct {
+		*models.Truce
+		On bool `json:"on"`
+	}{
+		Truce: &models.Truce{},
+	}
+
+	err := jsend.Read(r, &item)
+	if err != nil {
+		JSONUserError(w, "Cannot read json into truce data")
+		return
+	}
+	_, ok, err := h.Validate(item.GID, item.FID)
+	if my, bad := Check(err, "API PUT failure on resource validation", "type", "truce", "GID", item.GID, "FID", item.FID); bad {
+		JSONServerError(w, my)
+		return
+	}
+	if !ok {
+		JSONUserError(w, "You are not authorized for that faction")
+		return
+	}
+	errS, errU := InternalSetTruce(item.GID, item.FID, item.Trucee, item.On, item.Loc)
+	if my, bad := Check(errS, "API JSON PUT truce failure on command execution", "item", item); bad {
+		JSONServerError(w, my)
+		return
+	}
+	if errU != nil {
+		JSONUserError(w, errU.Error())
+		return
+	}
+	JSONSuccess(w, nil)
+}
+
+func (h *Handler) apiJSONputPowerOrders(w http.ResponseWriter, r *http.Request) {
+	item := &models.PowerOrder{}
+	err := jsend.Read(r, &item)
+	if err != nil {
+		JSONUserError(w, "Cannot read json into powerorder data")
+		return
+	}
+	_, ok, err := h.Validate(item.GID, item.FID)
+	if my, bad := Check(err, "API PUT failure on resource validation", "type", "powerorder", "GID", item.GID, "FID", item.FID); bad {
+		JSONServerError(w, my)
+		return
+	}
+	if !ok {
+		JSONUserError(w, "You are not authorized for that faction")
+		return
+	}
+	errS, errU := InternalSetPowerOrder(item.GID, item.FID, item.UpPower, item.Loc)
+	if my, bad := Check(errS, "API JSON PUT powerorder failure on command execution", "item", item); bad {
+		JSONServerError(w, my)
+		return
+	}
+	if errU != nil {
+		JSONUserError(w, errU.Error())
+		return
+	}
+	JSONSuccess(w, nil)
 }
 
 func (h *Handler) apiJSONputLaunchOrders(w http.ResponseWriter, r *http.Request) {

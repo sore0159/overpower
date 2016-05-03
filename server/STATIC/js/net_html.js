@@ -26,7 +26,7 @@ muleObj.html.clickWrap = function(f) {
         var clickx = event.pageX - this.offsetLeft;
         var clicky = event.pageY - this.offsetTop;
         var pt  = (muleObj.geometry)? new muleObj.geometry.Point(clickx, clicky) : {x: clickx, y: clicky};
-        f(pt, event.button, event.shiftKey);
+        f(pt, event.button, event.shiftKey, event.ctrlKey);
     };
     return g;
 };
@@ -70,7 +70,7 @@ function Screen(canvas) {
         }
         var clickx = event.pageX - this.offsetLeft;
         var clicky = event.pageY - this.offsetTop;
-        screen.handleClick(clickx, clicky, event.button, event.shiftKey);
+        screen.handleClick(clickx, clicky, event.button, event.shiftKey, event.ctrlKey);
     });
     canvas.oncontextmenu= function() { return false; };
 
@@ -143,9 +143,9 @@ ScreenTransform.prototype.setClick = function(f) {
 };
 ScreenTransform.prototype.setInClick = function(f) {
     var transform = this.transform;
-    var g = function(pt, button, shift) {
+    var g = function(pt, button, shift, ctrl) {
         var inPt = transform.out2in(pt);
-        return f(inPt, button, shift);
+        return f(inPt, button, shift, ctrl);
     };
     muleObj.html.setPointClick(this.canvas, g);
 };

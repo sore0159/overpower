@@ -22,6 +22,9 @@ function Hex(x, y) {
 Hex.prototype.eq = function(hex) {
     return (hex) && (hex.x === this.x) && (hex.y === this.y);
 };
+Hex.prototype.eqArray = function(list) {
+    return (list) && (this.x === list[0]) && (this.y === list[1]);
+};
 Hex.prototype.stepsTo = function(target) {
     var thisZ = - (this.x + this.y);
     var targetZ = - (target.x + target.y);
@@ -37,6 +40,12 @@ Hex.prototype.addHex = function(hex) {
 Hex.prototype.add = function(x, y) {
     var dx = x || 0;
     var dy = y || 0;
+    var pt = new Hex(this.x + dx, this.y+dy);
+    return pt;
+};
+Hex.prototype.addArray = function(list) {
+    var dx = list[0] || 0;
+    var dy = list[1] || 0;
     var pt = new Hex(this.x + dx, this.y+dy);
     return pt;
 };

@@ -6,6 +6,50 @@ import (
 	"mule/overpower/models"
 )
 
+func InternalSetTruce(gid, fid, trucee int, on bool, loc hexagon.Coord) (errS, errU error) {
+	manager := OPDB.NewManager()
+	list, err := manager.Truce().Select("gid", gid, "fid", fid, "locx", loc[0], "locy", loc[1], "trucee", trucee)
+	if my, bad := Check(err, "internal set truce failure on resource aquisition", "resource", "truce", "gid", gid, "fid", fid); bad {
+		return my, nil
+	}
+	if len(list) == 0 && on {
+		item := &models.Truce{
+			GID:    gid,
+			FID:    fid,
+			Loc:    loc,
+			Trucee: trucee,
+		}
+		manager.CreateTruce(item)
+	} else if len(list) != 0 && !on {
+		list[0].DELETE()
+	} else {
+		return nil, nil
+	}
+	err = manager.Close()
+	if my, bad := Check(err, "internal set truce failure on manager close", "truce", list); bad {
+		return my, nil
+	}
+	return nil, nil
+}
+
+func InternalSetPowerOrder(gid, fid, uppower int, loc hexagon.Coord) (errS, errU error) {
+	manager := OPDB.NewManager()
+	list, err := manager.PowerOrder().SelectWhere(manager.FID(gid, fid))
+	if my, bad := Check(err, "internal set powerorder failure on resource aquisition", "resource", "powerorder", "gid", gid, "fid", fid); bad {
+		return my, nil
+	}
+	if len(list) == 0 {
+		return nil, NewError("no faction found for given gid/fid")
+	}
+	list[0].SetLoc(loc)
+	list[0].SetUpPower(uppower)
+	err = manager.Close()
+	if my, bad := Check(err, "internal set power order failure on manager close", "power order", list[0]); bad {
+		return my, nil
+	}
+	return nil, nil
+}
+
 func InternalSetMapCenter(gid, fid int, center hexagon.Coord) (errS, errU error) {
 	manager := OPDB.NewManager()
 	mvs, err := manager.MapView().SelectWhere(manager.FID(gid, fid))
@@ -75,7 +119,7 @@ func InternalSetLaunchOrder(gid, fid, size int, source, target hexagon.Coord) (e
 			used += test.Size()
 		}
 	}
-	if size < 0 {
+	if size < 1 {
 		if o != nil {
 			o.DELETE()
 			err := manager.Close()

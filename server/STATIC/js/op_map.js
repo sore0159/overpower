@@ -12,6 +12,7 @@ var map = overpower.map;
 
 var canvas = document.getElementById('mainscreen');
 map.screen = new html.ScreenTransform(canvas, 0,0, 0.25, 15, 0.55);
+map.orderscreen = { canvas: document.getElementById('orderscreen'), clear: true };
 map.hexGrid = new geometry.HexGrid(map.screen.transform);
 map.getScale = function() {
     return this.screen.transform.scale;
@@ -27,6 +28,8 @@ map.setFrame = function(width, height) {
     var stars = overpower.stars;
     stars.screen.resize(width, height);
     stars.moreStars();
+    map.orderscreen.canvas.width = width;
+    map.orderscreen.canvas.height = height;
 };
 map.scaleStep = function(zoomIn) {
     var curScale = map.getScale();
@@ -77,6 +80,9 @@ map.moveTowardCenter = function(distLeft) {
         } else {
             //speed = 10 + Math.pow((distLeft-20), 3);
             speed = 10 + Math.pow((distLeft - 20)/25, 1.25);
+            if (speed > distLeft / 2) {
+                speed = distLeft /2;
+            }
         }
         var startPt = map.screen.center();
         var towardPt = map.hexGrid.centerPt(map.center);
@@ -87,11 +93,15 @@ map.moveTowardCenter = function(distLeft) {
     map.screen.setCenter(endpt);
 };
 
-function mapClick(inPoint, button, shift) {
+function mapClick(inPoint, button, shift, ctrl) {
     var hex = inPoint.hexAt();
-    console.log("MAPCLICK", inPoint, hex, button, shift);
+    console.log("MAPCLICK", inPoint, hex, button, shift, ctrl);
     if (button === 0) { 
-        if (shift) {
+        if (ctrl && shift) {
+            if (overpower.data.targets.order && overpower.data.targets.order.modified) {
+                overpower.net.putLaunchOrder(overpower.data.targets.order);
+            }
+        } else if (shift) {
             overpower.map.center = hex;
         } else {
             overpower.data.targets.setT1(hex);
@@ -106,20 +116,28 @@ map.screen.setInClick(mapClick);
 
 function mapWheel(up, shift, ctrl) {
     console.log("MAPWHEEL", up, shift, ctrl);
-    if (shift) {
-        var theta = (up > 0) ? 1: -1;
-        theta *= 0.015;
-        map.screen.rotate(theta);
+    var delta;
+    if (shift && ctrl) {
+        delta = (up > 0) ? 1: -1;
+        delta *= 10;
+        map.setFrame(map.screen.canvas.width + delta, map.screen.canvas.height + delta);
         map.redraw = true;
-        overpower.stars.screen.rotate(theta*0.5);
+        return;
+    }
+    if (shift) {
+        delta = (up > 0) ? 1: -1;
+        if (overpower.data.targets.modOrder(delta)) {
+            map.redraw = true;
+        }
+        console.log("ORDER:", overpower.data.targets.order);
         return;
     }
     if (ctrl) {
-        var delta = (up > 0) ? 1: -1;
-        delta *= 10;
-        map.setFrame(map.screen.canvas.width + delta, map.screen.canvas.height + delta);
-        //map.render();
+        delta = (up > 0) ? 1: -1;
+        delta *= 0.015;
+        map.screen.rotate(delta);
         map.redraw = true;
+        overpower.stars.screen.rotate(delta*0.5);
         return;
     }
     if (map.scaleStep(up > 0)) {
@@ -195,9 +213,7 @@ map.renderPlanet = function(ctx, pv, planetRad, showGrid) {
     }
     var path = new Path2D();
     var center = map.hexGrid.centerPt(pv.hex);
-    if (showGrid) {
-        center.y -= scale * 0.25;
-    }
+    center.y += map.yBoost();
     path.moveTo(center.x+planetRad, center.y);
     path.arc(center.x, center.y, planetRad, 0, 2*Math.PI);
     ctx.fill(path);
@@ -205,21 +221,15 @@ map.renderPlanet = function(ctx, pv, planetRad, showGrid) {
     if (scale < 1.5) {
         return;
     }
-    var nameStr;
     // TOP //
-    if (scale < 3.75) {
-        if (pv.avail) {
-            nameStr = "("+pv.avail+")";
-         // ctx.strokeText(nameStr, center.x+planetRad*0.25, center.y-1.15*planetRad);
-            ctx.fillText(nameStr, center.x+planetRad*0.25, center.y-1.15*planetRad);
-        }
-    } else {
-        if (pv.avail) {
-            nameStr = "("+pv.avail+")"+pv.name;
-        } else {
-            nameStr = pv.name;
-        }
-        //ctx.strokeText(nameStr, center.x+planetRad*0.25, center.y-1.15*planetRad);
+    var nameStr = "";
+    if (pv.avail) {
+        nameStr = "("+pv.avail+")";
+    }
+    if (scale >= 3.75) {
+        nameStr += pv.name;
+    }
+    if (nameStr) {
         ctx.fillText(nameStr, center.x+planetRad*0.25, center.y-1.15*planetRad);
     }
     // BOTTOM //
@@ -237,6 +247,69 @@ map.setLineWidth = function(ctx) {
 };
 map.isShowGrid = function() {
     return map.getScale() >= 15;
+};
+map.yBoost = function() {
+    if (map.screen.transform.scale < 15) {
+        return 0;
+    }
+    return map.screen.transform.scale * -0.25;
+};
+map.getPlanetRad = function() {
+    var scale = map.screen.transform.scale;
+    if (scale > 10) {
+        return scale * 0.45;
+    } else if (scale > 4) {
+        return 5;
+    }  else if (scale > 2) {
+        return 4;
+    } else {
+        return 3;
+    }
+};
+
+map.setFont = function(ctx) {
+    var scale = map.screen.transform.scale;
+    if (scale >= 20) {
+        ctx.font = "12pt Courier New";
+        return 14;
+    } else if (scale >= 15) {
+        ctx.font = "11pt Courier New";
+        return 13;
+    } else if (scale >= 10) {
+        ctx.font = "10pt Courier New";
+        return 12;
+    } else if (scale >= 7.5) {
+        ctx.font = "9pt Courier New";
+        return 11;
+    } else { 
+        ctx.font = "8pt Courier New";
+        return 10;
+    }
+};
+
+map.renderLaunchOrders = function(ctx, pv, visHexes) {
+    var boost = map.yBoost();
+    var f = function(ord) {
+        if (ord.isTarget) {
+            return;
+        }
+        var startPt = map.hexGrid.centerPt(ord.sourceHex);
+        var endPt = map.hexGrid.centerPt(ord.targetHex);
+        var path = new Path2D();
+        path.moveTo(startPt.x, startPt.y + boost);
+        path.lineTo(endPt.x, endPt.y + boost);
+        ctx.stroke(path);
+    };
+    pv.sourceLaunchOrders.forEach(f);
+    if (!visHexes) {
+        return;
+    }
+    pv.targetLaunchOrders.forEach(function(ord) {
+        if (visHexes.hasHex(ord.sourceHex)) {
+            return;
+        }
+        f(ord);
+    });
 };
 
 //map.render = function() {
@@ -261,59 +334,101 @@ function renderMap(timestamp) {
             map.renderTargets(ctx, visHexes, data.targets);
         }
     }
-    var planetRad;
-    if (scale > 10) {
-        planetRad = scale * 0.45;
-    } else if (scale > 4) {
-        planetRad = 5;
-    }  else if (scale > 2) {
-        planetRad = 4;
-    } else {
-        planetRad = 3;
-    }
-    var fontHeight;
-    if (scale >= 20) {
-        ctx.font = "12pt Courier New";
-        fontHeight = 14;
-    } else if (scale >= 15) {
-        ctx.font = "11pt Courier New";
-        fontHeight = 13;
-    } else if (scale >= 10) {
-        ctx.font = "10pt Courier New";
-        fontHeight = 12;
-    } else if (scale >= 7.5) {
-    //} else if (scale >= 5) {
-        ctx.font = "9pt Courier New";
-        fontHeight = 11;
-    } else { 
-        ctx.font = "8pt Courier New";
-        fontHeight = 10;
-    }
+    var planetRad = map.getPlanetRad();
+    var fontHeight = map.setFont(ctx);
     // ORDERS/TRAILS/DESTINATIONS  //
     // SHIPS //
     // PLANETS //
     if (data.planetGrid) {
         map.setLineWidth(ctx);
-        ctx.strokeStyle = "#000000";
-        var later = {};
+        var targetPLs = {};
+        plList = [];
+        ctx.lineWidth += 0.5;
+        ctx.strokeStyle = "#0FAFAF";
         data.planetGrid.forEach(function(pv, hex) {
             if (!visHexes || visHexes.hasHex(hex)) {
+                map.renderLaunchOrders(ctx, pv, visHexes);
                 if (data.targets.isT1(hex)) {
-                    later.t1 = pv;
+                    targetPLs.t1 = pv;
                 } else if (data.targets.isT2(hex)) {
-                    later.t2 = pv;
+                    targetPLs.t2 = pv;
                 } else {
-                    map.renderPlanet(ctx, pv, planetRad, showGrid);
+                    plList.push(pv);
                 }
             }
         });
-        if (later.t2) {
-            map.renderPlanet(ctx, later.t2, planetRad, showGrid);
+        ctx.lineWidth -= 0.5;
+        ctx.strokeStyle = "#000000";
+        plList.forEach(function(pv) {
+            map.renderPlanet(ctx, pv, planetRad, showGrid);
+        });
+        if (targetPLs.t2) {
+            map.renderPlanet(ctx, targetPLs.t2, planetRad, showGrid);
         }
-        if (later.t1) {
-            map.renderPlanet(ctx, later.t1, planetRad, showGrid);
+        if (targetPLs.t1) {
+            map.renderPlanet(ctx, targetPLs.t1, planetRad, showGrid);
         }
     }
+}
+
+function renderTargetOrder(timestamp) {
+    var canvas = map.orderscreen.canvas;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    map.orderscreen.clear = true;
+    if (!overpower.data.targets.order) {
+        return;
+    }
+    var startHex = overpower.data.targets.order.sourcePL.hex;
+    var endHex = overpower.data.targets.order.targetPL.hex;
+    map.orderscreen.clear = false;
+    map.setLineWidth(ctx);
+    ctx.lineWidth += 1;
+    ctx.strokeStyle = "#0FAFAF";
+    var scale = map.getScale();
+    if (scale > 5) {
+        ctx.setLineDash([8,8]);
+        ctx.lineDashOffset = -(timestamp*0.01)%16;
+    } else {
+        ctx.setLineDash([3,3]);
+        ctx.lineDashOffset = -(timestamp*0.01)%6;
+    }
+    var startPt = map.hexGrid.centerPt(startHex);
+    var endPt = map.hexGrid.centerPt(endHex);
+    var boost = map.yBoost();
+    startPt.y += boost;
+    endPt.y += boost;
+    var path = new Path2D();
+    path.moveTo(startPt.x, startPt.y);
+    path.lineTo(endPt.x, endPt.y);
+    ctx.stroke(path);
+    var pRad = map.getPlanetRad() ;
+    var numStr = overpower.data.targets.order.size; 
+    var numWidth = ctx.measureText(numStr).width;
+    ctx.font = "14pt Courier New";
+    var fHeight = 15;
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(startPt.x-(1.25*pRad+numWidth+1), startPt.y-fHeight-1, numWidth+2, fHeight+5);
+    ctx.strokeRect(startPt.x-(1.25*pRad+numWidth+1), startPt.y-fHeight-1, numWidth+2, fHeight+5);
+    ctx.fillStyle = "#0FAFAF";
+    if (!overpower.data.targets.order.modified || ((timestamp*0.01)%8 > 3)) {
+        ctx.fillText(numStr, startPt.x-(1.25*pRad+numWidth), startPt.y);
+    }
+    if (scale < 15) {
+        return;
+    }
+    path = new Path2D();
+    var cycle = 0.25* Math.sin(timestamp * 0.005);
+    var rad = pRad * 0.45;
+    path.moveTo(startPt.x+rad, startPt.y);
+    path.arc(startPt.x, startPt.y, rad, 0, 2*Math.PI);
+    ctx.fill(path);
+    path.moveTo(endPt.x+rad, endPt.y);
+    rad = pRad * 0.45 * (1 + cycle) ;
+    path.arc(endPt.x, endPt.y, rad, 0, 2*Math.PI);
+    ctx.fill(path);
 }
 
 map.animate = function(timestamp) {
@@ -329,6 +444,9 @@ map.animate = function(timestamp) {
     }
     if (redraw) {
         renderMap(timestamp);
+    }
+    if (!map.orderscreen.clear || overpower.data.targets.order) {
+        renderTargetOrder(timestamp);
     }
     window.requestAnimationFrame(map.animate);
 };

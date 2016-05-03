@@ -100,6 +100,22 @@ func (i PowerOrderIntf) UpPower() int {
 // --------- END GENERIC METHODS ------------ //
 // --------- BEGIN CUSTOM METHODS ------------ //
 
+func (i PowerOrderIntf) SetLoc(x hexagon.Coord) {
+	if i.item.Loc == x {
+		return
+	}
+	i.item.Loc = x
+	i.item.sql.UPDATE = true
+}
+
+func (i PowerOrderIntf) SetUpPower(x int) {
+	if i.item.UpPower == x {
+		return
+	}
+	i.item.UpPower = x
+	i.item.sql.UPDATE = true
+}
+
 // --------- END CUSTOM METHODS ------------ //
 // --------- BEGIN GROUP ------------ //
 
@@ -190,8 +206,6 @@ func (group *PowerOrderGroup) SelectCols() []string {
 
 func (group *PowerOrderGroup) UpdateCols() []string {
 	return []string{
-		"gid",
-		"fid",
 		"locx",
 		"locy",
 		"uppower",

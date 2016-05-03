@@ -277,12 +277,17 @@ div.targetcenter {
 canvas.screen {
         border: 1px solid black;
         position: absolute;
+        border-radius: 20px;
 }
-canvas.starscreen {
+#starscreen {
         z-index:1;
 }
-canvas.mainscreen {
+#mainscreen {
         z-index:2;
+}
+#orderscreen {
+        z-index:3;
+        pointer-events: none;
 }
 
 

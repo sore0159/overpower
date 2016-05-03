@@ -23,7 +23,7 @@ ajax.promiseJSEND = function(promise, callbacks) {
     }
     if (!callbacks.error) {
         callbacks.error = function(msg, data) {
-            console.log(msg);
+            console.log("JSEND ERROR:", msg);
             if (data) {
                 console.log("DATA:", JSON.stringify(data));
             }
@@ -31,7 +31,7 @@ ajax.promiseJSEND = function(promise, callbacks) {
     }
     if (!callbacks.success) {
         callbacks.success = function(msg) {
-            console.log(JSON.stringify(msg));
+            console.log("JSEND SUCCESS:", JSON.stringify(msg));
         };
     }
     promise.then(function(response) {

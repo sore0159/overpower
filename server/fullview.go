@@ -6,8 +6,8 @@ import (
 )
 
 type FullView struct {
-	Game          overpower.GameDat           `json:"game"`
-	Faction       overpower.FactionDat        `json:"faction"`
+	Game overpower.GameDat `json:"game"`
+	//	Faction       overpower.FactionDat        `json:"faction"`
 	Factions      []overpower.FactionDat      `json:"factions"`
 	PlanetViews   []overpower.PlanetViewDat   `json:"planetviews"`
 	ShipViews     []overpower.ShipViewDat     `json:"shipviews"`
@@ -76,8 +76,8 @@ func (h *Handler) GetFullView(gid int) (fv *FullView, errS, errU error) {
 	sortLDRecords(batRec)
 	sortFactions(facs)
 	fv = &FullView{
-		Game:          g,
-		Faction:       userF,
+		Game: g,
+		//Faction:       userF,
 		Factions:      facs,
 		PlanetViews:   plVs,
 		ShipViews:     shVs,
