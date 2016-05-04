@@ -11,7 +11,7 @@ if (!overpower.map) {
 var map = overpower.map;
 
 var canvas = document.getElementById('mainscreen');
-map.screen = new html.ScreenTransform(canvas, 0,0, 0.25, 15, 0.55);
+map.screen = new html.ScreenTransform(canvas, 0,0, 0.25, 14.5, 0.55);
 map.orderscreen = { canvas: document.getElementById('orderscreen'), clear: true };
 map.hexGrid = new geometry.HexGrid(map.screen.transform);
 map.getScale = function() {
@@ -22,8 +22,8 @@ map.setFrame = function(width, height) {
     var spacer = document.getElementById('canvasspacer');
     spacer.style.width = width+'px';
     spacer.style.height = height+'px';
-    var targetframe = document.getElementById('targetframe');
-    targetframe.style.marginLeft = ''+(width + 10)+'px';
+    //var targetframe = document.getElementById('targetframe');
+    //targetframe.style.marginLeft = ''+(width + 10)+'px';
     map.screen.resize(width, height);
     var stars = overpower.stars;
     stars.screen.resize(width, height);
@@ -118,13 +118,14 @@ function mapWheel(up, shift, ctrl) {
     console.log("MAPWHEEL", up, shift, ctrl);
     var delta;
     if (shift && ctrl) {
+        console.log("PING");
         delta = (up > 0) ? 1: -1;
         delta *= 10;
         map.setFrame(map.screen.canvas.width + delta, map.screen.canvas.height + delta);
         map.redraw = true;
         return;
     }
-    if (shift) {
+    if (ctrl) {
         delta = (up > 0) ? 1: -1;
         if (overpower.data.targets.modOrder(delta)) {
             map.redraw = true;
@@ -132,7 +133,7 @@ function mapWheel(up, shift, ctrl) {
         console.log("ORDER:", overpower.data.targets.order);
         return;
     }
-    if (ctrl) {
+    if (shift) {
         delta = (up > 0) ? 1: -1;
         delta *= 0.015;
         map.screen.rotate(delta);
@@ -406,15 +407,16 @@ function renderTargetOrder(timestamp) {
     var numStr = overpower.data.targets.order.size; 
     var numWidth = ctx.measureText(numStr).width;
     ctx.font = "14pt Courier New";
+    var textPt = endPt;
     var fHeight = 15;
     ctx.setLineDash([]);
     ctx.lineWidth = 1;
     ctx.fillStyle = "#000000";
-    ctx.fillRect(startPt.x-(1.25*pRad+numWidth+1), startPt.y-fHeight-1, numWidth+2, fHeight+5);
-    ctx.strokeRect(startPt.x-(1.25*pRad+numWidth+1), startPt.y-fHeight-1, numWidth+2, fHeight+5);
+    ctx.fillRect(textPt.x-(1.25*pRad+numWidth+1), textPt.y-fHeight-1, numWidth+2, fHeight+5);
+    ctx.strokeRect(textPt.x-(1.25*pRad+numWidth+1), textPt.y-fHeight-1, numWidth+2, fHeight+5);
     ctx.fillStyle = "#0FAFAF";
     if (!overpower.data.targets.order.modified || ((timestamp*0.01)%8 > 3)) {
-        ctx.fillText(numStr, startPt.x-(1.25*pRad+numWidth), startPt.y);
+        ctx.fillText(numStr, textPt.x-(1.25*pRad+numWidth), textPt.y);
     }
     if (scale < 15) {
         return;

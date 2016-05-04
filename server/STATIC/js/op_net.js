@@ -20,6 +20,31 @@ if (!overpower.net) {
 var net = overpower.net;
 net.timers = {};
 
+
+net.pingTurn = function() {
+    var url = "/overpower/json/games/"+overpower.GID;
+    var callbacks = {
+        error: function(err, data) {
+            console.log("Error checking turn data with server:", err, data);
+            window.setTimeout(net.pingTurn, 300000);
+        },
+        success: function(gameDat) {
+            if (gameDat[0] && gameDat[0].turn > overpower.data.game.turn) {
+                overpower.data.game.newTurn = true;
+                overpower.infobox.animateIcon();
+            } else {
+                var setTime = (document.hidden === false) ? 60000: 300000;
+                window.setTimeout(net.pingTurn, setTime);
+            }
+        },
+    };
+    ajax.getJSEND(url, callbacks);
+};
+
+window.setTimeout(net.pingTurn, 60000);
+
+
+
 net.getFullView = function() {
     var url = "/overpower/json/fullviews/"+overpower.GID+"/"+overpower.FID;
     var callbacks = {};
@@ -30,6 +55,31 @@ net.getFullView = function() {
 function successFV(data) {
     overpower.data.parseFullView(data);
 }
+
+net.putTurnBuffer = function(buff) {
+    var curTime = Date.now();
+    if (net.timers.turnBuff && curTime - net.timers.turnBuff < 1000) {
+        console.log("CANCELLING TURN BUFFER UPDATE: TOO SOON, EXECUTUS (1 second)");
+        return;
+    }
+    net.timers.turnBuff = curTime;
+    var jF = { gid: overpower.GID,
+        fid: overpower.FID,
+        donebuffer: buff,
+    };
+    var url = "/overpower/json/factions";
+ 
+    var callbacks = {
+        error: function(err, data) {
+            console.log("Error syncing donebuffer data with server:", err, data);
+        },
+        success: function(jDat) {
+            overpower.data.turnBufferConfirmed(buff);
+            console.log("TURN BUFFER CONFIRMED", buff);
+        },
+    };
+    ajax.putJSEND(url, jF, callbacks);
+};
 
 net.putPowerOrder = function(order) {
     var curTime = Date.now();
@@ -95,26 +145,39 @@ net.putLaunchOrder = function(order) {
 };
 
 
-net.putMapView = function() {
-    var jMV = { 
-        gid: overpower.GID, 
-        fid: overpower.FID, 
-        center: [overpower.map.center.x, overpower.map.center.y],
-        scale: overpower.map.getScale(),
-        theta: overpower.map.screen.transform.theta,
-        frame: [overpower.map.screen.canvas.width, overpower.map.screen.canvas.height ],
-        stars: !overpower.stars.stopAnimation,
+net.putTruces = function(planet) {
+    var curTime = Date.now();
+    if (net.timers.truces && curTime - net.timers.truces < 1000) {
+        console.log("CANCELLING TRUCES UPDATE: TOO SOON, EXECUTUS (1 second)");
+        return;
+    }
+    net.timers.truces = curTime;
+    var jTR = { gid: overpower.GID,
+        fid: overpower.FID,
+        loc: [planet.hex.x, planet.hex.y],
+        trucees: [],
     };
-    
-    var url = "/overpower/json/mapviews";
-    console.log("SENDING", JSON.stringify(jMV));
-
+    var trList = Object.keys(planet.truces);
+    trList.forEach(function(key) {
+        if (planet.truces[key]) {
+            jTR.trucees.push(parseInt(key));
+        }
+    });
+    var url = "/overpower/json/truces";
+ 
     var callbacks = {
         error: function(err, data) {
-            console.log("Error syncing mapview data with server:", err, data);
+            console.log("Error syncing truce data with server:", err, data);
+        },
+        success: function(jDat) {
+            jTR.planet = planet;
+            overpower.data.trucesConfirmed(jTR);
+            if ( overpower.data.targets.isT1(planet.hex) ||overpower.data.targets.isT2(planet.hex) ) {
+                console.log("REDRAW TARGET BOX");
+            }
         },
     };
-    ajax.putJSEND(url, jMV, callbacks);
+    ajax.putJSEND(url, jTR, callbacks);
 };
 
 

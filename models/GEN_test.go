@@ -73,8 +73,8 @@ func MakeTest(m *Manager) (logE, failE error) {
 	}
 	f := &Faction{
 		GID:   g.GID,
-		Owner: "mule",
-		Name:  "MuleFaction",
+		Owner: "Test",
+		Name:  "MainTestFaction",
 	}
 	madeF[4] = f
 	m.CreateFaction(f)

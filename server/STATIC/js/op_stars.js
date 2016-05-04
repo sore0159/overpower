@@ -78,8 +78,12 @@ stars.render = function() {
             return;
         }
         var index = (Math.floor(drawPt.x) + Math.floor(drawPt.y) * canvas.width) * 4;
-        var bUse = Math.floor( bright * (0.25 + 0.75*Math.random()) );
-        bUse += 10;
+        var bUse;
+        if (Math.random() < 0.25) {
+            bUse = 10 + Math.floor( bright * (0.25 + 0.75*Math.random()) );
+        } else {
+            bUse = bright;
+        }
         img.data[index] = bUse;
         img.data[index+1] = bUse;
         img.data[index+2] = bUse;

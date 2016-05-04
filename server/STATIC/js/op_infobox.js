@@ -24,6 +24,23 @@ var overpower = muleObj.overpower;
 
 var data = overpower.data;
 var infobox = overpower.infobox;
-infobox.mainTargetText = document.getElementById('maintargettext');
+
+var icon = document.querySelector('link[rel="shortcut icon"]');
+var blink = false;
+infobox.animateIcon = function() {
+    var nonBlinkSource = "/static/img/yd32.ico";
+    if (overpower.data.game.newTurn) {
+        blink = !blink;
+        if (blink) {
+            icon.href = "/static/img/yd32blink.ico";
+        } else {
+            icon.href = nonBlinkSource;
+        }
+        window.setTimeout(infobox.animateIcon, 1000);
+    } else {
+        blink = false;
+        icon.href = nonBlinkSource;
+    }
+};
 
 })(muleObj);

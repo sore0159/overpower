@@ -38,28 +38,40 @@ func (h *Handler) ApiJSONput(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) apiJSONputTruces(w http.ResponseWriter, r *http.Request) {
-	item := struct {
-		*models.Truce
-		On bool `json:"on"`
-	}{
-		Truce: &models.Truce{},
-	}
-
+	item := &TruceCommand{}
 	err := jsend.Read(r, &item)
 	if err != nil {
-		JSONUserError(w, "Cannot read json into truce data")
+		JSONUserError(w, "Cannot read json into trucecommand data")
 		return
 	}
-	_, ok, err := h.Validate(item.GID, item.FID)
-	if my, bad := Check(err, "API PUT failure on resource validation", "type", "truce", "GID", item.GID, "FID", item.FID); bad {
+	facs, err := h.M.Faction().SelectWhere(h.M.GID(item.GID))
+	if my, bad := Check(err, "API PUT failure on resource validation", "type", "truce", "GID", item.GID); bad {
 		JSONServerError(w, my)
 		return
 	}
-	if !ok {
+	var authID int
+	facMap := make(map[int]bool, len(facs))
+	for _, f := range facs {
+		if h.LoggedIn && f.Owner() == h.User.String() {
+			authID = f.FID()
+		}
+		facMap[f.FID()] = true
+	}
+	if authID == 0 {
 		JSONUserError(w, "You are not authorized for that faction")
 		return
 	}
-	errS, errU := InternalSetTruce(item.GID, item.FID, item.Trucee, item.On, item.Loc)
+	for _, fid := range item.Trucees {
+		if !facMap[fid] {
+			JSONUserError(w, "FACTION ID NOT FOUND", KV{"fid", fid})
+			return
+		}
+		if fid == authID {
+			JSONUserError(w, "CANNOT FORM TRUCE WITH SELF")
+			return
+		}
+	}
+	errS, errU := InternalSetTruce(item)
 	if my, bad := Check(errS, "API JSON PUT truce failure on command execution", "item", item); bad {
 		JSONServerError(w, my)
 		return

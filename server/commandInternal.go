@@ -6,24 +6,38 @@ import (
 	"mule/overpower/models"
 )
 
-func InternalSetTruce(gid, fid, trucee int, on bool, loc hexagon.Coord) (errS, errU error) {
+type TruceCommand struct {
+	GID     int           `json:"gid"`
+	FID     int           `json:"fid"`
+	Loc     hexagon.Coord `json:"loc"`
+	Trucees []int         `json:"trucees"`
+}
+
+func InternalSetTruce(item *TruceCommand) (errS, errU error) {
 	manager := OPDB.NewManager()
-	list, err := manager.Truce().Select("gid", gid, "fid", fid, "locx", loc[0], "locy", loc[1], "trucee", trucee)
-	if my, bad := Check(err, "internal set truce failure on resource aquisition", "resource", "truce", "gid", gid, "fid", fid); bad {
+	list, err := manager.Truce().Select("gid", item.GID, "fid", item.FID, "locx", item.Loc[0], "locy", item.Loc[1])
+	if my, bad := Check(err, "internal set truce failure on resource aquisition", "resource", "truce", "trucecommand", item); bad {
 		return my, nil
 	}
-	if len(list) == 0 && on {
-		item := &models.Truce{
-			GID:    gid,
-			FID:    fid,
-			Loc:    loc,
-			Trucee: trucee,
+	trMap := make(map[int]bool, len(item.Trucees))
+	for _, fid := range item.Trucees {
+		trMap[fid] = true
+	}
+	for _, tr := range list {
+		if !trMap[tr.Trucee()] {
+			tr.DELETE()
+		} else {
+			delete(trMap, tr.Trucee())
 		}
-		manager.CreateTruce(item)
-	} else if len(list) != 0 && !on {
-		list[0].DELETE()
-	} else {
-		return nil, nil
+	}
+	for fid, _ := range trMap {
+		newTr := &models.Truce{
+			GID:    item.GID,
+			FID:    item.FID,
+			Loc:    item.Loc,
+			Trucee: fid,
+		}
+		manager.CreateTruce(newTr)
 	}
 	err = manager.Close()
 	if my, bad := Check(err, "internal set truce failure on manager close", "truce", list); bad {
@@ -171,7 +185,6 @@ func InternalSetDoneBuffer(gid, fid, buff int) (errS, errU error) {
 		}
 		if testF.DoneBuffer() == 0 {
 			allDone = false
-			break
 		}
 	}
 	if f == nil {

@@ -188,7 +188,26 @@ data.targets.setPowerOrder = function(planet, type) {
 };
 
 data.parseFullView = function(fullView) {
-    //console.log("GOT", JSON.stringify(fullView));
+    // GAME //
+    data.game = fullView.game;
+     // FACTIONS //
+    data.factions = { list:[] };
+    fullView.factions.forEach(function(fac) {
+        data.factions.list.push(fac.fid);
+        data.factions[fac.fid] = fac;
+        if (fac.fid === overpower.FID) {
+            fac.me = true;
+            data.factions.myFaction = fac;
+        }
+    });
+    var makeTr = function() {
+        var tr = {};
+        data.factions.list.forEach(function(fid) {
+            tr[fid] = 0;
+        });
+        return tr;
+    };
+
     // PLANETS //
     var setAvail = function() {
             var sum;
@@ -224,6 +243,29 @@ data.parseFullView = function(fullView) {
             delete this.landing[turns];
         }
     };
+    var modTruce = function(fid, on) {
+        if (fid === overpower.FID) {
+            return;
+        }
+        var cur = this.truces[fid];
+        if (!cur && cur !== 0) {
+            return;
+        }
+        if (on) {
+            if (cur === 0) {
+                this.truces[fid] = 2;
+            } else if (cur === -1) {
+                this.truces[fid] = 1;
+            }
+        } else {
+            if (cur === 1) {
+                this.truces[fid] = -1;
+            } else if (cur === 2) {
+                this.truces[fid] = 0;
+            }
+        }
+    };
+
        
     data.planetGrid = new geometry.HexMap();
     fullView.planetviews.forEach(function(pv) {
@@ -254,6 +296,8 @@ data.parseFullView = function(fullView) {
         }
         pv.sourceLaunchOrders = new geometry.HexMap();
         pv.targetLaunchOrders = new geometry.HexMap();
+        pv.truces = makeTr();
+        pv.modTruce = modTruce;
         pv.landing = [];
     });
     // POWER ORDER //
@@ -285,18 +329,17 @@ data.parseFullView = function(fullView) {
         pv.targetLaunchOrders.setHex(ord.sourceHex, ord);
         pv.modLanding(ord.turns, ord.size);
     });
-   
-
-    // FACTIONS //
-    data.factions = {};
-    fullView.factions.forEach(function(fac) {
-        data.factions[fac.fid] = fac;
-        if (fac.fid === overpower.FID) {
-            fac.me = true;
-            data.factions.myFaction = fac;
+    // TRUCES //
+    fullView.truces.forEach(function(truce) {
+        truce.hex = (new geometry.Hex()).addArray(truce.loc);
+        var pl = data.planetGrid.getHex(truce.hex);
+        if (!pl) {
+            console.log("BAD TRUCE:", truce, "-- CAN'T FIND PLANET");
+            return;
         }
+        pl.truces[truce.trucee] = 1;
     });
-    console.log("FACS:", data.factions);
+
     // MAP //
     data.mapView = fullView.mapview;
     overpower.map.snapTo(new geometry.Hex(fullView.mapview.center[0], fullView.mapview.center[1]));
@@ -356,6 +399,25 @@ data.powerOrderConfirmed = function(order) {
     if (data.targets.power.hex.eq(data.power.hex)) {
         data.targets.changed = !data.power.hex.eq(data.targets.power.planet.hex) || data.power.type !== data.targets.type;
     }
+};
+
+data.trucesConfirmed = function(truces) {
+    var tr = {};
+    truces.trucees.forEach(function(fid) {
+        tr[fid] = true;
+    });
+    data.factions.list.forEach(function(fid) {
+        var cur = truces.planet.truces[fid];
+        if (tr[fid] && cur !== -1) {
+            truces.planet.truces[fid] = 1;
+        } else if (!tr[fid] && cur !== 2) {
+            truces.planet.truces[fid] = 0;
+        }
+    });
+};
+
+data.turnBufferConfirmed = function(buff) {
+    data.factions.myFaction.donebuffer = buff;
 };
 
 })(muleObj);

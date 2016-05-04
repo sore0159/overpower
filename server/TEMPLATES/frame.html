@@ -8,8 +8,26 @@
 <link rel="shortcut icon" href="/static/img/yd32.ico">
 </head>
 <body>
-{{ if .TitleBar }}{{ template "titlebar" . }}{{ end }}
+<div id="titlediv">
+        [ <a class="title" href="/overpower/">Overpower</a> ]
+<div id="titleright">
+{{ if .LoggedIn }}
+Logged in as
+     [ <a class="title" href="/overpower/home">{{ .User }}</a> ]
+     <form class="noblock" action="/auth/logout" method="post"><input class="title" type="submit" value="Logout"></form>
+{{ else }}
+Not logged in:
+    [ <a href="/auth/login">Login</a> ]
+    [ <a href="/auth/create">Create User</a> ]
+{{ end }}
+</div> </div>
+
+<div id="bodydiv">
+
 {{ template "body" .App }}
+
+<div class="clearer"></div>
+</div>
 </body>
 </html>
 {{ end }}
