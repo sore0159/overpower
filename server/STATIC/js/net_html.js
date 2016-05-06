@@ -7,12 +7,14 @@ if (!document) {
 if (!muleObj.html) {
     muleObj.html = {};
 }
-muleObj.html.clear = function(elem) {
+var html = muleObj.html;
+
+html.clear = function(elem) {
     while (elem.firstChild) {
         elem.removeChild(elem.firstChild);
     }
 };
-muleObj.html.spur = function(elem, kind, text) {
+html.spur = function(elem, kind, text) {
     var child = document.createElement(kind);
     if (text) {
         child.textContent = text;
@@ -21,7 +23,7 @@ muleObj.html.spur = function(elem, kind, text) {
     return child;
 };
 
-muleObj.html.clickWrap = function(f) {
+html.clickWrap = function(f) {
     var g = function(event) {
         var clickx = event.pageX - this.offsetLeft;
         var clicky = event.pageY - this.offsetTop;
@@ -31,13 +33,13 @@ muleObj.html.clickWrap = function(f) {
     return g;
 };
 
-muleObj.html.setPointClick = function(elem, f) {
-    var g = muleObj.html.clickWrap(f);
+html.setPointClick = function(elem, f) {
+    var g = html.clickWrap(f);
     elem.addEventListener("mouseup", g);
     elem.oncontextmenu= function() { return false; };
 };
 
-muleObj.html.wheelWrap = function(f) {
+html.wheelWrap = function(f) {
     var g = function(event) {
         event.preventDefault();
         var up = (event.detail)? -1*event.detail/3: (event.wheelDelta)/120;
@@ -54,8 +56,8 @@ muleObj.html.wheelWrap = function(f) {
     return g;
 };
 
-muleObj.html.setWheel = function(elem, f) {
-    var g = muleObj.html.wheelWrap(f);
+html.setWheel = function(elem, f) {
+    var g = html.wheelWrap(f);
     elem.onmousewheel = g;
     elem.onDOMMouseScroll = g;
     elem.addEventListener("DOMMouseScroll", g);
@@ -103,7 +105,7 @@ Screen.prototype.resize = function(width, height) {
     }
 };
 
-muleObj.html.Screen = Screen;
+html.Screen = Screen;
 
 function ScreenTransform(canvas, centerX, centerY, theta, scale, squashY) {
     this.canvas = canvas;
@@ -139,7 +141,7 @@ ScreenTransform.prototype.resize = function(width, height) {
     this.transform.setInAtOut(curCenter, this.center());
 };
 ScreenTransform.prototype.setClick = function(f) {
-    muleObj.html.setPointClick(this.canvas, f);
+    html.setPointClick(this.canvas, f);
 };
 ScreenTransform.prototype.setInClick = function(f) {
     var transform = this.transform;
@@ -147,13 +149,52 @@ ScreenTransform.prototype.setInClick = function(f) {
         var inPt = transform.out2in(pt);
         return f(inPt, button, shift, ctrl);
     };
-    muleObj.html.setPointClick(this.canvas, g);
+    html.setPointClick(this.canvas, g);
 };
 ScreenTransform.prototype.setWheel = function(f) {
-    muleObj.html.setWheel(this.canvas, f);
+    html.setWheel(this.canvas, f);
 };
 
-muleObj.html.ScreenTransform = ScreenTransform;
+html.ScreenTransform = ScreenTransform;
 
+function Tree(name) {
+    if (name) {
+        this.elem = document.getElementByID(name);
+        this.style = this.elem.style;
+    }
+}
+Tree.prototype.spur = function(kind, text) {
+    var newT = new Tree();
+    newT.elem = html.spur(this.elem, kind, text);
+    newT.style = newT.elem.style;
+    newT.parent = this;
+    return newT;
+};
+Tree.prototype.and = function(kind, text) {
+    return this.parent.spur(kind, text);
+};
+Tree.prototype.clear = function() {
+    while (this.elem.firstChild) {
+        this.elem.removeChild(this.elem.firstChild);
+    }
+};
+Tree.prototype.setText = function(text) {
+    this.elem.textContent = text;
+};
+Tree.prototype.setClick = function(f, noMenu) {
+    if (noMenu) {
+        this.elem.oncontextmenu= function() { return false; };
+    }
+    this.elem.addEventListener("mouseup", f, false);
+};
+Tree.prototype.setPointClick = function(f, noMenu) {
+    if (noMenu) {
+        this.elem.oncontextmenu= function() { return false; };
+    }
+    this.elem.addEventListener("mouseup", html.clickWrap(f), false);
+};
+Tree.prototype.setWheel = function(f) {
+    html.setWheel(this.elem, f);
+};
 
 })(muleObj);

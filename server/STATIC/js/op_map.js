@@ -19,11 +19,13 @@ map.getScale = function() {
 };
 
 map.setFrame = function(width, height) {
+    width = (width < 120) ? 120: width;
+    height = (height < 90) ? 90: height;
     var spacer = document.getElementById('canvasspacer');
     spacer.style.width = width+'px';
-    spacer.style.height = height+'px';
-    //var targetframe = document.getElementById('targetframe');
-    //targetframe.style.marginLeft = ''+(width + 10)+'px';
+    var infobox = document.getElementById('infobox');
+    infobox.style.marginLeft = ''+(width + 20)+'px';
+    document.body.style.minWidth = ""+(width+540)+'px';
     map.screen.resize(width, height);
     var stars = overpower.stars;
     stars.screen.resize(width, height);
@@ -120,8 +122,7 @@ function mapWheel(up, shift, ctrl) {
     if (shift && ctrl) {
         console.log("PING");
         delta = (up > 0) ? 1: -1;
-        delta *= 10;
-        map.setFrame(map.screen.canvas.width + delta, map.screen.canvas.height + delta);
+        map.setFrame(map.screen.canvas.width + (12*delta), map.screen.canvas.height + (9* delta));
         map.redraw = true;
         return;
     }

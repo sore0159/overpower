@@ -3,6 +3,7 @@ body {
         margin: 0px;
         background-color: #151515;
         font-family: "Courier New", Courier, Monospace;
+        min-width: 1340px;
 }
 div {
         padding: 0px; margin: 0px;
@@ -43,6 +44,7 @@ div.clearer {
 canvas.screen {
         position: absolute;
         border-radius: 20px;
+        border: 1px solid #2f2f8f;
 }
 #starscreen {
         z-index:1;
@@ -57,12 +59,14 @@ canvas.screen {
 #canvasspacer {
         padding: 0px; margin: 0px;
         width: 800px;
-        height: 600px;
-        float: left;
-        border: 1px solid #2f2f8f;
         border-radius: 20px;
+        float:left;
 }
 
+#infobox {
+        border: 2px solid white;
+        margin-left: 820px;
+}
 
 
 
