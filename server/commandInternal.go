@@ -196,7 +196,6 @@ func InternalSetDoneBuffer(gid, fid, buff int) (errS, errU error) {
 	if my, bad := Check(err, "command set turnbuffer failure on updating faction", "faction", f); bad {
 		return my, nil
 	}
-
 	if allDone {
 		// TODO: Run multiple turns if all players have done buffers > 1
 		logE, failE := OPDB.SourceTransact(f.GID(), overpower.RunGameTurn)

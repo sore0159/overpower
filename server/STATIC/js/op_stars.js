@@ -53,8 +53,12 @@ stars.moreStars = function() {
     stars.sizeFilled = starW;
 };
 
-stars.stop = function() {
+stars.stop = function(clear) {
     stars.stopAnimation = true;
+    if (clear) {
+        stars.locations = [[],[],[],[]];
+        stars.sizeFilled = 0;
+    }
 };
 stars.start = function() {
     stars.stopAnimation = false;
@@ -79,8 +83,10 @@ stars.render = function() {
         }
         var index = (Math.floor(drawPt.x) + Math.floor(drawPt.y) * canvas.width) * 4;
         var bUse;
-        if (Math.random() < 0.25) {
-            bUse = 10 + Math.floor( bright * (0.25 + 0.75*Math.random()) );
+        var rand = Math.random();
+        if (rand < 0.25) {
+            //bUse = 10 + Math.floor( bright * (0.25 + 0.75*Math.random()) );
+            bUse = 10 + Math.floor( bright * (0.25 + 3*rand) );
         } else {
             bUse = bright;
         }

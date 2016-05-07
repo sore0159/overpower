@@ -8,6 +8,9 @@ body {
 div {
         padding: 0px; margin: 0px;
 }
+p {
+        padding: 0px; margin: 0px;
+}
 a.title {
         text-decoration: none;
 }
@@ -64,10 +67,95 @@ canvas.screen {
 }
 
 #infobox {
-        border: 2px solid white;
         margin-left: 820px;
+        text-align: center;
 }
 
+div.subinfobox {
+        border: 0px solid #2f2f8f;
+        border-width: 2px 0;
+        background-color: #111111;
+        padding: 10px;
+        margin-bottom: 10px;
+        text-align: left;
+}
+
+span {
+        color: #aaaaff;
+}
+span.alert {
+        color: #ff3333;
+}
+button {
+        background-color: #000000;
+        color: #0000ff;
+        border: 1px solid #0000ff;
+        border-radius: 5px;
+        font-size: 1em;
+        font-family: "Courier New", Courier, Monospace;
+        margin: 3px 0px;
+}
+button.active {
+        color: #ff3333;
+        border-color: #ff3333;
+}
+button.inactive {
+        color: #ffffff;
+        border-color: #ffffff;
+}
+button.jumper {
+        color: #33ff33;
+        border-color: #33ff33;
+}
+
+#reportsbutton {
+        display: none;
+}
+#powerorderbutton {
+        display: none;
+}
+#launchorderbox {
+        display: none;
+}
+#powerorderbox {
+        display: none;
+}
+
+#lefttarget {
+        width: 44%;
+        display: inline-block;
+        visibility: hidden;
+        vertical-align: top;
+        word-wrap: break-word;
+}
+#targetspacer {
+        width: 2%;
+        display: inline-block;
+        visibility: hidden;
+        vertical-align: top;
+}
+#righttarget {
+        width: 44%;
+        display: inline-block;
+        visibility: hidden;
+        vertical-align: top;
+        word-wrap: break-word;
+}
+.target1 {
+        color: #ffff00;
+}
+.target2 {
+        color: #999900;
+}
+.yourplanet {
+        color: #0fff0f;
+}
+.contestedplanet {
+        color: #af00af;
+}
+.enemyplanet {
+        color: #ff0f0f;
+}
 
 
 

@@ -272,6 +272,10 @@ func NewFactionSession(d db.DBer) *FactionSession {
 	}
 }
 
+func (s *FactionSession) Close() error {
+	return s.Session.Close()
+}
+
 func (s *FactionSession) Select(conditions ...interface{}) ([]overpower.FactionDat, error) {
 	cur := len(s.FactionGroup.List)
 	err := s.Session.Select(conditions...)

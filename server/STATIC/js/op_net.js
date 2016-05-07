@@ -21,27 +21,29 @@ var net = overpower.net;
 net.timers = {};
 
 
-net.pingTurn = function() {
+net.pingTurn = function(repeat) {
     var url = "/overpower/json/games/"+overpower.GID;
     var callbacks = {
         error: function(err, data) {
             console.log("Error checking turn data with server:", err, data);
-            window.setTimeout(net.pingTurn, 300000);
+            if (repeat) {
+                window.setTimeout(net.pingTurn, 300000, true);
+            }
         },
         success: function(gameDat) {
             if (gameDat[0] && gameDat[0].turn > overpower.data.game.turn) {
                 overpower.data.game.newTurn = true;
-                overpower.infobox.animateIcon();
-            } else {
+                overpower.html.icon.animate();
+            } else if (repeat) {
                 var setTime = (document.hidden === false) ? 60000: 300000;
-                window.setTimeout(net.pingTurn, setTime);
+                window.setTimeout(net.pingTurn, setTime, true);
             }
         },
     };
     ajax.getJSEND(url, callbacks);
 };
 
-window.setTimeout(net.pingTurn, 60000);
+window.setTimeout(net.pingTurn, 60000, true);
 
 
 
@@ -54,6 +56,8 @@ net.getFullView = function() {
 
 function successFV(data) {
     overpower.data.parseFullView(data);
+    overpower.map.redraw = true;
+    overpower.html.infobox.render();
 }
 
 net.putTurnBuffer = function(buff) {
@@ -75,9 +79,13 @@ net.putTurnBuffer = function(buff) {
         },
         success: function(jDat) {
             overpower.data.turnBufferConfirmed(buff);
-            console.log("TURN BUFFER CONFIRMED", buff);
+            overpower.html.infobox.overview.renderTurn();
+            if (buff) {
+                net.pingTurn(true);
+            }
         },
     };
+    console.log("SENDING", JSON.stringify(jF));
     ajax.putJSEND(url, jF, callbacks);
 };
 
@@ -101,6 +109,7 @@ net.putPowerOrder = function(order) {
         },
         success: function(jDat) {
             overpower.data.powerOrderConfirmed(jPO);
+            overpower.html.infobox.overview.renderPowerOrder();
             overpower.map.redraw = true;
         },
     };

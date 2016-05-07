@@ -97,54 +97,31 @@ map.moveTowardCenter = function(distLeft) {
 
 function mapClick(inPoint, button, shift, ctrl) {
     var hex = inPoint.hexAt();
-    console.log("MAPCLICK", inPoint, hex, button, shift, ctrl);
-    if (button === 0) { 
-        if (ctrl && shift) {
-            if (overpower.data.targets.order && overpower.data.targets.order.modified) {
-                overpower.net.putLaunchOrder(overpower.data.targets.order);
-            }
-        } else if (shift) {
-            overpower.map.center = hex;
-        } else {
-            overpower.data.targets.setT1(hex);
-            map.redraw = true;
+    if (button === 0 && ctrl && shift) { 
+        if (overpower.data.targets.order && overpower.data.targets.order.modified) {
+            overpower.commands.confirmLaunchOrder();
         }
-    } else if (button === 2) {
-        overpower.data.targets.setT2(hex, shift);
-        map.redraw = true;
+        return;
     }
+    overpower.commands.clickHex(hex, button, shift);
 }
 map.screen.setInClick(mapClick);
 
 function mapWheel(up, shift, ctrl) {
-    console.log("MAPWHEEL", up, shift, ctrl);
     var delta;
     if (shift && ctrl) {
-        console.log("PING");
-        delta = (up > 0) ? 1: -1;
-        map.setFrame(map.screen.canvas.width + (12*delta), map.screen.canvas.height + (9* delta));
-        map.redraw = true;
+        overpower.commands.modMapFrame(up > 0);
         return;
     }
     if (ctrl) {
-        delta = (up > 0) ? 1: -1;
-        if (overpower.data.targets.modOrder(delta)) {
-            map.redraw = true;
-        }
-        console.log("ORDER:", overpower.data.targets.order);
+        overpower.commands.modLaunchOrder(up > 0);
         return;
     }
     if (shift) {
-        delta = (up > 0) ? 1: -1;
-        delta *= 0.015;
-        map.screen.rotate(delta);
-        map.redraw = true;
-        overpower.stars.screen.rotate(delta*0.5);
+        overpower.commands.rotateMap(up > 0);
         return;
     }
-    if (map.scaleStep(up > 0)) {
-        map.redraw = true;
-    }
+    overpower.commands.zoomMap(up > 0);
 }
 
 map.screen.setWheel(mapWheel);

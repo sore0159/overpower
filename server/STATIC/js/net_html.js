@@ -19,8 +19,12 @@ html.spur = function(elem, kind, text) {
     if (text) {
         child.textContent = text;
     }
-    this.elem.appendChild(child);
+    elem.appendChild(child);
     return child;
+};
+html.setText = function(name, text) {
+    var elem = document.getElementById(name);
+    elem.textContent = text;
 };
 
 html.clickWrap = function(f) {
@@ -28,7 +32,7 @@ html.clickWrap = function(f) {
         var clickx = event.pageX - this.offsetLeft;
         var clicky = event.pageY - this.offsetTop;
         var pt  = (muleObj.geometry)? new muleObj.geometry.Point(clickx, clicky) : {x: clickx, y: clicky};
-        f(pt, event.button, event.shiftKey, event.ctrlKey);
+        f.call(this, pt, event.button, event.shiftKey, event.ctrlKey);
     };
     return g;
 };
@@ -50,7 +54,7 @@ html.wheelWrap = function(f) {
         } else if (up === 0) {
             return true;
         }
-        f(up, event.shiftKey, event.ctrlKey);
+        f.call(this, up, event.shiftKey, event.ctrlKey);
         return false;
     };
     return g;
@@ -62,50 +66,6 @@ html.setWheel = function(elem, f) {
     elem.onDOMMouseScroll = g;
     elem.addEventListener("DOMMouseScroll", g);
 };
-
-function Screen(canvas) {
-    this.canvas = canvas;
-    var screen = this;
-    canvas.addEventListener("mouseup", function(event) {
-        if (!screen.handleClick) {
-            return;
-        }
-        var clickx = event.pageX - this.offsetLeft;
-        var clicky = event.pageY - this.offsetTop;
-        screen.handleClick(clickx, clicky, event.button, event.shiftKey, event.ctrlKey);
-    });
-    canvas.oncontextmenu= function() { return false; };
-
-    var g = function(event) {
-        if (!screen.handleWheel) {
-            return true;
-        }
-        event.preventDefault();
-        var up = (event.detail)? -1*event.detail/3: (event.wheelDelta)/120;
-        if (up > 0 && up < 1) {
-            up = 1;
-        } else if (up < 0 && up > -1) {
-            up = -1;
-        } else if (up === 0) {
-            return true;
-        }
-        screen.handleWheel(up, event.shiftKey, event.ctrlKey);
-        return false;
-    };
-    canvas.onmousewheel = g;
-    canvas.onDOMMouseScroll = g;
-    canvas.addEventListener("DOMMouseScroll", g);
-}
-
-Screen.prototype.resize = function(width, height) {
-    this.canvas.width = width;
-    this.canvas.height = height;
-    if (this.onResize) {
-        this.onResize(width, height);
-    }
-};
-
-html.Screen = Screen;
 
 function ScreenTransform(canvas, centerX, centerY, theta, scale, squashY) {
     this.canvas = canvas;
@@ -147,7 +107,7 @@ ScreenTransform.prototype.setInClick = function(f) {
     var transform = this.transform;
     var g = function(pt, button, shift, ctrl) {
         var inPt = transform.out2in(pt);
-        return f(inPt, button, shift, ctrl);
+        return f.call(this, inPt, button, shift, ctrl);
     };
     html.setPointClick(this.canvas, g);
 };
@@ -159,7 +119,7 @@ html.ScreenTransform = ScreenTransform;
 
 function Tree(name) {
     if (name) {
-        this.elem = document.getElementByID(name);
+        this.elem = document.getElementById(name);
         this.style = this.elem.style;
     }
 }
@@ -170,8 +130,28 @@ Tree.prototype.spur = function(kind, text) {
     newT.parent = this;
     return newT;
 };
+Tree.prototype.spurElement = function(elem) {
+    this.elem.appendChild(elem);
+    var newT = new Tree();
+    newT.elem = elem;
+    newT.style = elem.style;
+    newT.parent = this;
+    return newT;
+};
+
+Tree.prototype.spurClass = function(kind, className, text) {
+    var newT = new Tree();
+    newT.elem = html.spur(this.elem, kind, text);
+    newT.style = newT.elem.style;
+    newT.elem.className = className;
+    newT.parent = this;
+    return newT;
+};
 Tree.prototype.and = function(kind, text) {
     return this.parent.spur(kind, text);
+};
+Tree.prototype.andClass = function(kind, className, text) {
+    return this.parent.spurClass(kind, className, text);
 };
 Tree.prototype.clear = function() {
     while (this.elem.firstChild) {
@@ -180,6 +160,9 @@ Tree.prototype.clear = function() {
 };
 Tree.prototype.setText = function(text) {
     this.elem.textContent = text;
+};
+Tree.prototype.setClass = function(text) {
+    this.elem.className = text;
 };
 Tree.prototype.setClick = function(f, noMenu) {
     if (noMenu) {
@@ -196,5 +179,7 @@ Tree.prototype.setPointClick = function(f, noMenu) {
 Tree.prototype.setWheel = function(f) {
     html.setWheel(this.elem, f);
 };
+
+html.Tree = Tree;
 
 })(muleObj);

@@ -36,10 +36,9 @@ data.targets.setT1 = function(hex) {
     data.targets.primary = { hex: hex };
     if (data.targets.secondary) {
         data.targets.secondary.copy = hex.eq(data.targets.secondary.hex);
-        data.targets.secondary.dist = hex.stepsTo(data.targets.secondary.hex);
-        data.targets.secondary.turns = Math.ceil(data.targets.secondary.dist / 10);
+        data.targets.primary.dist = hex.stepsTo(data.targets.secondary.hex);
+        data.targets.primary.turns = Math.ceil(data.targets.primary.dist / 10);
     }
-
     var planet = data.planetGrid.getHex(hex);
     if (!planet) {
         return;
@@ -67,8 +66,8 @@ data.targets.setT2 = function(hex, force) {
     data.targets.secondary = { hex: hex, planet: planet };
     if (data.targets.primary) {
         data.targets.secondary.copy = hex.eq(data.targets.primary.hex);
-        data.targets.secondary.dist = hex.stepsTo(data.targets.primary.hex);
-        data.targets.secondary.turns = Math.ceil(data.targets.secondary.dist / 10);
+        data.targets.primary.dist = hex.stepsTo(data.targets.primary.hex);
+        data.targets.primary.turns = Math.ceil(data.targets.primary.dist / 10);
     } else {
         data.targets.secondary.copy = false;
     }
@@ -78,7 +77,6 @@ data.targets.setT2 = function(hex, force) {
     data.targets.makeOrder(data.targets.primary.planet, planet);
 };
 data.targets.dropOrder = function() {
-    console.log("DROP ORDER");
     if (data.targets.order && data.targets.order.curO) {
         delete data.targets.order.curO.isTarget;
     }
@@ -122,7 +120,6 @@ data.targets.makeOrder = function(targetPL, sourcePL) {
         dist: dist,
         turns: turns,
     };
-    console.log("SET ORDER", data.targets.order);
 };
 data.targets.modOrder = function(delta) {
     var dat = data.targets.order;
@@ -175,17 +172,6 @@ data.targets.isT1 = function(hex) {
 data.targets.isT2 = function(hex) {
     return (this.secondary && hex.eq(this.secondary.hex));
 };
-data.targets.setPowerOrder = function(planet, type) {
-    if (!type || planet.myControl < 1 || planet.myPower === type) {
-        return;
-    }
-    data.targets.power = {
-        hex: planet.hex,
-        planet: planet,
-        type: type,
-        changed: !data.power.hex.eq(planet.hex) || data.power.type !== type,
-    };
-};
 
 data.parseFullView = function(fullView) {
     // GAME //
@@ -207,6 +193,9 @@ data.parseFullView = function(fullView) {
         });
         return tr;
     };
+    // REPORTS //
+    data.launchReports = fullView.launchrecords;
+    data.battleReports = fullView.battlerecords;
 
     // PLANETS //
     var setAvail = function() {
@@ -307,7 +296,6 @@ data.parseFullView = function(fullView) {
         type: fullView.powerorder.uppower,
     };
     data.power.planet = data.planetGrid.getHex(data.power.hex);
-    data.targets.setPowerOrder(data.power.planet, data.power.type);
     // LAUNCH ORDERS //
     fullView.launchorders.forEach(function(ord) {
         ord.sourceHex = new geometry.Hex(ord.source[0], ord.source[1]);
@@ -343,8 +331,6 @@ data.parseFullView = function(fullView) {
     // MAP //
     data.mapView = fullView.mapview;
     overpower.map.snapTo(new geometry.Hex(fullView.mapview.center[0], fullView.mapview.center[1]));
-    overpower.map.redraw = true;
-
 };
 
 data.launchOrderConfirmed = function(order) {
@@ -396,9 +382,9 @@ data.powerOrderConfirmed = function(order) {
         hex: (new geometry.Hex()).addArray(order.loc),
     };
     data.power.planet = data.planetGrid.getHex(data.power.hex);
-    if (data.targets.power.hex.eq(data.power.hex)) {
-        data.targets.changed = !data.power.hex.eq(data.targets.power.planet.hex) || data.power.type !== data.targets.type;
-    }
+};
+data.isPOUseful = function() {
+    return (data.power && data.power.planet && data.power.planet.myControl > 0 && data.power.type && data.power.planet.myPower !== data.power.type);
 };
 
 data.trucesConfirmed = function(truces) {

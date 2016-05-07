@@ -1,4 +1,5 @@
 //(function() {
+/*
     var muleElement = document.getElementById('MULEELEMENT');
     if (!muleElement) {
         console.log("NO MULE ELEMENT FOUND: ABORTING");
@@ -8,7 +9,10 @@
         muleElement.MULEOBJECT = {};
         console.log("CREATING MULE OBJECT");
     }
+
     var muleObj = muleElement.MULEOBJECT;
+   */
+  var muleObj = {};
 
 
 //})();
