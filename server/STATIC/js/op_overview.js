@@ -34,14 +34,17 @@ ophtml.infobox.overview = {
     turntogglebutton: new html.Tree("turntogglebutton"),
     reportsbutton: new html.Tree("reportsbutton"),
     powerbutton: document.getElementById("powerorderbutton"),
+    powercancelbutton: new html.Tree("powercancelbutton"),
 };
-ophtml.jumperButton(null, ophtml.infobox.overview.powerbutton);
 
 var overview = ophtml.infobox.overview;
 
-//overview.powerbutton.setClick(function() {
-    //console.log("VIEW REPORTS GO!");
-//});
+ophtml.target2Button(null, overview.powerbutton);
+overview.powercancelbutton.setClick(function() {
+    if (data.power.planet) {
+        overpower.commands.setPowerOrder(data.power.planet, 0);
+    }
+});
 
 overview.reportsbutton.setClick(function() {
     console.log("VIEW REPORTS GO!");
@@ -161,13 +164,15 @@ overview.renderReports = function() {
 overview.renderPowerOrder = function() {
     var elem = document.getElementById("powerordertext");
     if (data.isPOUseful()) {
-        elem.textContent = ((data.power.type === -1) ? "Tachyons": "Antimatter");
+        elem.textContent = ((data.power.type === -1) ? "Tachyons ("+data.power.planet.tachyons+")": "Antimatter ("+data.power.planet.antimatter+")");
         elem.className = "";
         overview.powerbutton.style.display = 'inline';
+        overview.powercancelbutton.style.display = 'inline';
         overview.powerbutton.setPlanet(data.power.planet);
     } else {
         elem.textContent = "Not yet set";
         elem.className = "alert";
+        overview.powercancelbutton.style.display = 'none';
         overview.powerbutton.style.display = 'none';
     }
 };

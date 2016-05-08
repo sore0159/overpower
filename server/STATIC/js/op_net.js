@@ -110,6 +110,7 @@ net.putPowerOrder = function(order) {
         success: function(jDat) {
             overpower.data.powerOrderConfirmed(jPO);
             overpower.html.infobox.overview.renderPowerOrder();
+            overpower.html.infobox.orders.powerbox.render();
             overpower.map.redraw = true;
         },
     };
@@ -148,6 +149,7 @@ net.putLaunchOrder = function(order) {
             jLO.turns = turns;
             overpower.data.launchOrderConfirmed(jLO);
             overpower.map.redraw = true;
+            overpower.html.infobox.targets.render();
         },
     };
     ajax.putJSEND(url, jLO, callbacks);

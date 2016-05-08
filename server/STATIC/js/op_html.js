@@ -72,7 +72,7 @@ ophtml.jumperButton = function(dat, elem) {
     if (!elem) {
         elem = document.createElement("button");
     }
-    elem.className = "jumper";
+    elem.className = "target1";
     elem.oncontextmenu= function() { return false; };
     elem.setPlanet = setPlanet;
     if (dat) {
@@ -83,6 +83,22 @@ ophtml.jumperButton = function(dat, elem) {
     };
     elem.addEventListener("mouseup", jump);
     return elem;
+};
+
+ophtml.target2Button = function(dat, elem) {
+    var elem2 = ophtml.jumperButton(dat, elem);
+    elem2.className = "target2";
+    return elem2;
+};
+
+html.Tree.prototype.addDisplay = function(text, num, className) {
+    this.addText(text+": [ ");
+    if (className) {
+        this.spurClass("span", className, num);
+    } else {
+        this.spur("span", num);
+    }
+    this.addText(" ] ");
 };
 
 })(muleObj);

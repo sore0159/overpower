@@ -98,9 +98,7 @@ map.moveTowardCenter = function(distLeft) {
 function mapClick(inPoint, button, shift, ctrl) {
     var hex = inPoint.hexAt();
     if (button === 0 && ctrl && shift) { 
-        if (overpower.data.targets.order && overpower.data.targets.order.modified) {
-            overpower.commands.confirmLaunchOrder();
-        }
+        overpower.commands.confirmLaunchOrder();
         return;
     }
     overpower.commands.clickHex(hex, button, shift);

@@ -103,15 +103,14 @@ button.inactive {
         color: #ffffff;
         border-color: #ffffff;
 }
-button.jumper {
-        color: #33ff33;
-        border-color: #33ff33;
-}
 
 #reportsbutton {
         display: none;
 }
 #powerorderbutton {
+        display: none;
+}
+#powercancelbutton {
         display: none;
 }
 #launchorderbox {
@@ -143,9 +142,11 @@ button.jumper {
 }
 .target1 {
         color: #ffff00;
+        border-color: #ffff00;
 }
 .target2 {
         color: #999900;
+        border-color: #999900;
 }
 .yourplanet {
         color: #0fff0f;

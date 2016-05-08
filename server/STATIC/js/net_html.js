@@ -16,11 +16,15 @@ html.clear = function(elem) {
 };
 html.spur = function(elem, kind, text) {
     var child = document.createElement(kind);
-    if (text) {
+    if (text === 0 || text) {
         child.textContent = text;
     }
     elem.appendChild(child);
     return child;
+};
+html.spurText = function(elem, text) {
+    var child = document.createTextNode(text);
+    elem.appendChild(child);
 };
 html.setText = function(name, text) {
     var elem = document.getElementById(name);
@@ -137,6 +141,11 @@ Tree.prototype.spurElement = function(elem) {
     newT.style = elem.style;
     newT.parent = this;
     return newT;
+};
+Tree.prototype.addText = function(text) {
+    var child = document.createTextNode(text);
+    this.elem.appendChild(child);
+    return this;
 };
 
 Tree.prototype.spurClass = function(kind, className, text) {
