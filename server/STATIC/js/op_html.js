@@ -59,7 +59,7 @@ function setPlanet(dat) {
         name = dat.name;
     } else if ((dat.x === 0 || dat.x) && (dat.y === 0 || dat.y)) {
         hex = dat;
-        name = "["+x+","+y+"]";
+        name = "("+dat.x+","+dat.y+")";
     } else {
         hex = new geometry.Hex();
         name = "ERROR";

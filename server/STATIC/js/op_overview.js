@@ -32,6 +32,7 @@ var net = overpower.net;
 ophtml.infobox.overview = {
     turnbutton: new html.Tree("turnbutton"),
     turntogglebutton: new html.Tree("turntogglebutton"),
+    turnconfirmbutton: new html.Tree("turnconfirmbutton"),
     reportsbutton: new html.Tree("reportsbutton"),
     powerbutton: document.getElementById("powerorderbutton"),
     powercancelbutton: new html.Tree("powercancelbutton"),
@@ -68,56 +69,58 @@ overview.turntogglebutton.render = function() {
     }
 };
 
-overview.turnbutton.setClick(function() {
-    overview.turnbutton.render();
-    net.putTurnBuffer(this.userBuffer);
+overview.turnconfirmbutton.setClick(function() {
+    net.putTurnBuffer(overview.turnbutton.userBuffer);
 });
 overview.turnbutton.setWheel(function(up) {
     if (up > 0) {
-        if (!this.userBuffer) {
-            this.userBuffer = data.factions.myFaction.donebuffer+1;
-            if (!this.userBuffer) {
-                this.userBuffer = 1;
+        if (!overview.turnbutton.userBuffer) {
+            overview.turnbutton.userBuffer = data.factions.myFaction.donebuffer+1;
+            if (!overview.turnbutton.userBuffer) {
+                overview.turnbutton.userBuffer = 1;
             }
-        } else if (this.userBuffer === -1) {
-            this.userBuffer = 1;
+        } else if (overview.turnbutton.userBuffer === -1) {
+            overview.turnbutton.userBuffer = 1;
         } else {
-            this.userBuffer += 1;
+            overview.turnbutton.userBuffer += 1;
         }
     } else {
-         if (!this.userBuffer) {
-            this.userBuffer = data.factions.myFaction.donebuffer-1;
-        } else if (this.userBuffer !== -1) {
-            this.userBuffer -= 1;
+         if (!overview.turnbutton.userBuffer) {
+            overview.turnbutton.userBuffer = data.factions.myFaction.donebuffer-1;
+        } else if (overview.turnbutton.userBuffer !== -1) {
+            overview.turnbutton.userBuffer -= 1;
         }
-        if (!this.userBuffer) {
-            this.userBuffer = -1;
+        if (overview.turnbutton.userBuffer < 1) {
+            overview.turnbutton.userBuffer = -1;
         }
     }
     overview.turnbutton.render();
 });
 overview.turnbutton.render = function() {
     var buffer = data.factions.myFaction.donebuffer;
-    var userBuffer = this.elem.userBuffer;
+    var userBuffer = overview.turnbutton.userBuffer;
     if (!buffer) {
-        this.style.display = 'none';
-    } else if (!userBuffer || buffer === userBuffer) {
-        this.style.display = 'inline';
-        this.elem.className = "inactive";
-        if (buffer === 1) {
-            this.elem.textContent = "Set Buffer";
-        } else {
-            this.elem.textContent = "Change Buffer";
-        }
+        delete overview.turnbutton.userBuffer;
+        overview.turnbutton.style.display = 'none';
+        overview.turnconfirmbutton.style.display = 'none';
+        return;
+    }
+    if (!userBuffer || buffer === userBuffer) {
+        overview.turnconfirmbutton.style.display = 'none';
     } else {
-        this.style.display = 'block';
-        this.elem.className = "active";
+        overview.turnconfirmbutton.style.display = 'inline';
         if (userBuffer === -1) {
-            this.elem.textContent = "Click to confirm all turns complete";
+            overview.turnconfirmbutton.elem.textContent = "Click to confirm all turns complete";
         } else {
-            this.elem.textContent = "Click to confirm "+userBuffer+" turns complete";
+            overview.turnconfirmbutton.elem.textContent = "Click to confirm "+userBuffer+" turns complete";
         }
     }
+    if (buffer === 1) {
+        overview.turnbutton.elem.textContent = "Create Buffer";
+    } else {
+        overview.turnbutton.elem.textContent = "Modify Buffer";
+    }
+    overview.turnbutton.style.display = 'inline';
 };
 
 overview.render = function() {
@@ -148,8 +151,8 @@ overview.renderTurn = function() {
     } else {
         html.setText("turnstatustext", "Turn In Progress");
     }
-    overview.turnbutton.render();
     overview.turntogglebutton.render();
+    overview.turnbutton.render();
 };
 overview.renderReports = function() {
     if (data.game.turn > 1) {

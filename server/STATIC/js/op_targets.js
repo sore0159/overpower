@@ -139,9 +139,12 @@ targets.primary.render = function() {
         return;
     }
     box.style.visibility = 'visible';
-    box.spurClass("p", "target1", "Primary Target: ("+tDat.hex.x+","+tDat.hex.y+")");
     if (tDat.planet) {
+        box.spurClass("p", "target1", "Primary Target: ("+tDat.hex.x+","+tDat.hex.y+")");
         box.spurElement(ophtml.jumperButton(tDat.planet));
+    } else {
+        box.spurClass("span", "target1", "Primary Target: ");
+        box.spurElement(ophtml.jumperButton(tDat.hex));
     }
     if (tDat.dist) {
         box.spur("p", "Distance from secondary target: "+tDat.dist + " sector"+((tDat.dist === 1) ? "":"s" )+" ("+tDat.turns+" turn"+((tDat.turns === 1) ? "":"s")+")");

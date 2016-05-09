@@ -103,7 +103,12 @@ button.inactive {
         color: #ffffff;
         border-color: #ffffff;
 }
-
+#turnconfirmbutton {
+        display: none;
+}
+#turnbutton {
+        display: none;
+}
 #reportsbutton {
         display: none;
 }

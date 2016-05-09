@@ -19,14 +19,18 @@
         Leading Score: [ <span id="highscoretext"></span> ]<br>
         Status: [ <span id="turnstatustext"></span> ]
         <button id="turntogglebutton"></button>
-        <button title="This button allows you to set a 'buffer' of turns that will automatically be set 'complete' for you.  Use it if you won't have commands to give for a certain number of turns.
-Scroll the mousewheel over this button to alter the buffer value, then click to confirm."
+        <button class='inactive' title="This button allows you to set a 'buffer' of turns that will automatically be set 'complete' for you.  Use it if you won't have commands to give for a certain number of turns.
+Scroll the mousewheel over this button to alter the buffer value.  A buffer of one means only the current turn is complete: to have not even the current turn complete use the 'Set Not Complete' button.  A buffer value of '-1' means all turns will always be set done until you manually change this buffer.
+Other players can not see your buffer status beyond knowing if you are done or not with your current turn."
         id="turnbutton"></button>
+        <button class="active" id="turnconfirmbutton"
+                title="Click here to confirm your desired turn buffer"
+        ></button>
         <br>
         Reports: [ <span id="reportnum"></span> ]
         <button id="reportsbutton">View Reports</button><br>
-        Attunement Order: <button class="jumper" id="powerorderbutton"></button> [ <span id="powerordertext"></span> ] <button id="powercancelbutton"
-                title="Cancel this order first if you wish to set a new attunement order"
+        Attunement Transmission: <button class="jumper" id="powerorderbutton"></button> [ <span id="powerordertext"></span> ] <button id="powercancelbutton"
+                title="Cancel this transmission first if you wish to set a new attunement transmission"
                 >Cancel Attunement</button>
         </div>
 
