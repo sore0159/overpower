@@ -248,18 +248,23 @@ map.setFont = function(ctx) {
     var scale = map.screen.transform.scale;
     if (scale >= 20) {
         ctx.font = "12pt Courier New";
+        //ctx.font = "12pt Courier New";
         return 14;
     } else if (scale >= 15) {
         ctx.font = "11pt Courier New";
+        //ctx.font = "11pt Courier New";
         return 13;
     } else if (scale >= 10) {
         ctx.font = "10pt Courier New";
+        //ctx.font = "10pt Courier New";
         return 12;
     } else if (scale >= 7.5) {
         ctx.font = "9pt Courier New";
+        //ctx.font = "9pt Courier New";
         return 11;
     } else { 
         ctx.font = "8pt Courier New";
+        //ctx.font = "8pt Courier New";
         return 10;
     }
 };

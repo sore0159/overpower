@@ -128,11 +128,11 @@ function Tree(name) {
     }
 }
 Tree.prototype.spur = function(kind, text) {
-    var newT = new Tree();
-    newT.elem = html.spur(this.elem, kind, text);
-    newT.style = newT.elem.style;
-    newT.parent = this;
-    return newT;
+    var child = document.createElement(kind);
+    if (text === 0 || text) {
+        child.textContent = text;
+    }
+    return this.spurElement(child);
 };
 Tree.prototype.spurElement = function(elem) {
     this.elem.appendChild(elem);
@@ -149,11 +149,8 @@ Tree.prototype.addText = function(text) {
 };
 
 Tree.prototype.spurClass = function(kind, className, text) {
-    var newT = new Tree();
-    newT.elem = html.spur(this.elem, kind, text);
-    newT.style = newT.elem.style;
+    var newT = this.spur(kind, text);
     newT.elem.className = className;
-    newT.parent = this;
     return newT;
 };
 Tree.prototype.and = function(kind, text) {
@@ -173,20 +170,36 @@ Tree.prototype.setText = function(text) {
 Tree.prototype.setClass = function(text) {
     this.elem.className = text;
 };
+Tree.prototype.setWheel = function(f) {
+    var g = function(event) {
+        event.preventDefault();
+        var up = (event.detail)? -1*event.detail/3: (event.wheelDelta)/120;
+        if (up > 0 && up < 1) {
+            up = 1;
+        } else if (up < 0 && up > -1) {
+            up = -1;
+        } else if (up === 0) {
+            return true;
+        }
+        f.call(this, up, event.shiftKey, event.ctrlKey);
+        return false;
+    };
+    this.elem.onmousewheel = g;
+    this.elem.onDOMMouseScroll = g;
+    this.elem.addEventListener("DOMMouseScroll", g);
+};
 Tree.prototype.setClick = function(f, noMenu) {
     if (noMenu) {
         this.elem.oncontextmenu= function() { return false; };
     }
     this.elem.addEventListener("mouseup", f, false);
 };
+
 Tree.prototype.setPointClick = function(f, noMenu) {
     if (noMenu) {
         this.elem.oncontextmenu= function() { return false; };
     }
     this.elem.addEventListener("mouseup", html.clickWrap(f), false);
-};
-Tree.prototype.setWheel = function(f) {
-    html.setWheel(this.elem, f);
 };
 
 html.Tree = Tree;

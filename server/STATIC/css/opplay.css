@@ -17,6 +17,15 @@ a.title {
 a       {
         color: #0000ff;
 }
+input {
+        background-color: #000000;
+        color: #0000ff;
+        border: 1px solid #0000ff;
+        border-radius: 5px;
+        font-size: 0.75em;
+        font-family: "Courier New", Courier, Monospace;
+        margin: 0;
+}
 
 #titlediv {
         margin: 5px 20px;
@@ -91,7 +100,7 @@ button {
         color: #0000ff;
         border: 1px solid #0000ff;
         border-radius: 5px;
-        font-size: 1em;
+        font-size: 0.75em;
         font-family: "Courier New", Courier, Monospace;
         margin: 3px 0px;
 }

@@ -1,8 +1,9 @@
 body {
         padding: 0px;
         margin: 0px;
-        background-color: #cccccc;
+        background-color: #151515;
         font-family: "Courier New", Courier, Monospace;
+        color: #ffffff;
 }
 div {
         padding: 0px; margin: 0px;
@@ -13,11 +14,24 @@ a.title {
 a       {
         color: #0000ff;
 }
+input {
+        background-color: #ffffff;
+        color: #0000ff;
+        border: 1px solid #0000ff;
+        border-radius: 5px;
+        font-size: 1em;
+        font-family: "Courier New", Courier, Monospace;
+        margin: 0;
+}
+input.title {
+        background-color: #111111;
+        font-size: 0.75em;
+}
 
 #titlediv {
         margin: 5px 20px;
         font-size: 1.5em;
-        color: black;
+        color: #ffffff;
 }
 #titleright {
         padding-top: 5px;
@@ -35,7 +49,7 @@ div.clearer {
         color: black;
         padding: 10px 20px;
         padding-bottom: 200px;
-        border: 0px solid black;
+        border: 0px solid #2f2f8f;
         border-width: 2px 0 0 0;
         min-height: 600px;
 }
